@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: (user: AuthUser, token: string) => void;
@@ -38,9 +38,7 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-violet-600 flex items-center justify-center">
-            <LogIn className="w-8 h-8 text-white" />
-          </div>
+          <img src="/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <CardDescription>Sign in to access your productivity dashboard</CardDescription>
         </CardHeader>
