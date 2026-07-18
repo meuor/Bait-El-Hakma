@@ -41,6 +41,7 @@ interface State {
   isLoading: boolean;
   apiStatus: 'checking' | 'online' | 'offline';
   syncErrors: string[];
+  lastApiError: string | null;
   dataSource: 'api' | 'local';
 }
 
@@ -73,6 +74,7 @@ type Action =
   | { type: 'SET_ACTIVITY_DATA'; payload: ActivityData }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_API_STATUS'; payload: 'checking' | 'online' | 'offline' }
+  | { type: 'SET_API_ERROR'; payload: string | null }
   | { type: 'ADD_SYNC_ERROR'; payload: string }
   | { type: 'CLEAR_SYNC_ERRORS' }
   | { type: 'SET_DATA_SOURCE'; payload: 'api' | 'local' }
@@ -125,6 +127,7 @@ const initialState: State = {
   isLoading: false,
   apiStatus: 'checking',
   syncErrors: [],
+  lastApiError: null,
   dataSource: 'local',
 };
 
@@ -223,6 +226,8 @@ function appReducer(state: State, action: Action): State {
       return { ...state, isLoading: action.payload };
     case 'SET_API_STATUS':
       return { ...state, apiStatus: action.payload };
+    case 'SET_API_ERROR':
+      return { ...state, lastApiError: action.payload };
     case 'ADD_SYNC_ERROR':
       return { ...state, syncErrors: [...state.syncErrors.slice(-4), action.payload] };
     case 'CLEAR_SYNC_ERRORS':
@@ -349,6 +354,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         const loadedState: Partial<State> = {};
         let anySuccess = false;
+        const errors: string[] = [];
 
         if (sessions.status === 'fulfilled') {
           anySuccess = true;
@@ -357,6 +363,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             startTime: new Date(s.startTime),
             endTime: s.endTime ? new Date(s.endTime) : null,
           }));
+        } else if (sessions.status === 'rejected') {
+          errors.push(`Sessions: ${sessions.reason?.message || 'failed'}`);
         }
 
         if (columns.status === 'fulfilled' && columns.value.length > 0) {
@@ -364,6 +372,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           loadedState.kanbanColumns = columns.value;
         } else {
           loadedState.kanbanColumns = defaultKanbanColumns;
+          if (columns.status === 'rejected') {
+            errors.push(`Columns: ${columns.reason?.message || 'failed'}`);
+          }
         }
 
         if (cards.status === 'fulfilled') {
@@ -373,6 +384,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date(c.createdAt),
             dueDate: c.dueDate ? new Date(c.dueDate) : undefined,
           }));
+        } else if (cards.status === 'rejected') {
+          errors.push(`Cards: ${cards.reason?.message || 'failed'}`);
         }
 
         if (books.status === 'fulfilled') {
@@ -382,6 +395,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             addedAt: new Date(b.addedAt),
             completedAt: b.completedAt ? new Date(b.completedAt) : undefined,
           }));
+        } else if (books.status === 'rejected') {
+          errors.push(`Books: ${books.reason?.message || 'failed'}`);
         }
 
         if (todosList.status === 'fulfilled') {
@@ -391,6 +406,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date(t.createdAt),
             dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
           }));
+        } else if (todosList.status === 'rejected') {
+          errors.push(`Todos: ${todosList.reason?.message || 'failed'}`);
         }
 
         if (challengesList.status === 'fulfilled') {
@@ -399,6 +416,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ...c,
             startDate: new Date(c.startDate),
           }));
+        } else if (challengesList.status === 'rejected') {
+          errors.push(`Challenges: ${challengesList.reason?.message || 'failed'}`);
         }
 
         if (settings.status === 'fulfilled' && settings.value) {
@@ -412,13 +431,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             autoStartPomodoros: settings.value.autoStartPomodoros,
             soundEnabled: settings.value.soundEnabled,
           };
+        } else if (settings.status === 'rejected') {
+          errors.push(`Settings: ${settings.reason?.message || 'failed'}`);
         }
 
         if (anySuccess) {
           dispatch({ type: 'SET_API_STATUS', payload: 'online' });
           dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+          dispatch({ type: 'SET_API_ERROR', payload: null });
         } else {
           dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+          dispatch({ type: 'SET_API_ERROR', payload: errors.join('; ') || 'API unavailable' });
           loadFromLocalStorage();
           dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
         }
@@ -426,7 +449,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'LOAD_STATE', payload: loadedState });
       } catch (error) {
         console.error('Error loading from API, falling back to localStorage:', error);
+        const msg = error instanceof Error ? error.message : String(error);
         dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+        dispatch({ type: 'SET_API_ERROR', payload: msg });
         loadFromLocalStorage();
         dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
       } finally {
