@@ -368,27 +368,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: 'SET_API_STATUS', payload: 'online' });
             dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
           } else {
-            // Tables broken — run migration and retry
-            console.log('Data API failed, running migration...');
-            const migResp = await fetch('/api/migrate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            });
+            // API returned error — try to migrate tables (safe migration)
+            console.log('Data API failed, attempting safe migration...');
+            try {
+              const migResp = await fetch('/api/migrate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+              });
 
-            if (migResp.ok) {
-              console.log('Migration complete, retrying...');
-              // Migration drops old tables — user needs to re-register
-              localStorage.removeItem(TOKEN_KEY);
-              dispatch({ type: 'SET_API_STATUS', payload: 'online' });
-              dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
-              dispatch({ type: 'SET_API_ERROR', payload: null });
-            } else {
-              const migError = await migResp.text();
-              console.error('Migration failed:', migError);
+              if (migResp.ok) {
+                console.log('Migration complete, retrying data load...');
+                // Retry loading after migration
+                await loadAllDataFromAPI();
+                dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+                dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+                dispatch({ type: 'SET_API_ERROR', payload: null });
+              } else {
+                console.error('Migration failed');
+                dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+                loadFromLocalStorage();
+              }
+            } catch {
               dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
-              dispatch({ type: 'SET_API_ERROR', payload: `Migration failed: ${migError}` });
+              loadFromLocalStorage();
             }
-            loadFromLocalStorage();
           }
         } catch (err) {
           console.error('API check failed:', err);
@@ -398,23 +401,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } else {
         // No token — check if tables exist anyway (for first-time setup)
         try {
-          const testResp = await fetch('/api/todos');
-          const tablesExist = testResp.status === 401; // 401 = tables exist but need auth
-          if (!tablesExist && testResp.status === 500) {
-            // Tables might not exist — run migration
-            console.log('Tables missing, running migration...');
+          const testResp = await fetch('/api/migrate');
+          if (testResp.ok) {
+            dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+          } else {
+            // Try to create tables
             const migResp = await fetch('/api/migrate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             });
             if (migResp.ok) {
-              console.log('Migration complete!');
               dispatch({ type: 'SET_API_STATUS', payload: 'online' });
-              dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
-              dispatch({ type: 'SET_API_ERROR', payload: null });
             }
-          } else {
-            dispatch({ type: 'SET_API_STATUS', payload: 'online' });
           }
         } catch {
           dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
@@ -439,59 +437,89 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const loadedState: Partial<State> = {};
 
       if (sessions.status === 'fulfilled') {
-        loadedState.pomodoroHistory = sessions.value.map(s => ({
-          ...s,
-          startTime: new Date(s.startTime),
-          endTime: s.endTime ? new Date(s.endTime) : null,
+        loadedState.pomodoroHistory = sessions.value.map((s: any) => ({
+          id: s.id,
+          startTime: new Date(s.start_time || s.startTime),
+          endTime: s.end_time || s.endTime ? new Date(s.end_time || s.endTime) : null,
+          duration: s.duration,
+          type: s.type,
+          completed: s.completed,
         }));
       }
 
       if (columns.status === 'fulfilled' && columns.value.length > 0) {
-        loadedState.kanbanColumns = columns.value;
+        loadedState.kanbanColumns = (columns.value as any[]).map(c => ({
+          id: c.id,
+          title: c.title,
+          color: c.color,
+        }));
       } else {
         loadedState.kanbanColumns = defaultKanbanColumns;
       }
 
       if (cards.status === 'fulfilled') {
-        loadedState.kanbanCards = cards.value.map(c => ({
-          ...c,
-          createdAt: new Date(c.createdAt),
-          dueDate: c.dueDate ? new Date(c.dueDate) : undefined,
+        loadedState.kanbanCards = (cards.value as any[]).map(c => ({
+          id: c.id,
+          columnId: c.column_id || c.columnId,
+          title: c.title,
+          description: c.description || '',
+          labels: typeof c.labels === 'string' ? JSON.parse(c.labels) : (c.labels || []),
+          priority: c.priority,
+          createdAt: new Date(c.created_at || c.createdAt),
+          dueDate: c.due_date || c.dueDate ? new Date(c.due_date || c.dueDate) : undefined,
         }));
       }
 
       if (books.status === 'fulfilled') {
-        loadedState.books = books.value.map(b => ({
-          ...b,
-          addedAt: new Date(b.addedAt),
-          completedAt: b.completedAt ? new Date(b.completedAt) : undefined,
+        loadedState.books = (books.value as any[]).map(b => ({
+          id: b.id,
+          title: b.title,
+          author: b.author,
+          coverUrl: b.cover_url || b.coverUrl || '',
+          description: b.description || '',
+          tags: typeof b.tags === 'string' ? JSON.parse(b.tags) : (b.tags || []),
+          notes: [],
+          status: b.status,
+          progress: b.progress || 0,
+          addedAt: new Date(b.added_at || b.addedAt),
+          completedAt: b.completed_at || b.completedAt ? new Date(b.completed_at || b.completedAt) : undefined,
         }));
       }
 
       if (todosList.status === 'fulfilled') {
-        loadedState.todos = todosList.value.map(t => ({
-          ...t,
-          createdAt: new Date(t.createdAt),
-          dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
+        loadedState.todos = (todosList.value as any[]).map(t => ({
+          id: t.id,
+          content: t.content,
+          completed: t.completed,
+          createdAt: new Date(t.created_at || t.createdAt),
+          dueDate: t.due_date || t.dueDate ? new Date(t.due_date || t.dueDate) : undefined,
+          priority: t.priority,
         }));
       }
 
       if (challengesList.status === 'fulfilled') {
-        loadedState.challenges = challengesList.value.map(c => ({
-          ...c,
-          startDate: new Date(c.startDate),
+        loadedState.challenges = (challengesList.value as any[]).map(c => ({
+          id: c.id,
+          name: c.name,
+          description: c.description || '',
+          totalDays: c.total_days || c.totalDays,
+          completedDays: typeof c.completed_days === 'string' ? JSON.parse(c.completed_days) : (c.completed_days || []),
+          startDate: new Date(c.start_date || c.startDate),
+          color: c.color,
+          icon: c.icon,
         }));
       }
 
       if (settings.status === 'fulfilled' && settings.value) {
+        const sv = settings.value as any;
         loadedState.pomodoroSettings = {
-          focusTime: settings.value.focusTime,
-          shortBreak: settings.value.shortBreak,
-          longBreak: settings.value.longBreak,
-          cyclesBeforeLongBreak: settings.value.cyclesBeforeLongBreak,
-          autoStartBreaks: settings.value.autoStartBreaks,
-          autoStartPomodoros: settings.value.autoStartPomodoros,
-          soundEnabled: settings.value.soundEnabled,
+          focusTime: sv.focus_time || sv.focusTime || 25,
+          shortBreak: sv.short_break || sv.shortBreak || 5,
+          longBreak: sv.long_break || sv.longBreak || 15,
+          cyclesBeforeLongBreak: sv.cycles_before_long_break || sv.cyclesBeforeLongBreak || 4,
+          autoStartBreaks: sv.auto_start_breaks || sv.autoStartBreaks || false,
+          autoStartPomodoros: sv.auto_start_pomodoros || sv.autoStartPomodoros || false,
+          soundEnabled: sv.sound_enabled !== undefined ? sv.sound_enabled : (sv.soundEnabled !== undefined ? sv.soundEnabled : true),
         };
       }
 
@@ -584,7 +612,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Sync a single action to the API
   const syncActionToAPI = useCallback(async (action: Action) => {
-    if (!isAPIAvailable() || !getToken()) return;
+    if (!isAPIAvailable() || !getToken()) {
+      console.log('Sync skipped: no API or no token');
+      return;
+    }
+
+    console.log('Syncing to API:', action.type);
 
     switch (action.type) {
       case 'SET_POMODORO_SETTINGS':
@@ -594,6 +627,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         await pomodoroAPI.create(action.payload);
         break;
       case 'SET_KANBAN_COLUMNS':
+        for (const col of action.payload) {
+          await kanbanAPI.createColumn(col);
+        }
         break;
       case 'ADD_KANBAN_CARD':
         await kanbanAPI.createCard(action.payload);
@@ -647,11 +683,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await syncActionToAPI(action);
       dispatch({ type: 'SET_API_STATUS', payload: 'online' });
       dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+      console.log('Synced:', action.type);
     } catch (error) {
-      console.error('API sync error:', error);
-      const errorMsg = `Failed to save ${action.type.replace(/_/g, ' ').toLowerCase()}`;
+      console.error('API sync error for', action.type, ':', error);
+      const errorMsg = `Failed to sync ${action.type.replace(/_/g, ' ').toLowerCase()}: ${error instanceof Error ? error.message : 'unknown error'}`;
       dispatch({ type: 'ADD_SYNC_ERROR', payload: errorMsg });
-      dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
 
       // Queue for retry
       failedQueueRef.current.push({ action, retries: 0 });

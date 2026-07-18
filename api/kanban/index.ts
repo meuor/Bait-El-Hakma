@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       if (req.method === 'POST') {
         const { id, title, color, sortOrder } = req.body;
-        await sql`INSERT INTO kanban_columns (id, user_id, title, color, sort_order) VALUES (${id}, ${uid}, ${title}, ${color}, ${sortOrder || 0})`;
+        await sql`INSERT INTO kanban_columns (id, user_id, title, color, sort_order) VALUES (${id}, ${uid}, ${title}, ${color}, ${sortOrder || 0}) ON CONFLICT (id) DO UPDATE SET title = ${title}, color = ${color}`;
         return res.status(201).json({ success: true });
       }
       if (req.method === 'PUT') {
