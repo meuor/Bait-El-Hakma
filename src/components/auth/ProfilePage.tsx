@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { authAPI, type AuthUser, type UserStats } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
@@ -21,6 +20,8 @@ import {
   Loader2,
   LogOut,
   Edit3,
+  Camera,
+  X,
 } from 'lucide-react';
 
 interface ProfilePageProps {
@@ -33,10 +34,11 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState(user.displayName);
   const [bio, setBio] = useState(user.bio || '');
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '');
+  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl || '');
   const [isSaving, setIsSaving] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -52,10 +54,37 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
     loadStats();
   }, []);
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarPreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const updated = await authAPI.updateProfile({ displayName, bio, avatarUrl });
+      const updated = await authAPI.updateProfile({
+        displayName,
+        bio,
+        avatarUrl: avatarPreview,
+      });
       onUpdate(updated);
       setIsEditing(false);
       toast.success('Profile updated successfully!');
@@ -93,11 +122,36 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                <AvatarFallback className="text-2xl bg-violet-600 text-white">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              {/* Avatar with upload */}
+              <div className="relative group">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt={displayName}
+                    className="h-20 w-20 rounded-full object-cover border-2 border-border"
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full bg-violet-600 flex items-center justify-center border-2 border-border">
+                    <span className="text-2xl font-bold text-white">{initials}</span>
+                  </div>
+                )}
+                {isEditing && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <Camera className="h-6 w-6 text-white" />
+                  </button>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </div>
+
               <div>
                 <CardTitle className="text-2xl">{user.displayName}</CardTitle>
                 <CardDescription className="flex items-center gap-1 mt-1">
@@ -120,7 +174,7 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
                 </Button>
               ) : (
                 <>
-                  <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
+                  <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); setAvatarPreview(user.avatarUrl || ''); }}>
                     Cancel
                   </Button>
                   <Button size="sm" onClick={handleSave} disabled={isSaving}>
@@ -153,16 +207,22 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
                   rows={3}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="avatar">Avatar URL</Label>
-                <Input
-                  id="avatar"
-                  type="url"
-                  placeholder="https://example.com/avatar.jpg"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                />
-              </div>
+              {avatarPreview && (
+                <div className="space-y-2">
+                  <Label>Profile Picture</Label>
+                  <div className="flex items-center gap-3">
+                    <img src={avatarPreview} alt="Avatar" className="h-16 w-16 rounded-full object-cover" />
+                    <Button variant="outline" size="sm" onClick={handleRemoveAvatar}>
+                      <X className="h-4 w-4 mr-1" />
+                      Remove
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                      <Camera className="h-4 w-4 mr-1" />
+                      Change
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div>

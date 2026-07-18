@@ -102,7 +102,7 @@ export function Header({ user, onLogout }: HeaderProps) {
                   <img 
                     src={user.avatarUrl} 
                     alt={user.displayName} 
-                    className="w-8 h-8 rounded-full"
+                    className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
