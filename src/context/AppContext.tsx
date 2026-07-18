@@ -20,8 +20,7 @@ import {
   booksAPI,
   todosAPI, 
   challengesAPI, 
-  settingsAPI,
-  migrateAPI
+  settingsAPI
 } from '@/lib/api';
 
 // App State Interface
@@ -329,177 +328,174 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_THEME', payload: savedTheme as Theme });
       }
 
-      const token = getToken();
-
-      if (!isAPIAvailable() || !token) {
-        if (!token) {
-          dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
-        }
+      if (!isAPIAvailable()) {
         loadFromLocalStorage();
         dispatch({ type: 'SET_LOADING', payload: false });
         return;
       }
 
+      // Step 1: Check if API is reachable at all
       dispatch({ type: 'SET_API_STATUS', payload: 'checking' });
-
+      let apiReachable = false;
       try {
-        const [sessions, columns, cards, books, todosList, challengesList, settings] = await Promise.allSettled([
-          pomodoroAPI.getAll(),
-          kanbanAPI.getColumns(),
-          kanbanAPI.getCards(),
-          booksAPI.getAll(),
-          todosAPI.getAll(),
-          challengesAPI.getAll(),
-          settingsAPI.get(),
-        ]);
-
-        const loadedState: Partial<State> = {};
-        let anySuccess = false;
-        const errors: string[] = [];
-
-        if (sessions.status === 'fulfilled') {
-          anySuccess = true;
-          loadedState.pomodoroHistory = sessions.value.map(s => ({
-            ...s,
-            startTime: new Date(s.startTime),
-            endTime: s.endTime ? new Date(s.endTime) : null,
-          }));
-        } else if (sessions.status === 'rejected') {
-          errors.push(`Sessions: ${sessions.reason?.message || 'failed'}`);
-        }
-
-        if (columns.status === 'fulfilled' && columns.value.length > 0) {
-          anySuccess = true;
-          loadedState.kanbanColumns = columns.value;
-        } else {
-          loadedState.kanbanColumns = defaultKanbanColumns;
-          if (columns.status === 'rejected') {
-            errors.push(`Columns: ${columns.reason?.message || 'failed'}`);
-          }
-        }
-
-        if (cards.status === 'fulfilled') {
-          anySuccess = true;
-          loadedState.kanbanCards = cards.value.map(c => ({
-            ...c,
-            createdAt: new Date(c.createdAt),
-            dueDate: c.dueDate ? new Date(c.dueDate) : undefined,
-          }));
-        } else if (cards.status === 'rejected') {
-          errors.push(`Cards: ${cards.reason?.message || 'failed'}`);
-        }
-
-        if (books.status === 'fulfilled') {
-          anySuccess = true;
-          loadedState.books = books.value.map(b => ({
-            ...b,
-            addedAt: new Date(b.addedAt),
-            completedAt: b.completedAt ? new Date(b.completedAt) : undefined,
-          }));
-        } else if (books.status === 'rejected') {
-          errors.push(`Books: ${books.reason?.message || 'failed'}`);
-        }
-
-        if (todosList.status === 'fulfilled') {
-          anySuccess = true;
-          loadedState.todos = todosList.value.map(t => ({
-            ...t,
-            createdAt: new Date(t.createdAt),
-            dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
-          }));
-        } else if (todosList.status === 'rejected') {
-          errors.push(`Todos: ${todosList.reason?.message || 'failed'}`);
-        }
-
-        if (challengesList.status === 'fulfilled') {
-          anySuccess = true;
-          loadedState.challenges = challengesList.value.map(c => ({
-            ...c,
-            startDate: new Date(c.startDate),
-          }));
-        } else if (challengesList.status === 'rejected') {
-          errors.push(`Challenges: ${challengesList.reason?.message || 'failed'}`);
-        }
-
-        if (settings.status === 'fulfilled' && settings.value) {
-          anySuccess = true;
-          loadedState.pomodoroSettings = {
-            focusTime: settings.value.focusTime,
-            shortBreak: settings.value.shortBreak,
-            longBreak: settings.value.longBreak,
-            cyclesBeforeLongBreak: settings.value.cyclesBeforeLongBreak,
-            autoStartBreaks: settings.value.autoStartBreaks,
-            autoStartPomodoros: settings.value.autoStartPomodoros,
-            soundEnabled: settings.value.soundEnabled,
-          };
-        } else if (settings.status === 'rejected') {
-          errors.push(`Settings: ${settings.reason?.message || 'failed'}`);
-        }
-
-        if (anySuccess) {
-          dispatch({ type: 'SET_API_STATUS', payload: 'online' });
-          dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
-          dispatch({ type: 'SET_API_ERROR', payload: null });
-        } else {
-          // Tables might not exist — auto-create them
-          console.log('API calls failed, attempting auto-migration...');
-          try {
-            const migrateResult = await migrateAPI.setup();
-            if (migrateResult.success) {
-              console.log('Auto-migration successful, retrying data load...');
-              const [s2, c2, ca2, b2, t2, ch2, st2] = await Promise.allSettled([
-                pomodoroAPI.getAll(),
-                kanbanAPI.getColumns(),
-                kanbanAPI.getCards(),
-                booksAPI.getAll(),
-                todosAPI.getAll(),
-                challengesAPI.getAll(),
-                settingsAPI.get(),
-              ]);
-              const retryState: Partial<State> = {};
-              let retrySuccess = false;
-              if (s2.status === 'fulfilled') { retrySuccess = true; retryState.pomodoroHistory = s2.value.map(s => ({ ...s, startTime: new Date(s.startTime), endTime: s.endTime ? new Date(s.endTime) : null })); }
-              if (c2.status === 'fulfilled' && c2.value.length > 0) { retrySuccess = true; retryState.kanbanColumns = c2.value; }
-              if (ca2.status === 'fulfilled') { retrySuccess = true; retryState.kanbanCards = ca2.value.map(c => ({ ...c, createdAt: new Date(c.createdAt), dueDate: c.dueDate ? new Date(c.dueDate) : undefined })); }
-              if (b2.status === 'fulfilled') { retrySuccess = true; retryState.books = b2.value.map(b => ({ ...b, addedAt: new Date(b.addedAt), completedAt: b.completedAt ? new Date(b.completedAt) : undefined })); }
-              if (t2.status === 'fulfilled') { retrySuccess = true; retryState.todos = t2.value.map(t => ({ ...t, createdAt: new Date(t.createdAt), dueDate: t.dueDate ? new Date(t.dueDate) : undefined })); }
-              if (ch2.status === 'fulfilled') { retrySuccess = true; retryState.challenges = ch2.value.map(c => ({ ...c, startDate: new Date(c.startDate) })); }
-              if (st2.status === 'fulfilled' && st2.value) { retrySuccess = true; retryState.pomodoroSettings = { focusTime: st2.value.focusTime, shortBreak: st2.value.shortBreak, longBreak: st2.value.longBreak, cyclesBeforeLongBreak: st2.value.cyclesBeforeLongBreak, autoStartBreaks: st2.value.autoStartBreaks, autoStartPomodoros: st2.value.autoStartPomodoros, soundEnabled: st2.value.soundEnabled }; }
-              if (retrySuccess) {
-                dispatch({ type: 'SET_API_STATUS', payload: 'online' });
-                dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
-                dispatch({ type: 'SET_API_ERROR', payload: null });
-                dispatch({ type: 'LOAD_STATE', payload: retryState });
-              } else {
-                dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
-                dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
-              }
-            } else {
-              dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
-              dispatch({ type: 'SET_API_ERROR', payload: 'Migration failed: tables could not be created' });
-              loadFromLocalStorage();
-              dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
-            }
-          } catch (migErr) {
-            console.error('Auto-migration failed:', migErr);
-            dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
-            dispatch({ type: 'SET_API_ERROR', payload: migErr instanceof Error ? migErr.message : 'Migration failed' });
-            loadFromLocalStorage();
-            dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
-          }
-        }
-
-        dispatch({ type: 'LOAD_STATE', payload: loadedState });
-      } catch (error) {
-        console.error('Error loading from API, falling back to localStorage:', error);
-        const msg = error instanceof Error ? error.message : String(error);
-        dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
-        dispatch({ type: 'SET_API_ERROR', payload: msg });
-        loadFromLocalStorage();
-        dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
-      } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+        const check = await fetch('/api/migrate', { method: 'GET' });
+        apiReachable = check.ok;
+      } catch {
+        apiReachable = false;
       }
+
+      if (!apiReachable) {
+        // API is completely unreachable (e.g. running locally)
+        dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+        loadFromLocalStorage();
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return;
+      }
+
+      // Step 2: API is reachable. Check if tables exist by testing a simple query
+      const token = getToken();
+      if (token) {
+        dispatch({ type: 'SET_API_STATUS', payload: 'checking' });
+        try {
+          // Test if the data tables work with this token
+          const testResp = await fetch('/api/todos', {
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+          });
+
+          if (testResp.ok) {
+            // Tables work — load data normally
+            await loadAllDataFromAPI();
+            dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+            dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+          } else {
+            // Tables broken — run migration and retry
+            console.log('Data API failed, running migration...');
+            const migResp = await fetch('/api/migrate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (migResp.ok) {
+              console.log('Migration complete, retrying...');
+              // Migration drops old tables — user needs to re-register
+              localStorage.removeItem(TOKEN_KEY);
+              dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+              dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+              dispatch({ type: 'SET_API_ERROR', payload: null });
+            } else {
+              const migError = await migResp.text();
+              console.error('Migration failed:', migError);
+              dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+              dispatch({ type: 'SET_API_ERROR', payload: `Migration failed: ${migError}` });
+            }
+            loadFromLocalStorage();
+          }
+        } catch (err) {
+          console.error('API check failed:', err);
+          dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+          loadFromLocalStorage();
+        }
+      } else {
+        // No token — check if tables exist anyway (for first-time setup)
+        try {
+          const testResp = await fetch('/api/todos');
+          const tablesExist = testResp.status === 401; // 401 = tables exist but need auth
+          if (!tablesExist && testResp.status === 500) {
+            // Tables might not exist — run migration
+            console.log('Tables missing, running migration...');
+            const migResp = await fetch('/api/migrate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            });
+            if (migResp.ok) {
+              console.log('Migration complete!');
+              dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+              dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+              dispatch({ type: 'SET_API_ERROR', payload: null });
+            }
+          } else {
+            dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+          }
+        } catch {
+          dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+        }
+        loadFromLocalStorage();
+      }
+
+      dispatch({ type: 'SET_LOADING', payload: false });
+    };
+
+    const loadAllDataFromAPI = async () => {
+      const [sessions, columns, cards, books, todosList, challengesList, settings] = await Promise.allSettled([
+        pomodoroAPI.getAll(),
+        kanbanAPI.getColumns(),
+        kanbanAPI.getCards(),
+        booksAPI.getAll(),
+        todosAPI.getAll(),
+        challengesAPI.getAll(),
+        settingsAPI.get(),
+      ]);
+
+      const loadedState: Partial<State> = {};
+
+      if (sessions.status === 'fulfilled') {
+        loadedState.pomodoroHistory = sessions.value.map(s => ({
+          ...s,
+          startTime: new Date(s.startTime),
+          endTime: s.endTime ? new Date(s.endTime) : null,
+        }));
+      }
+
+      if (columns.status === 'fulfilled' && columns.value.length > 0) {
+        loadedState.kanbanColumns = columns.value;
+      } else {
+        loadedState.kanbanColumns = defaultKanbanColumns;
+      }
+
+      if (cards.status === 'fulfilled') {
+        loadedState.kanbanCards = cards.value.map(c => ({
+          ...c,
+          createdAt: new Date(c.createdAt),
+          dueDate: c.dueDate ? new Date(c.dueDate) : undefined,
+        }));
+      }
+
+      if (books.status === 'fulfilled') {
+        loadedState.books = books.value.map(b => ({
+          ...b,
+          addedAt: new Date(b.addedAt),
+          completedAt: b.completedAt ? new Date(b.completedAt) : undefined,
+        }));
+      }
+
+      if (todosList.status === 'fulfilled') {
+        loadedState.todos = todosList.value.map(t => ({
+          ...t,
+          createdAt: new Date(t.createdAt),
+          dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
+        }));
+      }
+
+      if (challengesList.status === 'fulfilled') {
+        loadedState.challenges = challengesList.value.map(c => ({
+          ...c,
+          startDate: new Date(c.startDate),
+        }));
+      }
+
+      if (settings.status === 'fulfilled' && settings.value) {
+        loadedState.pomodoroSettings = {
+          focusTime: settings.value.focusTime,
+          shortBreak: settings.value.shortBreak,
+          longBreak: settings.value.longBreak,
+          cyclesBeforeLongBreak: settings.value.cyclesBeforeLongBreak,
+          autoStartBreaks: settings.value.autoStartBreaks,
+          autoStartPomodoros: settings.value.autoStartPomodoros,
+          soundEnabled: settings.value.soundEnabled,
+        };
+      }
+
+      dispatch({ type: 'LOAD_STATE', payload: loadedState });
     };
 
     const loadFromLocalStorage = () => {

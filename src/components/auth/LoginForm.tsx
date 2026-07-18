@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,9 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
     try {
       const result = await authAPI.login(email, password);
       localStorage.setItem('bait-el-hakma-token', result.token);
+      if (keepLoggedIn) {
+        localStorage.setItem('bait-el-hakma-remember', 'true');
+      }
       toast.success(`Welcome back, ${result.user.displayName}!`);
       onLogin(result.user, result.token);
     } catch (error) {
@@ -43,7 +48,7 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
           <CardDescription>Sign in to access your productivity dashboard</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -65,20 +70,31 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="pr-10"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="keep-logged-in"
+                checked={keepLoggedIn}
+                onCheckedChange={(checked) => setKeepLoggedIn(checked === true)}
+              />
+              <Label htmlFor="keep-logged-in" className="text-sm font-normal cursor-pointer">
+                Keep me logged in
+              </Label>
+            </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
+          <CardFooter className="flex flex-col gap-4 pb-6">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
