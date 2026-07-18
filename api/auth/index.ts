@@ -143,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const username = req.query.username as string;
       if (!username) return res.status(400).json({ error: 'Username is required' });
 
-      const cleanUsername = username.toLowerCase().replace(/[^@]/g, '');
+      const cleanUsername = username.toLowerCase().replace(/[^a-z0-9_-]/g, '');
       const users = await sql`SELECT id, display_name, avatar_url, bio, username, created_at FROM users WHERE username = ${cleanUsername}`;
       if (users.length === 0) return res.status(404).json({ error: 'User not found' });
 

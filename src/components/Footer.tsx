@@ -1,4 +1,4 @@
-import { Heart, Github } from 'lucide-react';
+import { Heart, Github, Mail, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Footer() {
@@ -18,12 +18,42 @@ export function Footer() {
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 inline" />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
               asChild
-              className="gap-2 text-muted-foreground hover:text-foreground"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <a
+                href="mailto:ragaeymuhammed@gmail.com?subject=Bait%20El-Hakma%20Support"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Support</span>
+              </a>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <a
+                href="https://github.com/meuor/Bait-El-Hakma/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Report Issue</span>
+              </a>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
             >
               <a
                 href="https://github.com/meuor/Bait-El-Hakma"
@@ -31,7 +61,7 @@ export function Footer() {
                 rel="noopener noreferrer"
               >
                 <Github className="w-4 h-4" />
-                <span className="hidden sm:inline">View on GitHub</span>
+                <span className="hidden sm:inline">GitHub</span>
               </a>
             </Button>
           </div>

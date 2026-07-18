@@ -12,8 +12,10 @@ import {
   Quote,
   Moon,
   Sun,
+  ScrollText,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { QuranReader } from '@/components/QuranReader';
 
 // Local dataset of Hadith
 const hadithCollection = [
@@ -308,21 +310,30 @@ export function Motivation() {
         <p className="text-muted-foreground">Find inspiration and wisdom for your journey</p>
       </div>
 
-      <Tabs defaultValue="hadith" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="quran-reader" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="quran-reader" className="gap-2">
+            <ScrollText className="w-4 h-4" />
+            <span className="hidden sm:inline">Quran</span>
+          </TabsTrigger>
           <TabsTrigger value="hadith" className="gap-2">
             <BookOpen className="w-4 h-4" />
             <span className="hidden sm:inline">Hadith</span>
           </TabsTrigger>
-          <TabsTrigger value="quran" className="gap-2">
+          <TabsTrigger value="verse" className="gap-2">
             <Moon className="w-4 h-4" />
-            <span className="hidden sm:inline">Quran</span>
+            <span className="hidden sm:inline">Verse</span>
           </TabsTrigger>
           <TabsTrigger value="quotes" className="gap-2">
             <Sparkles className="w-4 h-4" />
             <span className="hidden sm:inline">Quotes</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Full Quran Reader Tab */}
+        <TabsContent value="quran-reader">
+          <QuranReader />
+        </TabsContent>
 
         {/* Hadith Tab */}
         <TabsContent value="hadith">
@@ -372,8 +383,8 @@ export function Motivation() {
           </Card>
         </TabsContent>
 
-        {/* Quran Tab */}
-        <TabsContent value="quran">
+        {/* Verse of the Day Tab */}
+        <TabsContent value="verse">
           <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
             <CardHeader className="flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
