@@ -1,313 +1,247 @@
-# 🏛️ Bait El-Hakma (بيت الحكمة)
+<p align="center">
+  <img src="public/logo.png" alt="Bait El-Hakma Logo" width="150" />
+</p>
 
-**House of Wisdom** - A comprehensive productivity web application designed to help you focus, organize, and achieve your goals.
+<h1 align="center">Bait El-Hakma</h1>
+<h3 align="center">بيت الحكمة — House of Wisdom</h3>
 
-![Bait El-Hakma](https://img.shields.io/badge/Bait%20El--Hakma-House%20of%20Wisdom-8b5cf6)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4-06B6D4?logo=tailwindcss)
-![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite)
+<p align="center">
+  A comprehensive productivity web application with cloud sync, authentication, and beautiful themes.
+</p>
 
-## ✨ Features
+<p align="center">
+  <a href="https://bait-el-hakma.vercel.app/">
+    <img src="https://img.shields.io/badge/Live_Demo-Vercel-8b5cf6?style=for-the-badge&logo=vercel" alt="Live Demo" />
+  </a>
+  <a href="https://github.com/meuor/Bait-El-Hakma">
+    <img src="https://img.shields.io/badge/Source_Code-GitHub-333?style=for-the-badge&logo=github" alt="GitHub" />
+  </a>
+</p>
 
-### 🎯 Pomodoro Timer
-- Customizable focus time, short break, and long break intervals
-- Circular progress indicator with smooth animations
-- Sound notifications for start and finish
-- Session history tracking
-- Configurable auto-start options
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&style=flat-square" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&style=flat-square" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&style=flat-square" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&style=flat-square" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Neon_DB-PostgreSQL-00E599?logo=postgresql&style=flat-square" alt="Neon" />
+  <img src="https://img.shields.io/badge/Vercel-Deploy-000?logo=vercel&style=flat-square" alt="Vercel" />
+</p>
 
-### 🎥 Focus Video Player
-- Play YouTube videos or local files
-- Syncs with Pomodoro timer (play/pause together)
-- Picture-in-Picture mode support
-- Floating mini-player window
+---
+
+## Live Demo
+
+**[https://bait-el-hakma.vercel.app/](https://bait-el-hakma.vercel.app/)**
+
+Create an account to sync your data across devices. Your data is securely stored in the cloud.
+
+---
+
+## Features
+
+### Pomodoro Timer
+- Customizable focus/break intervals
+- Circular SVG progress ring
+- Sound notifications
+- Session history & daily stats
+
+### Focus Video Player
+- YouTube & local video support
+- Picture-in-Picture mode
+- Floating mini-player
 - Curated focus music suggestions
 
-### 📋 Kanban Planner
-- GTD/PARA style task management
-- Drag and drop cards between columns
-- Color-coded labels and priority flags
-- Mindspace section for long-term planning
-- Customizable columns
+### Kanban Board
+- Drag & drop cards between columns
+- Color-coded labels & priorities
+- GTD/PARA style organization
+- 4-column default layout
 
-### 📚 Book Library
-- Personal book collection tracker
-- Reading progress monitoring
-- Notes and highlights for each book
-- Tag-based filtering and search
-- Book cover support
+### Book Library
+- Personal reading tracker
+- Progress monitoring (0-100%)
+- Notes with page numbers
+- Tag-based filtering & search
 
-### ✅ Daily Todo List
-- Simple daily task management
-- Priority levels (low, medium, high)
-- Dual calendar display (Gregorian & Hijri)
-- Progress tracking
+### Daily Todo
+- Priority levels (low/medium/high)
+- Dual calendar (Gregorian & Hijri)
+- Progress bar
+- Active/Done filters
 
-### 📊 Activity Statistics
-- Visual charts and analytics
-- Pomodoro session history
-- Task completion rates
-- Reading progress
+### Activity Statistics
+- Interactive charts (Recharts)
+- Pomodoro, task, and reading analytics
 - Achievement badges
+- Streak tracking
 
-### 🌟 Motivation Section
-- Random Hadith collection
-- Quranic verses
+### Motivation
+- Hadith collection
+- Quranic verses with transliteration
 - Motivational quotes
-- Favorites system
-- Share and copy functionality
+- Favorites & clipboard copy
 
-### 🏆 Challenge Tracker
-- Create custom challenges (e.g., 100DaysOfCode)
-- Visual day grid with progress tracking
+### Challenge Tracker
+- Custom day-based challenges
+- Visual day grid
 - Streak calculation
 - Multiple challenge support
 
-## 🎨 Themes
+---
 
-Bait El-Hakma includes 5 beautiful themes:
+## Authentication & Cloud Sync
 
-- **Light** - Clean and bright default theme
-- **Dark** - Easy on the eyes for night sessions
-- **Dracula** - Popular developer theme with vibrant colors
-- **Monokai** - Classic code editor theme
-- **GitHub** - Familiar GitHub-inspired colors
+Bait El-Hakma features a complete authentication system:
 
-## 🚀 Getting Started
+- **Register / Login** with email & password
+- **JWT-based** session management
+- **Cloud database** (Neon PostgreSQL)
+- **Access from any device** by signing in
+- **Data migration** tool to import existing local data
 
-### Prerequisites
+---
 
-- Node.js 18+ 
-- npm or yarn
+## Themes
 
-### Installation
+5 built-in themes with full dark mode support:
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/bait-el-hakma.git
-cd bait-el-hakma
+| Theme | Description |
+|-------|-------------|
+| Light | Clean & bright default |
+| Dark | Easy on the eyes |
+| Dracula | Vibrant developer theme |
+| Monokai | Classic code editor |
+| GitHub | GitHub-inspired colors |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19 + TypeScript 5.9 |
+| Build | Vite 7 |
+| Styling | Tailwind CSS 3.4 + shadcn/ui |
+| State | React Context + useReducer |
+| Charts | Recharts |
+| Animations | Framer Motion |
+| Icons | Lucide React |
+| Auth | JWT + bcryptjs |
+| Database | Neon PostgreSQL (serverless) |
+| Hosting | Vercel |
+
+---
+
+## Project Structure
+
 ```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-4. Open your browser and navigate to `http://localhost:5173`
-
-### Building for Production
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist` directory.
-
-## 📁 Project Structure
-
-```
-bait-el-hakma/
+Bait-El-Hakma/
+├── api/                        # Vercel Serverless Functions
+│   ├── _lib/                   # Shared utilities (db, auth)
+│   ├── auth/                   # Authentication (register, login, profile, stats)
+│   ├── kanban/                 # Kanban board CRUD
+│   ├── books/                  # Book library CRUD + notes
+│   ├── pomodoro/               # Pomodoro sessions CRUD
+│   ├── todos/                  # Daily todos CRUD
+│   ├── challenges/             # Challenges CRUD
+│   ├── settings/               # User settings
+│   └── migrate/                # Data migration endpoint
 ├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── ui/             # shadcn/ui components
+│   ├── components/
+│   │   ├── auth/               # LoginForm, RegisterForm, ProfilePage
+│   │   ├── ui/                 # 73 shadcn/ui components
 │   │   ├── Header.tsx
 │   │   ├── Footer.tsx
 │   │   └── TabNavigation.tsx
-│   ├── context/            # React context providers
-│   │   ├── ThemeContext.tsx
-│   │   └── AppContext.tsx
-│   ├── sections/           # Main feature sections
-│   │   ├── PomodoroTimer.tsx
-│   │   ├── VideoPlayer.tsx
-│   │   ├── KanbanBoard.tsx
-│   │   ├── BookLibrary.tsx
-│   │   ├── DailyTodo.tsx
-│   │   ├── ActivityStats.tsx
-│   │   ├── Motivation.tsx
-│   │   └── ChallengeTracker.tsx
-│   ├── types/              # TypeScript type definitions
-│   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utility functions
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── public/                 # Static assets
-├── index.html
+│   ├── context/
+│   │   ├── AppContext.tsx      # Central state + API sync
+│   │   └── ThemeContext.tsx    # Theme management
+│   ├── sections/               # 8 feature sections
+│   ├── lib/
+│   │   ├── api.ts              # API client
+│   │   └── utils.ts            # Utility functions
+│   ├── types/index.ts          # TypeScript types
+│   └── index.css               # Themes & global styles
+├── public/
+│   └── logo.png
+├── vercel.json
 ├── package.json
-├── tailwind.config.js
-├── tsconfig.json
 └── vite.config.ts
 ```
 
-## 🌐 Deployment
+---
 
-### Vercel (Recommended)
+## Getting Started
 
-1. Install Vercel CLI:
+### Prerequisites
+- Node.js 18+
+- Neon PostgreSQL database
+- Vercel account
+
+### Local Development
+
 ```bash
-npm i -g vercel
+# Clone the repo
+git clone https://github.com/meuor/Bait-El-Hakma.git
+cd Bait-El-Hakma
+
+# Install dependencies
+npm install
+
+# Create .env file (copy from .env.example)
+cp .env.example .env
+# Edit .env with your DATABASE_URL and JWT_SECRET
+
+# Start dev server
+npm run dev
 ```
-
-2. Deploy:
-```bash
-vercel
-```
-
-Or connect your GitHub repository to Vercel for automatic deployments.
-
-### Netlify
-
-1. Build the project:
-```bash
-npm run build
-```
-
-2. Drag and drop the `dist` folder to Netlify, or use Netlify CLI:
-```bash
-npm i -g netlify-cli
-netlify deploy --prod --dir=dist
-```
-
-### GitHub Pages
-
-1. Install gh-pages:
-```bash
-npm i -D gh-pages
-```
-
-2. Add to `package.json`:
-```json
-{
-  "scripts": {
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
-  }
-}
-```
-
-3. Deploy:
-```bash
-npm run deploy
-```
-
-### Firebase Hosting
-
-1. Install Firebase CLI:
-```bash
-npm i -g firebase-tools
-```
-
-2. Login and initialize:
-```bash
-firebase login
-firebase init hosting
-```
-
-3. Deploy:
-```bash
-firebase deploy
-```
-
-## 🔧 Configuration
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+| Variable | Description | Where to get |
+|----------|-------------|--------------|
+| `DATABASE_URL` | Neon PostgreSQL connection string | [Neon Console](https://console.neon.tech) |
+| `JWT_SECRET` | Secret key for JWT tokens | Generate any secure string |
 
-```env
-# Firebase Configuration (optional)
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
+---
 
-### Customizing Themes
+## Deployment
 
-Themes are defined in `src/index.css`. You can modify the CSS variables to create your own theme:
+The project is deployed on **Vercel** with automatic GitHub integration.
 
-```css
-.theme-your-theme {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  /* ... other variables */
-}
-```
+Every push to `master` triggers a new deployment.
 
-## 🛠️ Tech Stack
+### Deploy your own:
 
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui
-- **State Management**: React Context + useReducer
-- **Charts**: Recharts
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Date Handling**: date-fns
+1. Fork this repo
+2. Create a Neon database and run `api/_lib/schema.sql`
+3. Import the repo into Vercel
+4. Add `DATABASE_URL` and `JWT_SECRET` as environment variables
+5. Deploy!
 
-## 🤝 Contributing
+---
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Author
 
-## 🙏 Acknowledgments
+**Rajaei Muhammed**
 
-- **Created by**: Rajaei Muhammed
-- **Built with**: KIMI AI
-- **Support**: [Buy me a coffee](https://ko-fi.com/rajaeimuhammed)
-
-## 📱 Screenshots
-
-*Screenshots will be added soon*
-
-## 🔮 Roadmap
-
-- [ ] Firebase Authentication integration
-- [ ] Cloud sync for data persistence
-- [ ] Mobile app (React Native)
-- [ ] Browser extension
-- [ ] Team collaboration features
-- [ ] API for third-party integrations
-- [ ] Dark mode improvements
-- [ ] More theme options
-- [ ] Advanced statistics
-- [ ] Export data functionality
-
-## 💬 Support
-
-If you found this project helpful, consider supporting the developer:
-
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Me-FF5E5B?logo=ko-fi)](https://ko-fi.com/rajaeimuhammed)
-
-## 📧 Contact
-
-- **Developer**: Rajaei Muhammed
-- **Project**: Bait El-Hakma (House of Wisdom)
-- **Support Link**: https://ko-fi.com/rajaeimuhammed
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy_Me_a_Coffee-FF5E5B?logo=ko-fi&style=flat-square)](https://ko-fi.com/rajaeimuhammed)
 
 ---
 
 <p align="center">
-  <strong>بيت الحكمة</strong> - House of Wisdom
+  <strong>بيت الحكمة</strong> — House of Wisdom
 </p>
 <p align="center">
-  Made with ❤️ and ☕ by Rajaei Muhammed
+  Made with ❤️ by Rajaei Muhammed
 </p>
