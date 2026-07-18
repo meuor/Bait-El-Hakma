@@ -9,6 +9,7 @@
     }
   },
   "rewrites": [
+    { "source": "/@:username", "destination": "/index.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }

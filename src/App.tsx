@@ -7,6 +7,7 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ProfilePage } from '@/components/auth/ProfilePage';
+import { PublicProfile } from '@/components/auth/PublicProfile';
 import { PomodoroTimer } from '@/sections/PomodoroTimer';
 import { VideoPlayer } from '@/sections/VideoPlayer';
 import { KanbanBoard } from '@/sections/KanbanBoard';
@@ -17,7 +18,7 @@ import { Motivation } from '@/sections/Motivation';
 import { ChallengeTracker } from '@/sections/ChallengeTracker';
 import { Toaster } from '@/components/ui/sonner';
 import { SyncStatus } from '@/components/SyncStatus';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 
@@ -27,14 +28,22 @@ function AppContent() {
   const { state } = useApp();
   const { currentTab } = state;
 
-  // Auth state
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [authView, setAuthView] = useState<AuthView>('login');
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [publicProfileUsername, setPublicProfileUsername] = useState<string | null>(null);
 
-  // Check for existing token on mount
+  // Check for /@username route on mount
   useEffect(() => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/@([a-zA-Z0-9_-]+)$/);
+    if (match) {
+      setPublicProfileUsername(match[1]);
+      setIsLoadingAuth(false);
+      return;
+    }
+
     const checkAuth = async () => {
       const storedToken = localStorage.getItem('bait-el-hakma-token');
       if (storedToken) {
@@ -43,7 +52,6 @@ function AppContent() {
           const profile = await authAPI.getProfile();
           setUser(profile);
         } catch {
-          // Invalid token, clear it
           localStorage.removeItem('bait-el-hakma-token');
           setToken(null);
           setUser(null);
@@ -69,7 +77,19 @@ function AppContent() {
     setUser(updatedUser);
   }, []);
 
-  // Loading state
+  // Public profile view
+  if (publicProfileUsername) {
+    return (
+      <PublicProfile
+        username={publicProfileUsername}
+        onBack={() => {
+          setPublicProfileUsername(null);
+          window.history.pushState({}, '', '/');
+        }}
+      />
+    );
+  }
+
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
@@ -82,7 +102,6 @@ function AppContent() {
     );
   }
 
-  // Not authenticated - show login/register
   if (!user || !token) {
     if (authView === 'register') {
       return (
@@ -100,61 +119,61 @@ function AppContent() {
     );
   }
 
-  const renderTabContent = () => {
-    switch (currentTab) {
-      case 'pomodoro':
-        return <PomodoroTimer />;
-      case 'video':
-        return <VideoPlayer />;
-      case 'kanban':
-        return <KanbanBoard />;
-      case 'library':
-        return <BookLibrary />;
-      case 'todo':
-        return <DailyTodo />;
-      case 'stats':
-        return <ActivityStats />;
-      case 'motivation':
-        return <Motivation />;
-      case 'challenges':
-        return <ChallengeTracker />;
-      case 'profile':
-        return (
-          <ProfilePage
-            user={user}
-            onUpdate={handleUpdateUser}
-            onLogout={handleLogout}
-          />
-        );
-      default:
-        return <PomodoroTimer />;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header user={user} onLogout={handleLogout} />
       <TabNavigation />
       
       <main className="flex-1 container mx-auto px-4 py-6 overflow-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
-          >
-            {renderTabContent()}
-          </motion.div>
-        </AnimatePresence>
+        <AnimatePresenceWrapper currentTab={currentTab}>
+          {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'profile'] as const).map((tab) => (
+            <TabPanel key={tab} tab={tab} currentTab={currentTab}>
+              {tab === 'pomodoro' && <PomodoroTimer />}
+              {tab === 'video' && <VideoPlayer />}
+              {tab === 'kanban' && <KanbanBoard />}
+              {tab === 'library' && <BookLibrary />}
+              {tab === 'todo' && <DailyTodo />}
+              {tab === 'stats' && <ActivityStats />}
+              {tab === 'motivation' && <Motivation />}
+              {tab === 'challenges' && <ChallengeTracker />}
+              {tab === 'profile' && (
+                <ProfilePage
+                  user={user}
+                  onUpdate={handleUpdateUser}
+                  onLogout={handleLogout}
+                />
+              )}
+            </TabPanel>
+          ))}
+        </AnimatePresenceWrapper>
       </main>
       
       <Footer />
       <SyncStatus />
       <Toaster />
     </div>
+  );
+}
+
+function AnimatePresenceWrapper({ children }: { currentTab: string; children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
+function TabPanel({ tab, currentTab, children }: { tab: string; currentTab: string; children: React.ReactNode }) {
+  const isActive = currentTab === tab;
+  return (
+    <motion.div
+      initial={false}
+      animate={{
+        opacity: isActive ? 1 : 0,
+        y: isActive ? 0 : 10,
+      }}
+      transition={{ duration: 0.2 }}
+      className="h-full"
+      style={{ display: isActive ? 'block' : 'none' }}
+    >
+      {children}
+    </motion.div>
   );
 }
 

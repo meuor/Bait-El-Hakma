@@ -4,52 +4,142 @@ import { getUserFromRequest } from '../_lib/auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const authUser = getUserFromRequest(req as unknown as Request);
-  if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-
-  const uid = authUser.userId;
-
-  try {
-    const { pomodoroSessions, kanbanCards, books, todos, challenges, settings } = req.body;
-
-    if (pomodoroSessions?.length) {
-      for (const s of pomodoroSessions) {
-        await sql`INSERT INTO pomodoro_sessions (id, user_id, start_time, end_time, duration, type, completed) VALUES (${s.id}, ${uid}, ${s.startTime}, ${s.endTime}, ${s.duration}, ${s.type}, ${s.completed}) ON CONFLICT (id) DO NOTHING`;
-      }
+  if (req.method === 'GET') {
+    try {
+      const tables = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`;
+      return res.status(200).json({ tables: tables.map(t => t.table_name) });
+    } catch (error) {
+      return res.status(500).json({ error: String(error) });
     }
-    if (kanbanCards?.length) {
-      for (const c of kanbanCards) {
-        await sql`INSERT INTO kanban_cards (id, user_id, column_id, title, description, labels, priority, created_at, due_date) VALUES (${c.id}, ${uid}, ${c.columnId}, ${c.title}, ${c.description || ''}, ${JSON.stringify(c.labels || [])}, ${c.priority}, ${c.createdAt}, ${c.dueDate || null}) ON CONFLICT (id) DO NOTHING`;
-      }
-    }
-    if (books?.length) {
-      for (const b of books) {
-        await sql`INSERT INTO books (id, user_id, title, author, cover_url, description, tags, status, progress, added_at, completed_at) VALUES (${b.id}, ${uid}, ${b.title}, ${b.author}, ${b.coverUrl || ''}, ${b.description || ''}, ${JSON.stringify(b.tags || [])}, ${b.status}, ${b.progress || 0}, ${b.addedAt}, ${b.completedAt || null}) ON CONFLICT (id) DO NOTHING`;
-      }
-    }
-    if (todos?.length) {
-      for (const t of todos) {
-        await sql`INSERT INTO todos (id, user_id, content, completed, created_at, due_date, priority) VALUES (${t.id}, ${uid}, ${t.content}, ${t.completed || false}, ${t.createdAt}, ${t.dueDate || null}, ${t.priority}) ON CONFLICT (id) DO NOTHING`;
-      }
-    }
-    if (challenges?.length) {
-      for (const c of challenges) {
-        await sql`INSERT INTO challenges (id, user_id, name, description, total_days, completed_days, start_date, color, icon) VALUES (${c.id}, ${uid}, ${c.name}, ${c.description || ''}, ${c.totalDays}, ${JSON.stringify(c.completedDays || [])}, ${c.startDate}, ${c.color}, ${c.icon}) ON CONFLICT (id) DO NOTHING`;
-      }
-    }
-    if (settings) {
-      await sql`UPDATE pomodoro_settings SET focus_time = ${settings.focusTime}, short_break = ${settings.shortBreak}, long_break = ${settings.longBreak}, cycles_before_long_break = ${settings.cyclesBeforeLongBreak}, auto_start_breaks = ${settings.autoStartBreaks}, auto_start_pomodoros = ${settings.autoStartPomodoros}, sound_enabled = ${settings.soundEnabled}, updated_at = NOW() WHERE user_id = ${uid}`;
-    }
-
-    return res.status(200).json({ success: true, message: 'Data migrated successfully' });
-  } catch (error) {
-    console.error('Migration error:', error);
-    return res.status(500).json({ error: 'Migration failed' });
   }
+
+  if (req.method === 'POST') {
+    try {
+      await sql`CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        display_name TEXT NOT NULL DEFAULT 'User',
+        avatar_url TEXT DEFAULT '',
+        bio TEXT DEFAULT '',
+        username TEXT UNIQUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`;
+
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS username_changed_at TIMESTAMPTZ`;
+
+      await sql`CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        start_time TIMESTAMPTZ NOT NULL,
+        end_time TIMESTAMPTZ,
+        duration INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        completed BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`;
+
+      await sql`CREATE TABLE IF NOT EXISTS kanban_columns (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        color TEXT NOT NULL,
+        sort_order INTEGER DEFAULT 0
+      )`;
+
+      await sql`CREATE TABLE IF NOT EXISTS kanban_cards (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        column_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        labels JSONB DEFAULT '[]',
+        priority TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL,
+        due_date TIMESTAMPTZ
+      )`;
+
+      await sql`CREATE TABLE IF NOT EXISTS books (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        author TEXT NOT NULL,
+        cover_url TEXT DEFAULT '',
+        description TEXT DEFAULT '',
+        tags JSONB DEFAULT '[]',
+        status TEXT NOT NULL,
+        progress INTEGER DEFAULT 0,
+        added_at TIMESTAMPTZ NOT NULL,
+        completed_at TIMESTAMPTZ
+      )`;
+
+      await sql`CREATE TABLE IF NOT EXISTS book_notes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        book_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        page_number INTEGER,
+        created_at TIMESTAMPTZ NOT NULL
+      )`;
+
+      await sql`CREATE TABLE IF NOT EXISTS todos (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        completed BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ NOT NULL,
+        due_date TIMESTAMPTZ,
+        priority TEXT NOT NULL
+      )`;
+
+      await sql`CREATE TABLE IF NOT EXISTS challenges (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        total_days INTEGER NOT NULL,
+        completed_days JSONB DEFAULT '[]',
+        start_date TIMESTAMPTZ NOT NULL,
+        color TEXT NOT NULL,
+        icon TEXT NOT NULL
+      )`;
+
+      await sql`CREATE TABLE IF NOT EXISTS pomodoro_settings (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        focus_time INTEGER DEFAULT 25,
+        short_break INTEGER DEFAULT 5,
+        long_break INTEGER DEFAULT 15,
+        cycles_before_long_break INTEGER DEFAULT 4,
+        auto_start_breaks BOOLEAN DEFAULT false,
+        auto_start_pomodoros BOOLEAN DEFAULT false,
+        sound_enabled BOOLEAN DEFAULT true,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`;
+
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_pomodoro_sessions_user ON pomodoro_sessions(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_kanban_columns_user ON kanban_columns(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_kanban_cards_user ON kanban_cards(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_kanban_cards_column ON kanban_cards(column_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_books_user ON books(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_book_notes_user ON book_notes(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_todos_user ON todos(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_challenges_user ON challenges(user_id)`;
+
+      return res.status(200).json({ success: true, message: 'Database schema created/updated successfully' });
+    } catch (error) {
+      console.error('Migration error:', error);
+      return res.status(500).json({ error: String(error) });
+    }
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
 }

@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
 interface RegisterFormProps {
   onLogin: (user: AuthUser, token: string) => void;
@@ -14,6 +14,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,6 +22,32 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [registeredName, setRegisteredName] = useState('');
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+
+  const checkUsernameAvailability = useCallback(async (value: string) => {
+    if (value.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+    const clean = value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (clean !== value) {
+      setUsername(clean);
+    }
+    setUsernameStatus('checking');
+    try {
+      const result = await authAPI.checkUsername(clean);
+      setUsernameStatus(result.available ? 'available' : 'taken');
+    } catch {
+      setUsernameStatus('idle');
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (username) checkUsernameAvailability(username);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [username, checkUsernameAvailability]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,15 +62,23 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
       return;
     }
 
+    if (username && usernameStatus !== 'available') {
+      if (usernameStatus === 'taken') {
+        toast.error('Username is already taken');
+      } else if (username.length < 3) {
+        toast.error('Username must be at least 3 characters');
+      }
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await authAPI.register(email, password, displayName);
+      const result = await authAPI.register(email, password, displayName, username || undefined);
       localStorage.setItem('bait-el-hakma-token', result.token);
       setRegisteredName(result.user.displayName);
       setRegistered(true);
       toast.success(`Welcome, ${result.user.displayName}! Your account has been created.`);
-      // Delay login to show success message
       setTimeout(() => {
         onLogin(result.user, result.token);
       }, 2000);
@@ -99,6 +134,34 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                   onChange={(e) => setDisplayName(e.target.value)}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="username">
+                  Username
+                  <span className="text-xs text-muted-foreground ml-2">(optional, your public profile link)</span>
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">@</span>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="your_username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                    className="pl-8 pr-8"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {usernameStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    {usernameStatus === 'available' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                    {usernameStatus === 'taken' && <XCircle className="h-4 w-4 text-red-500" />}
+                  </span>
+                </div>
+                {username && usernameStatus === 'taken' && (
+                  <p className="text-xs text-red-500">This username is already taken</p>
+                )}
+                {username && usernameStatus === 'available' && (
+                  <p className="text-xs text-green-500">Your profile: bait-el-hakma.vercel.app/@{username}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

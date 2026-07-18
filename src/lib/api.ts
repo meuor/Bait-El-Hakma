@@ -49,6 +49,8 @@ export interface AuthUser {
   displayName: string;
   avatarUrl: string;
   bio: string;
+  username?: string;
+  usernameChangedAt?: string;
   createdAt?: string;
 }
 
@@ -68,10 +70,10 @@ export interface UserStats {
 }
 
 export const authAPI = {
-  register: (email: string, password: string, displayName?: string) =>
+  register: (email: string, password: string, displayName?: string, username?: string) =>
     fetchAPI<AuthResponse>('/auth?action=register', {
       method: 'POST',
-      body: JSON.stringify({ email, password, displayName }),
+      body: JSON.stringify({ email, password, displayName, username }),
     }),
 
   login: (email: string, password: string) =>
@@ -87,6 +89,18 @@ export const authAPI = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+
+  setUsername: (username: string) =>
+    fetchAPI<{ success: boolean; username: string; usernameChangedAt: string }>('/auth?action=username', {
+      method: 'POST',
+      body: JSON.stringify({ username }),
+    }),
+
+  checkUsername: (username: string) =>
+    fetchAPI<{ available: boolean }>(`/auth?action=check-username&username=${encodeURIComponent(username)}`),
+
+  getPublicProfile: (username: string) =>
+    fetchAPI<AuthUser & { totalTodos: number; completedTodos: number; totalBooks: number; totalPomodoroSessions: number; totalChallenges: number }>(`/auth?action=public-profile&username=${encodeURIComponent(username)}`),
 
   getStats: () => fetchAPI<UserStats>('/auth?action=stats'),
 };
@@ -267,6 +281,15 @@ export const settingsAPI = {
 
 // Migration API
 export const migrateAPI = {
+  setup: () =>
+    fetchAPI<{ success: boolean; message: string }>('/migrate', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+
+  getTables: () =>
+    fetchAPI<{ tables: string[] }>('/migrate'),
+
   migrate: (data: {
     pomodoroSessions?: PomodoroSession[];
     kanbanCards?: KanbanCard[];

@@ -20,7 +20,8 @@ import {
   booksAPI,
   todosAPI, 
   challengesAPI, 
-  settingsAPI 
+  settingsAPI,
+  migrateAPI
 } from '@/lib/api';
 
 // App State Interface
@@ -440,10 +441,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
           dispatch({ type: 'SET_API_ERROR', payload: null });
         } else {
-          dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
-          dispatch({ type: 'SET_API_ERROR', payload: errors.join('; ') || 'API unavailable' });
-          loadFromLocalStorage();
-          dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
+          // Tables might not exist — auto-create them
+          console.log('API calls failed, attempting auto-migration...');
+          try {
+            const migrateResult = await migrateAPI.setup();
+            if (migrateResult.success) {
+              console.log('Auto-migration successful, retrying data load...');
+              const [s2, c2, ca2, b2, t2, ch2, st2] = await Promise.allSettled([
+                pomodoroAPI.getAll(),
+                kanbanAPI.getColumns(),
+                kanbanAPI.getCards(),
+                booksAPI.getAll(),
+                todosAPI.getAll(),
+                challengesAPI.getAll(),
+                settingsAPI.get(),
+              ]);
+              const retryState: Partial<State> = {};
+              let retrySuccess = false;
+              if (s2.status === 'fulfilled') { retrySuccess = true; retryState.pomodoroHistory = s2.value.map(s => ({ ...s, startTime: new Date(s.startTime), endTime: s.endTime ? new Date(s.endTime) : null })); }
+              if (c2.status === 'fulfilled' && c2.value.length > 0) { retrySuccess = true; retryState.kanbanColumns = c2.value; }
+              if (ca2.status === 'fulfilled') { retrySuccess = true; retryState.kanbanCards = ca2.value.map(c => ({ ...c, createdAt: new Date(c.createdAt), dueDate: c.dueDate ? new Date(c.dueDate) : undefined })); }
+              if (b2.status === 'fulfilled') { retrySuccess = true; retryState.books = b2.value.map(b => ({ ...b, addedAt: new Date(b.addedAt), completedAt: b.completedAt ? new Date(b.completedAt) : undefined })); }
+              if (t2.status === 'fulfilled') { retrySuccess = true; retryState.todos = t2.value.map(t => ({ ...t, createdAt: new Date(t.createdAt), dueDate: t.dueDate ? new Date(t.dueDate) : undefined })); }
+              if (ch2.status === 'fulfilled') { retrySuccess = true; retryState.challenges = ch2.value.map(c => ({ ...c, startDate: new Date(c.startDate) })); }
+              if (st2.status === 'fulfilled' && st2.value) { retrySuccess = true; retryState.pomodoroSettings = { focusTime: st2.value.focusTime, shortBreak: st2.value.shortBreak, longBreak: st2.value.longBreak, cyclesBeforeLongBreak: st2.value.cyclesBeforeLongBreak, autoStartBreaks: st2.value.autoStartBreaks, autoStartPomodoros: st2.value.autoStartPomodoros, soundEnabled: st2.value.soundEnabled }; }
+              if (retrySuccess) {
+                dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+                dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+                dispatch({ type: 'SET_API_ERROR', payload: null });
+                dispatch({ type: 'LOAD_STATE', payload: retryState });
+              } else {
+                dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+                dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
+              }
+            } else {
+              dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+              dispatch({ type: 'SET_API_ERROR', payload: 'Migration failed: tables could not be created' });
+              loadFromLocalStorage();
+              dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
+            }
+          } catch (migErr) {
+            console.error('Auto-migration failed:', migErr);
+            dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+            dispatch({ type: 'SET_API_ERROR', payload: migErr instanceof Error ? migErr.message : 'Migration failed' });
+            loadFromLocalStorage();
+            dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
+          }
         }
 
         dispatch({ type: 'LOAD_STATE', payload: loadedState });
