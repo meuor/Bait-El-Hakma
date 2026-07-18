@@ -80,6 +80,20 @@ export function PomodoroTimer() {
 
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
+  // Sync timer display to global state for mini player
+  useEffect(() => {
+    if (timerState === 'running' || timerState === 'paused' || timerState === 'break') {
+      dispatch({ type: 'SET_TIMER_DISPLAY', payload: {
+        isRunning: timerState === 'running',
+        timeLeft,
+        totalTime,
+        sessionType,
+      }});
+    } else {
+      dispatch({ type: 'SET_TIMER_DISPLAY', payload: null });
+    }
+  }, [timerState, timeLeft, totalTime, sessionType, dispatch]);
+
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -127,7 +141,8 @@ export function PomodoroTimer() {
     setCurrentCycle(1);
     setTimeLeft(pomodoroSettings.focusTime * 60);
     sessionStartTime.current = null;
-  }, [pomodoroSettings.focusTime]);
+    dispatch({ type: 'SET_TIMER_DISPLAY', payload: null });
+  }, [pomodoroSettings.focusTime, dispatch]);
 
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {

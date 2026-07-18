@@ -24,6 +24,18 @@ import {
 } from '@/lib/api';
 
 // App State Interface
+interface TimerDisplay {
+  isRunning: boolean;
+  timeLeft: number;
+  totalTime: number;
+  sessionType: 'focus' | 'shortBreak' | 'longBreak';
+}
+
+interface ActiveVideo {
+  url: string;
+  title: string;
+}
+
 interface State {
   theme: Theme;
   user: User | null;
@@ -43,6 +55,8 @@ interface State {
   syncErrors: string[];
   lastApiError: string | null;
   dataSource: 'api' | 'local';
+  timerDisplay: TimerDisplay | null;
+  activeVideo: ActiveVideo | null;
 }
 
 // Action Types
@@ -78,6 +92,8 @@ type Action =
   | { type: 'ADD_SYNC_ERROR'; payload: string }
   | { type: 'CLEAR_SYNC_ERRORS' }
   | { type: 'SET_DATA_SOURCE'; payload: 'api' | 'local' }
+  | { type: 'SET_TIMER_DISPLAY'; payload: TimerDisplay | null }
+  | { type: 'SET_ACTIVE_VIDEO'; payload: ActiveVideo | null }
   | { type: 'LOAD_STATE'; payload: Partial<State> };
 
 // Default Pomodoro Settings
@@ -129,6 +145,8 @@ const initialState: State = {
   syncErrors: [],
   lastApiError: null,
   dataSource: 'local',
+  timerDisplay: null,
+  activeVideo: null,
 };
 
 // Reducer
@@ -234,6 +252,10 @@ function appReducer(state: State, action: Action): State {
       return { ...state, syncErrors: [] };
     case 'SET_DATA_SOURCE':
       return { ...state, dataSource: action.payload };
+    case 'SET_TIMER_DISPLAY':
+      return { ...state, timerDisplay: action.payload };
+    case 'SET_ACTIVE_VIDEO':
+      return { ...state, activeVideo: action.payload };
     case 'LOAD_STATE':
       return { ...state, ...action.payload };
     default:
