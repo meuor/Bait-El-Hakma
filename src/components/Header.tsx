@@ -17,9 +17,10 @@ import {
   Brain,
   User,
   LogOut,
-  Settings
+  BarChart3,
 } from 'lucide-react';
 import type { Theme } from '@/types';
+import type { AuthUser } from '@/lib/api';
 
 const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
   { value: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
@@ -29,31 +30,27 @@ const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
   { value: 'github', label: 'GitHub', icon: <Github className="w-4 h-4" /> },
 ];
 
-export function Header() {
+interface HeaderProps {
+  user: AuthUser;
+  onLogout: () => void;
+}
+
+export function Header({ user, onLogout }: HeaderProps) {
   const { theme, setTheme } = useTheme();
-  const { state, dispatch } = useApp();
-  const { user, isAuthenticated } = state;
+  const { dispatch } = useApp();
 
-  const handleLogin = () => {
-    // Mock login for now - would integrate with Firebase
-    dispatch({ 
-      type: 'SET_USER', 
-      payload: { 
-        uid: 'mock-user-123', 
-        email: 'user@example.com', 
-        displayName: 'Demo User',
-        photoURL: null 
-      } 
-    });
-    dispatch({ type: 'SET_AUTH', payload: true });
-  };
-
-  const handleLogout = () => {
-    dispatch({ type: 'SET_USER', payload: null });
-    dispatch({ type: 'SET_AUTH', payload: false });
+  const goToProfile = () => {
+    dispatch({ type: 'SET_TAB', payload: 'profile' });
   };
 
   const currentTheme = themes.find(t => t.value === theme);
+
+  const initials = user.displayName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -101,52 +98,50 @@ export function Header() {
           </DropdownMenu>
 
           {/* User Menu */}
-          {isAuthenticated && user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  {user.photoURL ? (
-                    <img 
-                      src={user.photoURL} 
-                      alt={user.displayName || 'User'} 
-                      className="w-8 h-8 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-primary-foreground text-sm font-medium">
-                        {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                      </span>
-                    </div>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col">
-                    <span>{user.displayName || 'User'}</span>
-                    <span className="text-xs text-muted-foreground">{user.email}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                {user.avatarUrl ? (
+                  <img 
+                    src={user.avatarUrl} 
+                    alt={user.displayName} 
+                    className="w-8 h-8 rounded-full"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <span className="text-primary-foreground text-sm font-medium">
+                      {initials}
+                    </span>
                   </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={handleLogout}
-                  className="cursor-pointer text-destructive"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button variant="ghost" size="sm" onClick={handleLogin} className="gap-2">
-              <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Sign In</span>
-            </Button>
-          )}
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span>{user.displayName}</span>
+                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={goToProfile} className="cursor-pointer">
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={goToProfile} className="cursor-pointer">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Statistics
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={onLogout}
+                className="cursor-pointer text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

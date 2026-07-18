@@ -12,6 +12,7 @@ import {
   BarChart3,
   Sparkles,
   Trophy,
+  UserCircle,
 } from 'lucide-react';
 
 interface Tab {
@@ -69,6 +70,12 @@ const tabs: Tab[] = [
     label: 'Challenges',
     icon: <Trophy className="w-4 h-4" />,
     description: 'Track your 100-day challenges',
+  },
+  {
+    id: 'profile',
+    label: 'Profile',
+    icon: <UserCircle className="w-4 h-4" />,
+    description: 'Your account and settings',
   },
 ];
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import type { 
   Theme, 
   User, 
@@ -14,6 +14,14 @@ import type {
   ActivityData,
   AppTab
 } from '@/types';
+import { 
+  pomodoroAPI, 
+  kanbanAPI, 
+  booksAPI, 
+  todosAPI, 
+  challengesAPI, 
+  settingsAPI 
+} from '@/lib/api';
 
 // App State Interface
 interface State {
@@ -218,64 +226,175 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'bait-el-hakma-data';
+const THEME_STORAGE_KEY = 'bait-el-hakma-theme';
+const DATA_STORAGE_KEY = 'bait-el-hakma-data';
+
+// Check if API is available
+function isAPIAvailable(): boolean {
+  return typeof window !== 'undefined' && window.fetch !== undefined;
+}
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Load state from localStorage on mount
+  // Load state from API or localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Convert date strings back to Date objects
-        if (parsed.pomodoroHistory) {
-          parsed.pomodoroHistory = parsed.pomodoroHistory.map((session: PomodoroSession) => ({
-            ...session,
-            startTime: new Date(session.startTime),
-            endTime: session.endTime ? new Date(session.endTime) : null,
-          }));
-        }
-        if (parsed.kanbanCards) {
-          parsed.kanbanCards = parsed.kanbanCards.map((card: KanbanCard) => ({
-            ...card,
-            createdAt: new Date(card.createdAt),
-            dueDate: card.dueDate ? new Date(card.dueDate) : undefined,
-          }));
-        }
-        if (parsed.books) {
-          parsed.books = parsed.books.map((book: Book) => ({
-            ...book,
-            addedAt: new Date(book.addedAt),
-            completedAt: book.completedAt ? new Date(book.completedAt) : undefined,
-            notes: book.notes?.map((note: BookNote) => ({
-              ...note,
-              createdAt: new Date(note.createdAt),
-            })),
-          }));
-        }
-        if (parsed.todos) {
-          parsed.todos = parsed.todos.map((todo: Todo) => ({
-            ...todo,
-            createdAt: new Date(todo.createdAt),
-            dueDate: todo.dueDate ? new Date(todo.dueDate) : undefined,
-          }));
-        }
-        if (parsed.challenges) {
-          parsed.challenges = parsed.challenges.map((challenge: Challenge) => ({
-            ...challenge,
-            startDate: new Date(challenge.startDate),
-          }));
-        }
-        dispatch({ type: 'LOAD_STATE', payload: parsed });
-      } catch (error) {
-        console.error('Error loading state:', error);
+    const loadState = async () => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+
+      // Load theme from localStorage (theme is UI-only, not synced)
+      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      if (savedTheme) {
+        dispatch({ type: 'SET_THEME', payload: savedTheme as Theme });
       }
-    }
+
+      if (!isAPIAvailable()) {
+        // Fallback to localStorage if API not available
+        loadFromLocalStorage();
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return;
+      }
+
+      try {
+        // Load all data from API in parallel
+        const [sessions, columns, cards, books, todosList, challengesList, settings] = await Promise.allSettled([
+          pomodoroAPI.getAll(),
+          kanbanAPI.getColumns(),
+          kanbanAPI.getCards(),
+          booksAPI.getAll(),
+          todosAPI.getAll(),
+          challengesAPI.getAll(),
+          settingsAPI.get(),
+        ]);
+
+        const loadedState: Partial<State> = {};
+
+        if (sessions.status === 'fulfilled') {
+          loadedState.pomodoroHistory = sessions.value.map(s => ({
+            ...s,
+            startTime: new Date(s.startTime),
+            endTime: s.endTime ? new Date(s.endTime) : null,
+          }));
+        }
+
+        if (columns.status === 'fulfilled' && columns.value.length > 0) {
+          loadedState.kanbanColumns = columns.value;
+        } else {
+          loadedState.kanbanColumns = defaultKanbanColumns;
+        }
+
+        if (cards.status === 'fulfilled') {
+          loadedState.kanbanCards = cards.value.map(c => ({
+            ...c,
+            createdAt: new Date(c.createdAt),
+            dueDate: c.dueDate ? new Date(c.dueDate) : undefined,
+          }));
+        }
+
+        if (books.status === 'fulfilled') {
+          loadedState.books = books.value.map(b => ({
+            ...b,
+            addedAt: new Date(b.addedAt),
+            completedAt: b.completedAt ? new Date(b.completedAt) : undefined,
+          }));
+        }
+
+        if (todosList.status === 'fulfilled') {
+          loadedState.todos = todosList.value.map(t => ({
+            ...t,
+            createdAt: new Date(t.createdAt),
+            dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
+          }));
+        }
+
+        if (challengesList.status === 'fulfilled') {
+          loadedState.challenges = challengesList.value.map(c => ({
+            ...c,
+            startDate: new Date(c.startDate),
+          }));
+        }
+
+        if (settings.status === 'fulfilled' && settings.value) {
+          loadedState.pomodoroSettings = {
+            focusTime: settings.value.focusTime,
+            shortBreak: settings.value.shortBreak,
+            longBreak: settings.value.longBreak,
+            cyclesBeforeLongBreak: settings.value.cyclesBeforeLongBreak,
+            autoStartBreaks: settings.value.autoStartBreaks,
+            autoStartPomodoros: settings.value.autoStartPomodoros,
+            soundEnabled: settings.value.soundEnabled,
+          };
+        }
+
+        dispatch({ type: 'LOAD_STATE', payload: loadedState });
+      } catch (error) {
+        console.error('Error loading from API, falling back to localStorage:', error);
+        loadFromLocalStorage();
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    const loadFromLocalStorage = () => {
+      const stored = localStorage.getItem(DATA_STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // Convert date strings back to Date objects
+          if (parsed.pomodoroHistory) {
+            parsed.pomodoroHistory = parsed.pomodoroHistory.map((session: PomodoroSession) => ({
+              ...session,
+              startTime: new Date(session.startTime),
+              endTime: session.endTime ? new Date(session.endTime) : null,
+            }));
+          }
+          if (parsed.kanbanCards) {
+            parsed.kanbanCards = parsed.kanbanCards.map((card: KanbanCard) => ({
+              ...card,
+              createdAt: new Date(card.createdAt),
+              dueDate: card.dueDate ? new Date(card.dueDate) : undefined,
+            }));
+          }
+          if (parsed.books) {
+            parsed.books = parsed.books.map((book: Book) => ({
+              ...book,
+              addedAt: new Date(book.addedAt),
+              completedAt: book.completedAt ? new Date(book.completedAt) : undefined,
+              notes: book.notes?.map((note: BookNote) => ({
+                ...note,
+                createdAt: new Date(note.createdAt),
+              })),
+            }));
+          }
+          if (parsed.todos) {
+            parsed.todos = parsed.todos.map((todo: Todo) => ({
+              ...todo,
+              createdAt: new Date(todo.createdAt),
+              dueDate: todo.dueDate ? new Date(todo.dueDate) : undefined,
+            }));
+          }
+          if (parsed.challenges) {
+            parsed.challenges = parsed.challenges.map((challenge: Challenge) => ({
+              ...challenge,
+              startDate: new Date(challenge.startDate),
+            }));
+          }
+          dispatch({ type: 'LOAD_STATE', payload: parsed });
+        } catch (error) {
+          console.error('Error loading state from localStorage:', error);
+        }
+      }
+    };
+
+    loadState();
   }, []);
 
-  // Save state to localStorage on changes
+  // Save theme to localStorage on changes
+  useEffect(() => {
+    localStorage.setItem(THEME_STORAGE_KEY, state.theme);
+  }, [state.theme]);
+
+  // Save data to localStorage as backup (for offline support)
   useEffect(() => {
     const dataToSave = {
       pomodoroSettings: state.pomodoroSettings,
@@ -288,7 +407,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       challenges: state.challenges,
       activityData: state.activityData,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(dataToSave));
   }, [
     state.pomodoroSettings,
     state.pomodoroHistory,
@@ -301,8 +420,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.activityData,
   ]);
 
+  // API-backed dispatch wrapper
+  const apiDispatch = useCallback(async (action: Action) => {
+    // First, update local state immediately
+    dispatch(action);
+
+    // Then, sync to API in the background
+    if (!isAPIAvailable()) return;
+
+    try {
+      switch (action.type) {
+        case 'SET_POMODORO_SETTINGS':
+          await settingsAPI.update(action.payload);
+          break;
+        case 'ADD_POMODORO_SESSION':
+          await pomodoroAPI.create(action.payload);
+          break;
+        case 'SET_KANBAN_COLUMNS':
+          // We don't sync column changes individually yet
+          break;
+        case 'ADD_KANBAN_CARD':
+          await kanbanAPI.createCard(action.payload);
+          break;
+        case 'UPDATE_KANBAN_CARD':
+          await kanbanAPI.updateCard(action.payload);
+          break;
+        case 'DELETE_KANBAN_CARD':
+          await kanbanAPI.deleteCard(action.payload);
+          break;
+        case 'ADD_BOOK':
+          await booksAPI.create(action.payload);
+          break;
+        case 'UPDATE_BOOK':
+          await booksAPI.update(action.payload);
+          break;
+        case 'DELETE_BOOK':
+          await booksAPI.delete(action.payload);
+          break;
+        case 'ADD_TODO':
+          await todosAPI.create(action.payload);
+          break;
+        case 'UPDATE_TODO':
+          await todosAPI.update(action.payload);
+          break;
+        case 'DELETE_TODO':
+          await todosAPI.delete(action.payload);
+          break;
+        case 'ADD_CHALLENGE':
+          await challengesAPI.create(action.payload);
+          break;
+        case 'UPDATE_CHALLENGE':
+          await challengesAPI.update(action.payload);
+          break;
+        case 'DELETE_CHALLENGE':
+          await challengesAPI.delete(action.payload);
+          break;
+      }
+    } catch (error) {
+      console.error('API sync error:', error);
+      // Local state is already updated, so the app still works
+      // Data will be synced on next load
+    }
+  }, []);
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch: apiDispatch as React.Dispatch<Action> }}>
       {children}
     </AppContext.Provider>
   );

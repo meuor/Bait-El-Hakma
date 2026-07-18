@@ -197,7 +197,8 @@ export type AppTab =
   | 'todo' 
   | 'stats' 
   | 'motivation' 
-  | 'challenges';
+  | 'challenges'
+  | 'profile';
 
 export interface TabConfig {
   id: AppTab;

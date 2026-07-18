@@ -27,6 +27,7 @@ import {
   Flame,
   Award,
 } from 'lucide-react';
+import { MigrateData } from '@/components/MigrateData';
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
 
@@ -465,6 +466,11 @@ export function ActivityStats() {
           )}
         </CardContent>
       </Card>
+
+      {/* Data Migration Section */}
+      <div className="mt-8">
+        <MigrateData />
+      </div>
     </div>
   );
 }
