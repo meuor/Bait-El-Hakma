@@ -64,26 +64,26 @@ export interface UserStats {
 
 export const authAPI = {
   register: (email: string, password: string, displayName?: string) =>
-    fetchAPI<AuthResponse>('/auth/register', {
+    fetchAPI<AuthResponse>('/auth?action=register', {
       method: 'POST',
       body: JSON.stringify({ email, password, displayName }),
     }),
 
   login: (email: string, password: string) =>
-    fetchAPI<AuthResponse>('/auth/login', {
+    fetchAPI<AuthResponse>('/auth?action=login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
 
-  getProfile: () => fetchAPI<AuthUser>('/auth/profile'),
+  getProfile: () => fetchAPI<AuthUser>('/auth?action=profile'),
 
   updateProfile: (data: { displayName?: string; avatarUrl?: string; bio?: string }) =>
-    fetchAPI<AuthUser>('/auth/profile', {
+    fetchAPI<AuthUser>('/auth?action=profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
-  getStats: () => fetchAPI<UserStats>('/auth/stats'),
+  getStats: () => fetchAPI<UserStats>('/auth?action=stats'),
 };
 
 // Pomodoro API
@@ -109,27 +109,27 @@ export const pomodoroAPI = {
 
 // Kanban API
 export const kanbanAPI = {
-  getColumns: () => fetchAPI<KanbanColumn[]>('/kanban/columns'),
+  getColumns: () => fetchAPI<KanbanColumn[]>('/kanban?type=columns'),
   
   createColumn: (column: KanbanColumn) =>
-    fetchAPI('/kanban/columns', {
+    fetchAPI('/kanban?type=columns', {
       method: 'POST',
       body: JSON.stringify(column),
     }),
 
   updateColumn: (column: KanbanColumn) =>
-    fetchAPI('/kanban/columns', {
+    fetchAPI('/kanban?type=columns', {
       method: 'PUT',
       body: JSON.stringify(column),
     }),
 
   deleteColumn: (id: string) =>
-    fetchAPI(`/kanban/columns?id=${id}`, { method: 'DELETE' }),
+    fetchAPI(`/kanban?type=columns&id=${id}`, { method: 'DELETE' }),
 
-  getCards: () => fetchAPI<KanbanCard[]>('/kanban/cards'),
+  getCards: () => fetchAPI<KanbanCard[]>('/kanban?type=cards'),
   
   createCard: (card: KanbanCard) =>
-    fetchAPI('/kanban/cards', {
+    fetchAPI('/kanban?type=cards', {
       method: 'POST',
       body: JSON.stringify({
         ...card,
@@ -139,7 +139,7 @@ export const kanbanAPI = {
     }),
 
   updateCard: (card: KanbanCard) =>
-    fetchAPI('/kanban/cards', {
+    fetchAPI('/kanban?type=cards', {
       method: 'PUT',
       body: JSON.stringify({
         ...card,
@@ -149,7 +149,7 @@ export const kanbanAPI = {
     }),
 
   deleteCard: (id?: string) =>
-    fetchAPI(`/kanban/cards${id ? `?id=${id}` : ''}`, { method: 'DELETE' }),
+    fetchAPI(`/kanban?type=cards${id ? `&id=${id}` : ''}`, { method: 'DELETE' }),
 };
 
 // Books API
@@ -180,10 +180,10 @@ export const booksAPI = {
     fetchAPI(`/books${id ? `?id=${id}` : ''}`, { method: 'DELETE' }),
 
   getNotes: (bookId: string) =>
-    fetchAPI<BookNote[]>(`/books/notes?bookId=${bookId}`),
+    fetchAPI<BookNote[]>(`/books?action=notes&bookId=${bookId}`),
 
   createNote: (note: BookNote & { bookId: string }) =>
-    fetchAPI('/books/notes', {
+    fetchAPI('/books?action=notes', {
       method: 'POST',
       body: JSON.stringify({
         ...note,
@@ -192,7 +192,7 @@ export const booksAPI = {
     }),
 
   deleteNote: (id: string) =>
-    fetchAPI(`/books/notes?id=${id}`, { method: 'DELETE' }),
+    fetchAPI(`/books?action=notes&id=${id}`, { method: 'DELETE' }),
 };
 
 // Todos API
