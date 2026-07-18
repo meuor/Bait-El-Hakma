@@ -5,24 +5,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: (user: AuthUser, token: string) => void;
   onSwitchToRegister: () => void;
+  onForgotPassword: () => void;
 }
 
-export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [keepLoggedIn, setKeepLoggedIn] = useState(true);
+  const [error, setError] = useState('');
+  const [shakeField, setShakeField] = useState<'email' | 'password' | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
       const result = await authAPI.login(email, password);
@@ -32,8 +37,11 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
       }
       toast.success(`Welcome back, ${result.user.displayName}!`);
       onLogin(result.user, result.token);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Login failed';
+      setError(msg);
+      setShakeField('email');
+      setTimeout(() => setShakeField(null), 500);
     } finally {
       setIsLoading(false);
     }
@@ -49,28 +57,36 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-5">
+            {error && (
+              <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className={error ? 'text-destructive' : ''}>Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 required
+                className={shakeField === 'email' ? 'border-destructive animate-pulse' : ''}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className={error ? 'text-destructive' : ''}>Password</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   required
-                  className="pr-10"
+                  className={`pr-10 ${shakeField === 'password' ? 'border-destructive animate-pulse' : ''}`}
                 />
                 <Button
                   type="button"
@@ -80,6 +96,11 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <div className="flex justify-end">
+                <Button type="button" variant="link" className="p-0 h-auto text-sm text-muted-foreground" onClick={onForgotPassword}>
+                  Forgot password?
                 </Button>
               </div>
             </div>

@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
 import sql from '../_lib/db.js';
 import { hashPassword, verifyPassword, generateToken, getUserFromRequest } from '../_lib/auth.js';
+import { sendPasswordResetEmail } from '../_lib/email.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -194,6 +195,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         completedTodos: parseInt(todos[0].done),
         totalChallenges: parseInt(challenges[0].count),
       });
+    }
+
+    // POST /api/auth?action=forgot-password
+    if (req.method === 'POST' && action === 'forgot-password') {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ error: 'Email is required' });
+
+      const users = await sql`SELECT id FROM users WHERE email = ${email}`;
+      if (users.length === 0) {
+        // Return success even if user not found (don't leak info)
+        return res.status(200).json({ success: true, message: 'If an account with that email exists, a reset code has been sent.' });
+      }
+
+      // Generate 6-char code: ***-***
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const displayCode = `${code.slice(0, 3)}-${code.slice(3, 6)}`;
+
+      const resetId = uuidv4();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await sql`INSERT INTO password_resets (id, email, code, expires_at) VALUES (${resetId}, ${email}, ${code}, ${expiresAt.toISOString()})`;
+
+      try {
+        await sendPasswordResetEmail(email, displayCode);
+      } catch (emailError) {
+        console.error('Failed to send reset email:', emailError);
+        // Still return success - code was generated, just email failed
+      }
+
+      return res.status(200).json({ success: true, message: 'If an account with that email exists, a reset code has been sent.' });
+    }
+
+    // POST /api/auth?action=verify-reset-code
+    if (req.method === 'POST' && action === 'verify-reset-code') {
+      const { email, code } = req.body;
+      if (!email || !code) return res.status(400).json({ error: 'Email and code are required' });
+
+      const cleanCode = code.replace(/-/g, '').toLowerCase();
+      const resets = await sql`SELECT id FROM password_resets WHERE email = ${email} AND code = ${cleanCode} AND used = false AND expires_at > NOW()`;
+      if (resets.length === 0) return res.status(400).json({ error: 'Invalid or expired code' });
+
+      return res.status(200).json({ success: true, message: 'Code verified successfully' });
+    }
+
+    // POST /api/auth?action=reset-password
+    if (req.method === 'POST' && action === 'reset-password') {
+      const { email, code, newPassword } = req.body;
+      if (!email || !code || !newPassword) return res.status(400).json({ error: 'Email, code, and new password are required' });
+      if (newPassword.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+      const cleanCode = code.replace(/-/g, '').toLowerCase();
+      const resets = await sql`SELECT id FROM password_resets WHERE email = ${email} AND code = ${cleanCode} AND used = false AND expires_at > NOW()`;
+      if (resets.length === 0) return res.status(400).json({ error: 'Invalid or expired code' });
+
+      const passwordHash = await hashPassword(newPassword);
+      await sql`UPDATE users SET password_hash = ${passwordHash}, updated_at = NOW() WHERE email = ${email}`;
+      await sql`UPDATE password_resets SET used = true WHERE id = ${resets[0].id}`;
+
+      return res.status(200).json({ success: true, message: 'Password reset successfully' });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

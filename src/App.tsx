@@ -6,6 +6,8 @@ import { Footer } from '@/components/Footer';
 import { TabNavigation } from '@/components/TabNavigation';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
+import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { ProfilePage } from '@/components/auth/ProfilePage';
 import { PublicProfile } from '@/components/auth/PublicProfile';
 import { PomodoroTimer } from '@/sections/PomodoroTimer';
@@ -23,7 +25,7 @@ import { motion } from 'framer-motion';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 
-type AuthView = 'login' | 'register';
+type AuthView = 'login' | 'register' | 'forgot-password' | 'reset-password';
 
 function AppContent() {
   const { state } = useApp();
@@ -34,6 +36,8 @@ function AppContent() {
   const [authView, setAuthView] = useState<AuthView>('login');
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [publicProfileUsername, setPublicProfileUsername] = useState<string | null>(null);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
 
   // Check for /@username route on mount
   useEffect(() => {
@@ -112,10 +116,33 @@ function AppContent() {
         />
       );
     }
+    if (authView === 'forgot-password') {
+      return (
+        <ForgotPasswordForm
+          onBack={() => setAuthView('login')}
+          onCodeVerified={(email, code) => {
+            setResetEmail(email);
+            setResetCode(code);
+            setAuthView('reset-password');
+          }}
+        />
+      );
+    }
+    if (authView === 'reset-password') {
+      return (
+        <ResetPasswordForm
+          email={resetEmail}
+          initialCode={resetCode}
+          onBack={() => setAuthView('login')}
+          onSuccess={() => setAuthView('login')}
+        />
+      );
+    }
     return (
       <LoginForm
         onLogin={handleLogin}
         onSwitchToRegister={() => setAuthView('register')}
+        onForgotPassword={() => setAuthView('forgot-password')}
       />
     );
   }

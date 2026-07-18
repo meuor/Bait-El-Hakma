@@ -103,6 +103,24 @@ export const authAPI = {
     fetchAPI<AuthUser & { totalTodos: number; completedTodos: number; totalBooks: number; totalPomodoroSessions: number; totalChallenges: number }>(`/auth?action=public-profile&username=${encodeURIComponent(username)}`),
 
   getStats: () => fetchAPI<UserStats>('/auth?action=stats'),
+
+  forgotPassword: (email: string) =>
+    fetchAPI<{ success: boolean; message: string }>('/auth?action=forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyResetCode: (email: string, code: string) =>
+    fetchAPI<{ success: boolean; message: string }>('/auth?action=verify-reset-code', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
+
+  resetPassword: (email: string, code: string, newPassword: string) =>
+    fetchAPI<{ success: boolean; message: string }>('/auth?action=reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, newPassword }),
+    }),
 };
 
 // Pomodoro API

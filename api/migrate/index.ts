@@ -134,6 +134,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )`;
 
+      await sql`CREATE TABLE IF NOT EXISTS password_resets (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        code TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        used BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`;
+
       await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_pomodoro_sessions_user ON pomodoro_sessions(user_id)`;
