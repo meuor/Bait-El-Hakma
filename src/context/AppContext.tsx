@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import type { 
   Theme, 
   User, 
@@ -17,7 +17,7 @@ import type {
 import { 
   pomodoroAPI, 
   kanbanAPI, 
-  booksAPI, 
+  booksAPI,
   todosAPI, 
   challengesAPI, 
   settingsAPI 
@@ -39,6 +39,9 @@ interface State {
   challenges: Challenge[];
   activityData: ActivityData;
   isLoading: boolean;
+  apiStatus: 'checking' | 'online' | 'offline';
+  syncErrors: string[];
+  dataSource: 'api' | 'local';
 }
 
 // Action Types
@@ -69,6 +72,10 @@ type Action =
   | { type: 'DELETE_CHALLENGE'; payload: string }
   | { type: 'SET_ACTIVITY_DATA'; payload: ActivityData }
   | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_API_STATUS'; payload: 'checking' | 'online' | 'offline' }
+  | { type: 'ADD_SYNC_ERROR'; payload: string }
+  | { type: 'CLEAR_SYNC_ERRORS' }
+  | { type: 'SET_DATA_SOURCE'; payload: 'api' | 'local' }
   | { type: 'LOAD_STATE'; payload: Partial<State> };
 
 // Default Pomodoro Settings
@@ -116,6 +123,9 @@ const initialState: State = {
   challenges: [],
   activityData: defaultActivityData,
   isLoading: false,
+  apiStatus: 'checking',
+  syncErrors: [],
+  dataSource: 'local',
 };
 
 // Reducer
@@ -211,6 +221,14 @@ function appReducer(state: State, action: Action): State {
       return { ...state, activityData: action.payload };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
+    case 'SET_API_STATUS':
+      return { ...state, apiStatus: action.payload };
+    case 'ADD_SYNC_ERROR':
+      return { ...state, syncErrors: [...state.syncErrors.slice(-4), action.payload] };
+    case 'CLEAR_SYNC_ERRORS':
+      return { ...state, syncErrors: [] };
+    case 'SET_DATA_SOURCE':
+      return { ...state, dataSource: action.payload };
     case 'LOAD_STATE':
       return { ...state, ...action.payload };
     default:
@@ -228,35 +246,97 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'bait-el-hakma-theme';
 const DATA_STORAGE_KEY = 'bait-el-hakma-data';
+const TOKEN_KEY = 'bait-el-hakma-token';
 
-// Check if API is available
+function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
 function isAPIAvailable(): boolean {
   return typeof window !== 'undefined' && window.fetch !== undefined;
 }
 
+// Actions that should sync to API
+const API_SYNC_ACTIONS = new Set([
+  'SET_POMODORO_SETTINGS',
+  'ADD_POMODORO_SESSION',
+  'ADD_KANBAN_CARD',
+  'UPDATE_KANBAN_CARD',
+  'DELETE_KANBAN_CARD',
+  'SET_KANBAN_COLUMNS',
+  'ADD_BOOK',
+  'UPDATE_BOOK',
+  'DELETE_BOOK',
+  'ADD_TODO',
+  'UPDATE_TODO',
+  'DELETE_TODO',
+  'ADD_CHALLENGE',
+  'UPDATE_CHALLENGE',
+  'DELETE_CHALLENGE',
+]);
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const syncErrorsRef = useRef<string[]>([]);
+  const failedQueueRef = useRef<Array<{ action: Action; retries: number }>>([]);
+  const isRetryingRef = useRef(false);
+
+  // Process retry queue
+  const processRetryQueue = useCallback(async () => {
+    if (isRetryingRef.current || failedQueueRef.current.length === 0) return;
+    isRetryingRef.current = true;
+
+    const queue = [...failedQueueRef.current];
+    failedQueueRef.current = [];
+
+    for (const item of queue) {
+      try {
+        await syncActionToAPI(item.action);
+        dispatch({ type: 'CLEAR_SYNC_ERRORS' });
+      } catch {
+        if (item.retries < 2) {
+          failedQueueRef.current.push({ action: item.action, retries: item.retries + 1 });
+        } else {
+          const errorMsg = `Failed to sync ${item.action.type.replace(/_/g, ' ').toLowerCase()}`;
+          if (!syncErrorsRef.current.includes(errorMsg)) {
+            syncErrorsRef.current.push(errorMsg);
+            dispatch({ type: 'ADD_SYNC_ERROR', payload: errorMsg });
+          }
+        }
+      }
+    }
+
+    isRetryingRef.current = false;
+
+    if (failedQueueRef.current.length > 0) {
+      setTimeout(processRetryQueue, 10000);
+    }
+  }, []);
 
   // Load state from API or localStorage on mount
   useEffect(() => {
     const loadState = async () => {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      // Load theme from localStorage (theme is UI-only, not synced)
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
       if (savedTheme) {
         dispatch({ type: 'SET_THEME', payload: savedTheme as Theme });
       }
 
-      if (!isAPIAvailable()) {
-        // Fallback to localStorage if API not available
+      const token = getToken();
+
+      if (!isAPIAvailable() || !token) {
+        if (!token) {
+          dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+        }
         loadFromLocalStorage();
         dispatch({ type: 'SET_LOADING', payload: false });
         return;
       }
 
+      dispatch({ type: 'SET_API_STATUS', payload: 'checking' });
+
       try {
-        // Load all data from API in parallel
         const [sessions, columns, cards, books, todosList, challengesList, settings] = await Promise.allSettled([
           pomodoroAPI.getAll(),
           kanbanAPI.getColumns(),
@@ -268,8 +348,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ]);
 
         const loadedState: Partial<State> = {};
+        let anySuccess = false;
 
         if (sessions.status === 'fulfilled') {
+          anySuccess = true;
           loadedState.pomodoroHistory = sessions.value.map(s => ({
             ...s,
             startTime: new Date(s.startTime),
@@ -278,12 +360,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (columns.status === 'fulfilled' && columns.value.length > 0) {
+          anySuccess = true;
           loadedState.kanbanColumns = columns.value;
         } else {
           loadedState.kanbanColumns = defaultKanbanColumns;
         }
 
         if (cards.status === 'fulfilled') {
+          anySuccess = true;
           loadedState.kanbanCards = cards.value.map(c => ({
             ...c,
             createdAt: new Date(c.createdAt),
@@ -292,6 +376,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (books.status === 'fulfilled') {
+          anySuccess = true;
           loadedState.books = books.value.map(b => ({
             ...b,
             addedAt: new Date(b.addedAt),
@@ -300,6 +385,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (todosList.status === 'fulfilled') {
+          anySuccess = true;
           loadedState.todos = todosList.value.map(t => ({
             ...t,
             createdAt: new Date(t.createdAt),
@@ -308,6 +394,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (challengesList.status === 'fulfilled') {
+          anySuccess = true;
           loadedState.challenges = challengesList.value.map(c => ({
             ...c,
             startDate: new Date(c.startDate),
@@ -315,6 +402,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (settings.status === 'fulfilled' && settings.value) {
+          anySuccess = true;
           loadedState.pomodoroSettings = {
             focusTime: settings.value.focusTime,
             shortBreak: settings.value.shortBreak,
@@ -326,10 +414,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           };
         }
 
+        if (anySuccess) {
+          dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+          dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+        } else {
+          dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+          loadFromLocalStorage();
+          dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
+        }
+
         dispatch({ type: 'LOAD_STATE', payload: loadedState });
       } catch (error) {
         console.error('Error loading from API, falling back to localStorage:', error);
+        dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
         loadFromLocalStorage();
+        dispatch({ type: 'SET_DATA_SOURCE', payload: 'local' });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
@@ -340,7 +439,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          // Convert date strings back to Date objects
           if (parsed.pomodoroHistory) {
             parsed.pomodoroHistory = parsed.pomodoroHistory.map((session: PomodoroSession) => ({
               ...session,
@@ -420,68 +518,82 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.activityData,
   ]);
 
-  // API-backed dispatch wrapper
-  const apiDispatch = useCallback(async (action: Action) => {
-    // First, update local state immediately
-    dispatch(action);
+  // Sync a single action to the API
+  const syncActionToAPI = useCallback(async (action: Action) => {
+    if (!isAPIAvailable() || !getToken()) return;
 
-    // Then, sync to API in the background
-    if (!isAPIAvailable()) return;
-
-    try {
-      switch (action.type) {
-        case 'SET_POMODORO_SETTINGS':
-          await settingsAPI.update(action.payload);
-          break;
-        case 'ADD_POMODORO_SESSION':
-          await pomodoroAPI.create(action.payload);
-          break;
-        case 'SET_KANBAN_COLUMNS':
-          // We don't sync column changes individually yet
-          break;
-        case 'ADD_KANBAN_CARD':
-          await kanbanAPI.createCard(action.payload);
-          break;
-        case 'UPDATE_KANBAN_CARD':
-          await kanbanAPI.updateCard(action.payload);
-          break;
-        case 'DELETE_KANBAN_CARD':
-          await kanbanAPI.deleteCard(action.payload);
-          break;
-        case 'ADD_BOOK':
-          await booksAPI.create(action.payload);
-          break;
-        case 'UPDATE_BOOK':
-          await booksAPI.update(action.payload);
-          break;
-        case 'DELETE_BOOK':
-          await booksAPI.delete(action.payload);
-          break;
-        case 'ADD_TODO':
-          await todosAPI.create(action.payload);
-          break;
-        case 'UPDATE_TODO':
-          await todosAPI.update(action.payload);
-          break;
-        case 'DELETE_TODO':
-          await todosAPI.delete(action.payload);
-          break;
-        case 'ADD_CHALLENGE':
-          await challengesAPI.create(action.payload);
-          break;
-        case 'UPDATE_CHALLENGE':
-          await challengesAPI.update(action.payload);
-          break;
-        case 'DELETE_CHALLENGE':
-          await challengesAPI.delete(action.payload);
-          break;
-      }
-    } catch (error) {
-      console.error('API sync error:', error);
-      // Local state is already updated, so the app still works
-      // Data will be synced on next load
+    switch (action.type) {
+      case 'SET_POMODORO_SETTINGS':
+        await settingsAPI.update(action.payload);
+        break;
+      case 'ADD_POMODORO_SESSION':
+        await pomodoroAPI.create(action.payload);
+        break;
+      case 'SET_KANBAN_COLUMNS':
+        break;
+      case 'ADD_KANBAN_CARD':
+        await kanbanAPI.createCard(action.payload);
+        break;
+      case 'UPDATE_KANBAN_CARD':
+        await kanbanAPI.updateCard(action.payload);
+        break;
+      case 'DELETE_KANBAN_CARD':
+        await kanbanAPI.deleteCard(action.payload);
+        break;
+      case 'ADD_BOOK':
+        await booksAPI.create(action.payload);
+        break;
+      case 'UPDATE_BOOK':
+        await booksAPI.update(action.payload);
+        break;
+      case 'DELETE_BOOK':
+        await booksAPI.delete(action.payload);
+        break;
+      case 'ADD_TODO':
+        await todosAPI.create(action.payload);
+        break;
+      case 'UPDATE_TODO':
+        await todosAPI.update(action.payload);
+        break;
+      case 'DELETE_TODO':
+        await todosAPI.delete(action.payload);
+        break;
+      case 'ADD_CHALLENGE':
+        await challengesAPI.create(action.payload);
+        break;
+      case 'UPDATE_CHALLENGE':
+        await challengesAPI.update(action.payload);
+        break;
+      case 'DELETE_CHALLENGE':
+        await challengesAPI.delete(action.payload);
+        break;
     }
   }, []);
+
+  // API-backed dispatch wrapper
+  const apiDispatch = useCallback(async (action: Action) => {
+    // Always update local state immediately
+    dispatch(action);
+
+    // Only sync API-relevant actions
+    if (!API_SYNC_ACTIONS.has(action.type)) return;
+    if (!isAPIAvailable() || !getToken()) return;
+
+    try {
+      await syncActionToAPI(action);
+      dispatch({ type: 'SET_API_STATUS', payload: 'online' });
+      dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
+    } catch (error) {
+      console.error('API sync error:', error);
+      const errorMsg = `Failed to save ${action.type.replace(/_/g, ' ').toLowerCase()}`;
+      dispatch({ type: 'ADD_SYNC_ERROR', payload: errorMsg });
+      dispatch({ type: 'SET_API_STATUS', payload: 'offline' });
+
+      // Queue for retry
+      failedQueueRef.current.push({ action, retries: 0 });
+      setTimeout(processRetryQueue, 5000);
+    }
+  }, [syncActionToAPI, processRetryQueue]);
 
   return (
     <AppContext.Provider value={{ state, dispatch: apiDispatch as React.Dispatch<Action> }}>

@@ -16,6 +16,7 @@ import { ActivityStats } from '@/sections/ActivityStats';
 import { Motivation } from '@/sections/Motivation';
 import { ChallengeTracker } from '@/sections/ChallengeTracker';
 import { Toaster } from '@/components/ui/sonner';
+import { SyncStatus } from '@/components/SyncStatus';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
@@ -151,6 +152,7 @@ function AppContent() {
       </main>
       
       <Footer />
+      <SyncStatus />
       <Toaster />
     </div>
   );

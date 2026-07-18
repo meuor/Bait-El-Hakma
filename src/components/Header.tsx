@@ -17,6 +17,8 @@ import {
   User,
   LogOut,
   BarChart3,
+  Cloud,
+  CloudOff,
 } from 'lucide-react';
 import type { Theme } from '@/types';
 import type { AuthUser } from '@/lib/api';
@@ -36,7 +38,9 @@ interface HeaderProps {
 
 export function Header({ user, onLogout }: HeaderProps) {
   const { theme, setTheme } = useTheme();
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
+  const { apiStatus, syncErrors } = state;
+  const hasErrors = syncErrors.length > 0;
 
   const goToProfile = () => {
     dispatch({ type: 'SET_TAB', payload: 'profile' });
@@ -65,6 +69,22 @@ export function Header({ user, onLogout }: HeaderProps) {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
+          {/* Cloud Sync Indicator */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground" title={
+            hasErrors ? 'Cloud sync failed' :
+            apiStatus === 'online' ? 'Data saved to cloud' :
+            apiStatus === 'offline' ? 'Data saved locally only' :
+            'Connecting...'
+          }>
+            {hasErrors ? (
+              <CloudOff className="h-4 w-4 text-red-500" />
+            ) : apiStatus === 'online' ? (
+              <Cloud className="h-4 w-4 text-green-500" />
+            ) : apiStatus === 'offline' ? (
+              <CloudOff className="h-4 w-4 text-orange-500" />
+            ) : null}
+          </div>
+
           {/* Theme Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
