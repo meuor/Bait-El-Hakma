@@ -30,7 +30,17 @@ export function verifyToken(token: string): JWTPayload | null {
 }
 
 export function getTokenFromRequest(request: Request): string | null {
-  const authHeader = request.headers.get('Authorization');
+  // Works with both standard Request and VercelRequest
+  const headers = request.headers;
+  let authHeader: string | null = null;
+
+  if (typeof headers.get === 'function') {
+    authHeader = headers.get('Authorization');
+  } else {
+    // VercelRequest: headers is a plain object
+    authHeader = (headers as any).authorization || (headers as any).Authorization || null;
+  }
+
   if (authHeader?.startsWith('Bearer ')) {
     return authHeader.slice(7);
   }
