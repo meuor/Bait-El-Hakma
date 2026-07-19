@@ -1,7 +1,7 @@
 {
-  "name": "Bait El-Hakma | House of Wisdom",
+  "name": "Bait El-Hakma | بيت الحكمة - House of Wisdom",
   "short_name": "Bait El-Hakma",
-  "description": "A comprehensive productivity app with tasks, books, Kanban, Pomodoro, Quran, and more.",
+  "description": "All-in-one productivity suite: Quran reader, Pomodoro timer, Kanban board, book library, habit tracker, and cloud sync. بيت الحكمة - تطبيق إنتاجية شامل.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f23",
@@ -23,5 +23,6 @@
     }
   ],
   "categories": ["productivity", "education", "lifestyle"],
-  "lang": "en"
+  "lang": "en",
+  "dir": "ltr"
 }
