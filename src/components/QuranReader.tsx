@@ -81,6 +81,7 @@ function saveBookmark(surahNumber: number, ayahNumber: number) {
   const bookmarks = loadBookmarks();
   bookmarks[surahNumber] = ayahNumber;
   localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  localStorage.setItem(LAST_READ_KEY, JSON.stringify({ surah: surahNumber, ayah: ayahNumber }));
   saveProgress({ currentSurah: surahNumber, currentAyah: ayahNumber });
 }
 
@@ -289,7 +290,7 @@ export function QuranReader() {
           </div>
         )}
 
-        {selectedSurah.number !== 9 && (
+        {selectedSurah.number === 2 && (
           <div className="text-center py-3">
             <p
               dir="rtl"
