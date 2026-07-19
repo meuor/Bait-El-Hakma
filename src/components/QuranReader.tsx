@@ -176,15 +176,19 @@ export function QuranReader() {
       const json = await res.json();
       if (json.code === 200) {
         const data = json.data;
+        const bsm = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
         const isFatihah = surah.number === 1;
         const isTawbah = surah.number === 9;
-        if (!isFatihah && !isTawbah && data.ayahs.length > 0) {
-          const bsm = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
+
+        if (isFatihah) {
+          data.ayahs = data.ayahs.filter((a: Ayah) => !a.text.includes(bsm));
+        } else if (!isTawbah && data.ayahs.length > 0) {
           const firstText = data.ayahs[0].text;
           if (firstText.includes(bsm)) {
             data.ayahs[0] = { ...data.ayahs[0], text: firstText.replace(bsm, '').trim() };
           }
         }
+
         setSurahData(data);
         const total = data.ayahs.length;
         if (total <= 12) setAllAyahsLoaded(true);
@@ -282,6 +286,21 @@ export function QuranReader() {
             >
               Jump to it
             </Button>
+          </div>
+        )}
+
+        {selectedSurah.number !== 9 && (
+          <div className="text-center py-3">
+            <p
+              dir="rtl"
+              style={{
+                fontFamily: themeData.fontFamily,
+                fontSize: ayahFontSize,
+                lineHeight: ayahLineHeight,
+              }}
+            >
+              بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+            </p>
           </div>
         )}
 
