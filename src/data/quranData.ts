@@ -128,10 +128,9 @@ export const SURAH_LIST: SurahInfo[] = [
 
 // Calculate daily reading: ~4 pages/day to finish Quran in ~30 days
 // Each surah has a rough page count (1 page ≈ 20 ayahs)
-export function getDailyPortion(dayOfMonth: number): { startSurah: number; startAyah: number; endSurah: number; endAyah: number } {
-  const ayahsPerPage = 20;
-  const dailyPages = 4;
-  const dailyAyahs = ayahsPerPage * dailyPages;
+export function getDailyPortion(dayOfMonth: number, pagesPerDay: number = 4): { startSurah: number; startAyah: number; endSurah: number; endAyah: number } {
+  const ayahsPerPage = 12;
+  const dailyAyahs = ayahsPerPage * pagesPerDay;
 
   const day = ((dayOfMonth - 1) % 30);
   const startAyahOffset = day * dailyAyahs;

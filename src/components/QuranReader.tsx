@@ -565,40 +565,133 @@ export function QuranReader() {
 }
 
 function DailyReadingCard({ onReadSurah }: { onReadSurah: (s: SurahInfo) => void }) {
+  const DAILY_KEY = 'quran-daily-progress';
+  const PAGES_KEY = 'quran-daily-pages';
+
+  const [pagesPerDay, setPagesPerDay] = useState(() => {
+    try { return parseInt(localStorage.getItem(PAGES_KEY) || '4') || 4; } catch { return 4; }
+  });
+  const [completedDays, setCompletedDays] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem(DAILY_KEY) || '{}'); } catch { return {}; }
+  });
+  const [editing, setEditing] = useState(false);
+  const [tempPages, setTempPages] = useState(String(pagesPerDay));
+
   const today = new Date();
+  const todayKey = today.toISOString().split('T')[0];
   const dayOfMonth = today.getDate();
-  const portion = getDailyPortion(dayOfMonth);
+  const isTodayDone = !!completedDays[todayKey];
+  const portion = getDailyPortion(dayOfMonth, pagesPerDay);
   const startSurah = SURAH_LIST.find(s => s.number === portion.startSurah);
   const endSurah = SURAH_LIST.find(s => s.number === portion.endSurah);
 
+  const completedCount = Object.values(completedDays).filter(Boolean).length;
+  const totalDays = 30;
+  const progressPct = Math.round((completedCount / totalDays) * 100);
+  const estDays = Math.ceil(TOTAL_AYAHS / (pagesPerDay * 12));
+
+  const toggleToday = () => {
+    const updated = { ...completedDays, [todayKey]: !isTodayDone };
+    setCompletedDays(updated);
+    localStorage.setItem(DAILY_KEY, JSON.stringify(updated));
+    toast.success(isTodayDone ? 'Marked as not completed' : 'Daily reading completed! 🎉');
+  };
+
+  const savePages = () => {
+    const val = parseInt(tempPages);
+    if (val >= 1 && val <= 20) {
+      setPagesPerDay(val);
+      localStorage.setItem(PAGES_KEY, String(val));
+      setEditing(false);
+    } else {
+      toast.error('Pages must be between 1 and 20');
+    }
+  };
+
   return (
-    <Card className="bg-gradient-to-r from-emerald-500/5 to-primary/5 border-emerald-500/20">
+    <Card className={`border transition-colors ${isTodayDone ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-gradient-to-r from-emerald-500/5 to-primary/5 border-emerald-500/20'}`}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <ScrollText className="w-4 h-4 text-emerald-500" />
-          الورد اليومي — Daily Reading
+        <CardTitle className="text-sm flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <ScrollText className="w-4 h-4 text-emerald-500" />
+            الورد اليومي — Daily Reading
+          </span>
+          <span className="text-xs font-normal text-muted-foreground">
+            {completedCount}/{totalDays} days ({progressPct}%)
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Today's portion: <strong>Surah {startSurah?.englishName}</strong> ({portion.startAyah})
-          {portion.startSurah !== portion.endSurah && (
-            <> → <strong>Surah {endSurah?.englishName}</strong> ({portion.endAyah})</>
-          )}
-        </p>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => startSurah && onReadSurah(startSurah)}>
-            <BookOpen className="w-4 h-4 mr-1" />
-            Start Reading
-          </Button>
-          {portion.startSurah !== portion.endSurah && endSurah && (
-            <Button size="sm" variant="outline" onClick={() => onReadSurah(endSurah)}>
-              End: {endSurah.englishName}
-            </Button>
+        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+          <div
+            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <p className="text-muted-foreground">
+            {isTodayDone ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">✓ Today's reading completed</span>
+            ) : (
+              <>Read: <strong>Surah {startSurah?.englishName}</strong> ({portion.startAyah})
+                {portion.startSurah !== portion.endSurah && (
+                  <> → <strong>Surah {endSurah?.englishName}</strong> ({portion.endAyah})</>
+                )}
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{pagesPerDay} pages/day</span>
+          <span>•</span>
+          <span>~{estDays} days to complete</span>
+          <span>•</span>
+          {editing ? (
+            <span className="flex items-center gap-1">
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={tempPages}
+                onChange={(e) => setTempPages(e.target.value)}
+                className="w-12 px-1 py-0.5 rounded border border-border bg-background text-center text-xs"
+                onKeyDown={(e) => e.key === 'Enter' && savePages()}
+              />
+              <Button variant="ghost" size="sm" className="h-5 px-1.5 text-xs" onClick={savePages}>✓</Button>
+              <Button variant="ghost" size="sm" className="h-5 px-1.5 text-xs" onClick={() => setEditing(false)}>✕</Button>
+            </span>
+          ) : (
+            <button
+              onClick={() => { setTempPages(String(pagesPerDay)); setEditing(true); }}
+              className="text-primary hover:underline cursor-pointer"
+            >
+              Edit
+            </button>
           )}
         </div>
+
+        <div className="flex gap-2">
+          {!isTodayDone && (
+            <Button size="sm" onClick={() => startSurah && onReadSurah(startSurah)}>
+              <BookOpen className="w-4 h-4 mr-1" />
+              Start Reading
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant={isTodayDone ? 'outline' : 'default'}
+            className={isTodayDone ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' : ''}
+            onClick={toggleToday}
+          >
+            <CheckCircle2 className="w-4 h-4 mr-1" />
+            {isTodayDone ? 'Done ✓' : 'Mark Done'}
+          </Button>
+        </div>
+
         <p className="text-xs text-muted-foreground">
-          ~4 pages/day to complete the Quran in 30 days — {today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          {today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
       </CardContent>
     </Card>
