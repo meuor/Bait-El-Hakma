@@ -321,3 +321,23 @@ export const migrateAPI = {
       body: JSON.stringify(data),
     }),
 };
+
+export interface QuranProgressData {
+  bookmarks: Record<number, number>;
+  completedSurahs: number[];
+  dailyCompleted: Record<string, boolean>;
+  dailyPages: number;
+  mushafTheme: string;
+  lastRead: { surah?: number; ayah?: number };
+}
+
+export const quranAPI = {
+  get: () =>
+    fetchAPI<QuranProgressData>('/quran'),
+
+  save: (data: QuranProgressData) =>
+    fetchAPI<{ success: boolean }>('/quran', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+};

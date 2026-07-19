@@ -7,6 +7,7 @@ import {
   CheckCircle2, Loader2, Palette, MapPin,
 } from 'lucide-react';
 import { SURAH_LIST, getDailyPortion, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
+import { quranAPI } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface Ayah {
@@ -110,9 +111,16 @@ export function QuranReader() {
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [allAyahsLoaded, setAllAyahsLoaded] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [visibleAyahs, setVisibleAyahs] = useState(30);
+  const [visibleAyahs, setVisibleAyahs] = useState(12);
+  const [dailyCompleted, setDailyCompleted] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem('quran-daily-progress') || '{}'); } catch { return {}; }
+  });
+  const [dailyPages, setDailyPages] = useState(() => {
+    try { return parseInt(localStorage.getItem('quran-daily-pages') || '4') || 4; } catch { return 4; }
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const ayahRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalRead = progress.completedSurahs.reduce((sum, sn) => {
     const s = SURAH_LIST.find(x => x.number === sn);
@@ -123,6 +131,53 @@ export function QuranReader() {
   useEffect(() => {
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('bait-el-hakma-token');
+    if (!token) return;
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      quranAPI.save({
+        bookmarks,
+        completedSurahs: progress.completedSurahs,
+        dailyCompleted,
+        dailyPages,
+        mushafTheme: theme,
+        lastRead: getLastRead() || {},
+      }).catch(() => {});
+    }, 1500);
+  }, [bookmarks, progress.completedSurahs, dailyCompleted, dailyPages, theme]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('bait-el-hakma-token');
+    if (!token) return;
+    quranAPI.get().then((data) => {
+      if (data.bookmarks && Object.keys(data.bookmarks).length > 0) {
+        setBookmarks(data.bookmarks);
+        localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(data.bookmarks));
+      }
+      if (data.completedSurahs && data.completedSurahs.length > 0) {
+        const updated = { ...loadProgress(), completedSurahs: data.completedSurahs };
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(updated));
+        setProgress(updated);
+      }
+      if (data.dailyCompleted && Object.keys(data.dailyCompleted).length > 0) {
+        setDailyCompleted(data.dailyCompleted);
+        localStorage.setItem('quran-daily-progress', JSON.stringify(data.dailyCompleted));
+      }
+      if (data.dailyPages) {
+        setDailyPages(data.dailyPages);
+        localStorage.setItem('quran-daily-pages', String(data.dailyPages));
+      }
+      if (data.mushafTheme) {
+        setTheme(data.mushafTheme as MushafTheme);
+        localStorage.setItem(THEME_KEY, data.mushafTheme);
+      }
+      if (data.lastRead?.surah) {
+        localStorage.setItem(LAST_READ_KEY, JSON.stringify(data.lastRead));
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current?.closest('.overflow-auto') || window;
@@ -454,7 +509,13 @@ export function QuranReader() {
         </Card>
       )}
 
-      <DailyReadingCard onReadSurah={loadSurah} />
+      <DailyReadingCard
+        onReadSurah={loadSurah}
+        dailyCompleted={dailyCompleted}
+        setDailyCompleted={setDailyCompleted}
+        dailyPages={dailyPages}
+        setDailyPages={setDailyPages}
+      />
 
       <div className="flex items-center justify-between">
         <div className="flex gap-1">
@@ -564,35 +625,41 @@ export function QuranReader() {
   );
 }
 
-function DailyReadingCard({ onReadSurah }: { onReadSurah: (s: SurahInfo) => void }) {
+function DailyReadingCard({
+  onReadSurah,
+  dailyCompleted,
+  setDailyCompleted,
+  dailyPages,
+  setDailyPages,
+}: {
+  onReadSurah: (s: SurahInfo) => void;
+  dailyCompleted: Record<string, boolean>;
+  setDailyCompleted: (v: Record<string, boolean>) => void;
+  dailyPages: number;
+  setDailyPages: (v: number) => void;
+}) {
   const DAILY_KEY = 'quran-daily-progress';
   const PAGES_KEY = 'quran-daily-pages';
 
-  const [pagesPerDay, setPagesPerDay] = useState(() => {
-    try { return parseInt(localStorage.getItem(PAGES_KEY) || '4') || 4; } catch { return 4; }
-  });
-  const [completedDays, setCompletedDays] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem(DAILY_KEY) || '{}'); } catch { return {}; }
-  });
   const [editing, setEditing] = useState(false);
-  const [tempPages, setTempPages] = useState(String(pagesPerDay));
+  const [tempPages, setTempPages] = useState(String(dailyPages));
 
   const today = new Date();
   const todayKey = today.toISOString().split('T')[0];
   const dayOfMonth = today.getDate();
-  const isTodayDone = !!completedDays[todayKey];
-  const portion = getDailyPortion(dayOfMonth, pagesPerDay);
+  const isTodayDone = !!dailyCompleted[todayKey];
+  const portion = getDailyPortion(dayOfMonth, dailyPages);
   const startSurah = SURAH_LIST.find(s => s.number === portion.startSurah);
   const endSurah = SURAH_LIST.find(s => s.number === portion.endSurah);
 
-  const completedCount = Object.values(completedDays).filter(Boolean).length;
+  const completedCount = Object.values(dailyCompleted).filter(Boolean).length;
   const totalDays = 30;
   const progressPct = Math.round((completedCount / totalDays) * 100);
-  const estDays = Math.ceil(TOTAL_AYAHS / (pagesPerDay * 12));
+  const estDays = Math.ceil(TOTAL_AYAHS / (dailyPages * 12));
 
   const toggleToday = () => {
-    const updated = { ...completedDays, [todayKey]: !isTodayDone };
-    setCompletedDays(updated);
+    const updated = { ...dailyCompleted, [todayKey]: !isTodayDone };
+    setDailyCompleted(updated);
     localStorage.setItem(DAILY_KEY, JSON.stringify(updated));
     toast.success(isTodayDone ? 'Marked as not completed' : 'Daily reading completed! 🎉');
   };
@@ -600,7 +667,7 @@ function DailyReadingCard({ onReadSurah }: { onReadSurah: (s: SurahInfo) => void
   const savePages = () => {
     const val = parseInt(tempPages);
     if (val >= 1 && val <= 20) {
-      setPagesPerDay(val);
+      setDailyPages(val);
       localStorage.setItem(PAGES_KEY, String(val));
       setEditing(false);
     } else {
@@ -644,7 +711,7 @@ function DailyReadingCard({ onReadSurah }: { onReadSurah: (s: SurahInfo) => void
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{pagesPerDay} pages/day</span>
+          <span>{dailyPages} pages/day</span>
           <span>•</span>
           <span>~{estDays} days to complete</span>
           <span>•</span>
@@ -664,7 +731,7 @@ function DailyReadingCard({ onReadSurah }: { onReadSurah: (s: SurahInfo) => void
             </span>
           ) : (
             <button
-              onClick={() => { setTempPages(String(pagesPerDay)); setEditing(true); }}
+              onClick={() => { setTempPages(String(dailyPages)); setEditing(true); }}
               className="text-primary hover:underline cursor-pointer"
             >
               Edit

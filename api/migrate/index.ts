@@ -143,6 +143,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )`;
 
+      await sql`CREATE TABLE IF NOT EXISTS quran_progress (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        bookmarks JSONB DEFAULT '{}',
+        completed_surahs JSONB DEFAULT '[]',
+        daily_completed JSONB DEFAULT '{}',
+        daily_pages INTEGER DEFAULT 4,
+        mushaf_theme TEXT DEFAULT 'madina-1441',
+        last_read JSONB DEFAULT '{}',
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`;
+
       await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_pomodoro_sessions_user ON pomodoro_sessions(user_id)`;
