@@ -37,6 +37,46 @@ Create an account to sync your data across devices. Your data is securely stored
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/dashboard.png" alt="Dashboard" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/quran-reader.png" alt="Quran Reader" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/book-library.png" alt="Book Library" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/kanban-board.png" alt="Kanban Board" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/daily-todo.png" alt="Daily Todo" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/pomodoro-timer.png" alt="Pomodoro Timer" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/challenge-tracker.png" alt="Challenge Tracker" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/profile.png" alt="Profile" width="80%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/activity-stats.png" alt="Activity Statistics" width="80%" />
+</p>
+
+---
+
 ## Features
 
 ### Pomodoro Timer
