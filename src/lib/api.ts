@@ -105,7 +105,7 @@ export const authAPI = {
   getStats: () => fetchAPI<UserStats>('/auth?action=stats'),
 
   forgotPassword: (email: string) =>
-    fetchAPI<{ success: boolean; message: string }>('/auth?action=forgot-password', {
+    fetchAPI<{ success: boolean; message: string; devCode?: string }>('/auth?action=forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
     }),

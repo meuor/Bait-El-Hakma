@@ -18,6 +18,7 @@ export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFor
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+  const [devCode, setDevCode] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,8 +26,9 @@ export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFor
     setError('');
 
     try {
-      await authAPI.forgotPassword(email);
+      const res = await authAPI.forgotPassword(email);
       setSent(true);
+      if (res.devCode) setDevCode(res.devCode);
       toast.success('Reset code sent! Check your email.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send reset code');
@@ -51,6 +53,12 @@ export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFor
             <p className="text-sm text-muted-foreground text-center">
               Enter the code from your email to reset your password. The code expires in 15 minutes.
             </p>
+            {devCode && (
+              <div className="border border-amber-300 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 text-center space-y-2">
+                <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">Email not configured — use this code:</p>
+                <p className="text-3xl font-mono font-bold text-foreground tracking-widest">{devCode}</p>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-3 pb-6">
             <Button className="w-full" onClick={() => onCodeVerified(email, '')}>

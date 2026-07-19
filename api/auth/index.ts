@@ -221,14 +221,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       await sql`INSERT INTO password_resets (id, email, code, expires_at) VALUES (${resetId}, ${email}, ${code}, ${expiresAt.toISOString()})`;
 
+      let emailSent = false;
       try {
         await sendPasswordResetEmail(email, displayCode);
+        emailSent = true;
       } catch (emailError) {
         console.error('Failed to send reset email:', emailError);
-        // Still return success - code was generated, just email failed
       }
 
-      return res.status(200).json({ success: true, message: 'If an account with that email exists, a reset code has been sent.' });
+      const response: Record<string, unknown> = { success: true, message: 'If an account with that email exists, a reset code has been sent.' };
+      if (!emailSent) {
+        // Email not configured — return code in response for dev/testing
+        response.devCode = displayCode;
+      }
+
+      return res.status(200).json(response);
     }
 
     // POST /api/auth?action=verify-reset-code
