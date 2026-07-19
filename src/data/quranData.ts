@@ -7,6 +7,8 @@ export interface SurahInfo {
   revelationType: string;
 }
 
+export const TOTAL_AYAHS = 6236;
+
 export const SURAH_LIST: SurahInfo[] = [
   { number: 1, name: "الفاتحة", englishName: "Al-Fatihah", englishNameTranslation: "The Opening", numberOfAyahs: 7, revelationType: "Meccan" },
   { number: 2, name: "البقرة", englishName: "Al-Baqarah", englishNameTranslation: "The Cow", numberOfAyahs: 286, revelationType: "Medinan" },
