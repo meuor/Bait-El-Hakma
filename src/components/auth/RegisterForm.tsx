@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw } from 'lucide-react';
 
 interface RegisterFormProps {
   onLogin: (user: AuthUser, token: string) => void;
@@ -110,11 +110,37 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
             <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
               <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-2" />
               <p className="font-medium text-green-700 dark:text-green-300">
-                Registration Successful!
+                Welcome, {registeredName}! 🎉
               </p>
               <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                Your account has been created and your data will be stored securely in the cloud.
+                Your account is ready. A welcome email has been sent to your inbox.
               </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-left text-sm">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800">
+                <BookOpen className="h-4 w-4 text-violet-500 shrink-0" />
+                <span className="text-violet-700 dark:text-violet-300">Quran Reader</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
+                <Library className="h-4 w-4 text-blue-500 shrink-0" />
+                <span className="text-blue-700 dark:text-blue-300">Book Library</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                <Timer className="h-4 w-4 text-amber-500 shrink-0" />
+                <span className="text-amber-700 dark:text-amber-300">Pomodoro Timer</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                <Trophy className="h-4 w-4 text-green-500 shrink-0" />
+                <span className="text-green-700 dark:text-green-300">Challenges</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-pink-50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800">
+                <ListTodo className="h-4 w-4 text-pink-500 shrink-0" />
+                <span className="text-pink-700 dark:text-pink-300">Tasks & Kanban</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800">
+                <RefreshCw className="h-4 w-4 text-cyan-500 shrink-0" />
+                <span className="text-cyan-700 dark:text-cyan-300">Cloud Sync</span>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">
               Redirecting you to the app...

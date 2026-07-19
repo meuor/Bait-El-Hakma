@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   ScrollText, BookOpen, ArrowLeft, Bookmark, ChevronUp,
-  CheckCircle2, Loader2, Palette,
+  CheckCircle2, Loader2, Palette, MapPin,
 } from 'lucide-react';
 import { SURAH_LIST, getDailyPortion, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
 import { toast } from 'sonner';
@@ -31,9 +31,9 @@ const MUSHAF_THEMES: { id: MushafTheme; name: string; nameAr: string; fontFamily
 ];
 
 const LAST_READ_KEY = 'quran-last-read';
+const BOOKMARKS_KEY = 'quran-bookmarks';
 const PROGRESS_KEY = 'quran-progress';
 const THEME_KEY = 'quran-mushaf-theme';
-const AYAHS_PER_PAGE = 15;
 
 interface QuranProgressData {
   completedSurahs: number[];
@@ -41,6 +41,10 @@ interface QuranProgressData {
   currentSurah: number;
   currentAyah: number;
   lastReadAt: string;
+}
+
+interface BookmarksData {
+  [surahNumber: number]: number;
 }
 
 function loadProgress(): QuranProgressData {
@@ -65,11 +69,51 @@ function loadTheme(): MushafTheme {
   return 'madina-1441';
 }
 
+function loadBookmarks(): BookmarksData {
+  try {
+    const raw = localStorage.getItem(BOOKMARKS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+function saveBookmark(surahNumber: number, ayahNumber: number) {
+  const bookmarks = loadBookmarks();
+  bookmarks[surahNumber] = ayahNumber;
+  localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  saveProgress({ currentSurah: surahNumber, currentAyah: ayahNumber });
+}
+
 function getLastRead(): { surah: number; ayah: number } | null {
   try {
     const raw = localStorage.getItem(LAST_READ_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
+}
+
+function toArabicNumber(n: number): string {
+  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return String(n).split('').map(d => arabicDigits[parseInt(d)]).join('');
+}
+
+function AyahVerseMarker({ number, theme }: { number: number; theme: MushafTheme }) {
+  const arabic = toArabicNumber(number);
+  return (
+    <span
+      className="inline-flex items-center justify-center mx-1 select-none"
+      style={{
+        fontFamily: theme === 'madina-1441' ? "'Amiri Quran', serif" : "'Amiri', serif",
+        fontSize: theme === 'madina-1441' ? '1.1rem' : '0.95rem',
+        color: 'hsl(var(--primary))',
+        opacity: 0.7,
+        verticalAlign: 'baseline',
+        position: 'relative',
+        top: '-2px',
+      }}
+    >
+      ﴿{arabic}﴾
+    </span>
+  );
 }
 
 export function QuranReader() {
@@ -80,11 +124,14 @@ export function QuranReader() {
   const [filter, setFilter] = useState<'all' | 'meccan' | 'medinan'>('all');
   const [theme, setTheme] = useState<MushafTheme>(loadTheme);
   const [progress, setProgress] = useState(loadProgress);
+  const [bookmarks, setBookmarks] = useState<BookmarksData>(loadBookmarks);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [visibleAyahs, setVisibleAyahs] = useState(AYAHS_PER_PAGE);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [allAyahsLoaded, setAllAyahsLoaded] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [visibleAyahs, setVisibleAyahs] = useState(30);
   const containerRef = useRef<HTMLDivElement>(null);
+  const ayahRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
 
   const totalRead = progress.completedSurahs.reduce((sum, sn) => {
     const s = SURAH_LIST.find(x => x.number === sn);
@@ -107,23 +154,27 @@ export function QuranReader() {
         const scrollHeight = container.scrollHeight;
         const clientHeight = container.clientHeight;
         const currentScroll = container.scrollTop;
-        if (scrollHeight - currentScroll - clientHeight < 300 && visibleAyahs < surahData.ayahs.length) {
+        if (scrollHeight - currentScroll - clientHeight < 300 && !allAyahsLoaded) {
           loadMoreAyahs();
         }
       }
     };
     el.addEventListener('scroll', handleScroll, { passive: true });
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [view, surahData, visibleAyahs]);
+  }, [view, surahData, allAyahsLoaded]);
 
   const loadMoreAyahs = useCallback(() => {
-    if (loadingMore || !surahData) return;
+    if (loadingMore || !surahData || allAyahsLoaded) return;
     setLoadingMore(true);
     setTimeout(() => {
-      setVisibleAyahs(prev => Math.min(prev + AYAHS_PER_PAGE, surahData.ayahs.length));
+      setVisibleAyahs(prev => {
+        const next = Math.min(prev + 30, surahData.ayahs.length);
+        if (next >= surahData.ayahs.length) setAllAyahsLoaded(true);
+        return next;
+      });
       setLoadingMore(false);
     }, 300);
-  }, [loadingMore, surahData]);
+  }, [loadingMore, surahData, allAyahsLoaded]);
 
   const markSurahComplete = useCallback((surahNumber: number) => {
     const current = loadProgress();
@@ -138,18 +189,36 @@ export function QuranReader() {
   const loadSurah = useCallback(async (surah: SurahInfo) => {
     setSelectedSurah(surah);
     setView('surah');
-    setVisibleAyahs(AYAHS_PER_PAGE);
+    setVisibleAyahs(30);
+    setAllAyahsLoaded(false);
     try {
       const res = await fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/ar.alafasy`);
       const json = await res.json();
       if (json.code === 200) {
         setSurahData(json.data);
-        saveProgress({ currentSurah: surah.number, currentAyah: 1 });
+        const total = json.data.ayahs.length;
+        if (total <= 30) setAllAyahsLoaded(true);
+
+        const savedBookmark = loadBookmarks()[surah.number] || 1;
+        setTimeout(() => {
+          if (savedBookmark > 1) {
+            const el = ayahRefs.current.get(savedBookmark);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }, 400);
       }
     } catch (err) {
       console.error('Failed to load surah:', err);
       toast.error('Failed to load surah. Check your connection.');
     }
+  }, []);
+
+  const setBookmark = useCallback((surahNumber: number, ayahNumber: number) => {
+    saveBookmark(surahNumber, ayahNumber);
+    setBookmarks(prev => ({ ...prev, [surahNumber]: ayahNumber }));
+    toast.success(`Marked ayah ${ayahNumber} as your last read`, { icon: '📌' });
   }, []);
 
   const loadFromLastRead = useCallback(() => {
@@ -175,21 +244,26 @@ export function QuranReader() {
   const themeData = MUSHAF_THEMES.find(t => t.id === theme) || MUSHAF_THEMES[0];
   const isComplete = (sn: number) => progress.completedSurahs.includes(sn);
 
+  const ayahFontSize = theme === 'madina-1441' ? '1.65rem' : theme === 'madina-classic' ? '1.5rem' : '1.4rem';
+  const ayahLineHeight = theme === 'madina-1441' ? '2.6' : theme === 'madina-classic' ? '2.4' : '2.2';
+
   if (view === 'surah' && surahData && selectedSurah) {
     const shownAyahs = surahData.ayahs.slice(0, visibleAyahs);
     const hasMore = visibleAyahs < surahData.ayahs.length;
     const readPct = Math.round((visibleAyahs / surahData.ayahs.length) * 100);
+    const bookmarkAyah = bookmarks[selectedSurah.number] || 0;
+    const totalAyahs = surahData.ayahs.length;
 
     return (
       <div className="space-y-4" ref={containerRef}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sticky top-0 z-30 bg-background/95 backdrop-blur-sm py-2 -mx-1 px-1">
           <Button variant="ghost" size="sm" onClick={() => { setView('list'); setSurahData(null); }}>
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
           <div className="flex-1 text-center">
             <h3 className="font-bold text-lg">{surahData.englishName}</h3>
-            <p className="text-sm text-muted-foreground" dir="rtl">{surahData.name}</p>
+            <p className="text-xs text-muted-foreground" dir="rtl">{surahData.name}</p>
           </div>
           <Button
             variant={isComplete(selectedSurah.number) ? 'default' : 'outline'}
@@ -197,51 +271,82 @@ export function QuranReader() {
             onClick={() => markSurahComplete(selectedSurah.number)}
           >
             <CheckCircle2 className="w-4 h-4 mr-1" />
-            {isComplete(selectedSurah.number) ? 'Done' : 'Complete'}
+            {isComplete(selectedSurah.number) ? 'Done' : 'Mark Done'}
           </Button>
         </div>
 
-        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${readPct}%` }} />
-        </div>
-        <p className="text-xs text-center text-muted-foreground">
-          {visibleAyahs} / {surahData.ayahs.length} ayahs loaded ({readPct}%)
-        </p>
+        {bookmarkAyah > 0 && (
+          <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-2 flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-primary">
+              <MapPin className="w-4 h-4" />
+              <span>Your bookmark: Ayah {bookmarkAyah}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => {
+                const el = ayahRefs.current.get(bookmarkAyah);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+            >
+              Jump to it
+            </Button>
+          </div>
+        )}
 
-        <div className="text-center p-4">
-          <p className="mushaf-theme-madina-1441" dir="rtl" style={{ fontFamily: themeData.fontFamily }}>
+        <div className="text-center p-6">
+          <p
+            dir="rtl"
+            style={{
+              fontFamily: themeData.fontFamily,
+              fontSize: ayahFontSize,
+              lineHeight: ayahLineHeight,
+            }}
+          >
             بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
           </p>
-          <p className="text-xs text-muted-foreground mt-1">In the name of Allah, the Most Gracious, the Most Merciful</p>
         </div>
 
-        <div className="space-y-1">
-          {shownAyahs.map((ayah) => (
-            <div
-              key={ayah.number}
-              id={`ayah-${ayah.numberInSurah}`}
-              className="py-4 px-3 border-b border-border/30 last:border-b-0"
+        <div
+          className="rounded-xl border border-border/50 overflow-hidden"
+          style={{ background: 'hsl(var(--card))' }}
+        >
+          <div className="p-5 md:p-8">
+            <p
+              dir="rtl"
+              className="text-center"
+              style={{
+                fontFamily: themeData.fontFamily,
+                fontSize: ayahFontSize,
+                lineHeight: ayahLineHeight,
+                letterSpacing: theme === 'unicode' ? '0' : '0.01em',
+                wordSpacing: '0.15em',
+              }}
             >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-11 h-11 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <span className="text-xs font-bold text-primary">{ayah.numberInSurah}</span>
-                </div>
-                <p
-                  className="flex-1 text-right"
-                  dir="rtl"
-                  style={{
-                    fontFamily: themeData.fontFamily,
-                    fontSize: theme === 'madina-1441' ? '1.8rem' : theme === 'madina-classic' ? '1.6rem' : '1.5rem',
-                    lineHeight: theme === 'madina-1441' ? '2.8' : theme === 'madina-classic' ? '2.6' : '2.4',
-                    letterSpacing: theme === 'unicode' ? '0' : '0.02em',
-                  }}
-                  onMouseUp={() => saveProgress({ currentSurah: surahData.number, currentAyah: ayah.numberInSurah })}
-                >
-                  {ayah.text}
-                </p>
-              </div>
-            </div>
-          ))}
+              {shownAyahs.map((ayah) => {
+                const isBookmarked = bookmarkAyah === ayah.numberInSurah;
+                return (
+                  <span
+                    key={ayah.number}
+                    ref={(el) => {
+                      if (el) ayahRefs.current.set(ayah.numberInSurah, el);
+                    }}
+                    onClick={() => setBookmark(selectedSurah.number, ayah.numberInSurah)}
+                    className={`cursor-pointer transition-all duration-200 rounded-sm inline ${
+                      isBookmarked
+                        ? 'bg-primary/20 ring-2 ring-primary/40 px-1 -mx-1'
+                        : 'hover:bg-primary/10 hover:px-1 hover:-mx-1'
+                    }`}
+                    title={isBookmarked ? `This is your last read (ayah ${ayah.numberInSurah}). Click another ayah to change.` : `Tap to mark as last read`}
+                  >
+                    {ayah.text}
+                    <AyahVerseMarker number={ayah.numberInSurah} theme={theme} />
+                  </span>
+                );
+              })}
+            </p>
+          </div>
         </div>
 
         {hasMore && (
@@ -250,15 +355,27 @@ export function QuranReader() {
               <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
             ) : (
               <Button variant="outline" onClick={loadMoreAyahs}>
-                Load More ({surahData.ayahs.length - visibleAyahs} remaining)
+                Load more ayahs ({surahData.ayahs.length - visibleAyahs} remaining)
               </Button>
             )}
           </div>
         )}
 
-        {!hasMore && surahData.ayahs.length > AYAHS_PER_PAGE && (
-          <p className="text-center text-sm text-muted-foreground py-2">All ayahs loaded</p>
+        {!hasMore && (
+          <p className="text-center text-sm text-muted-foreground py-2">
+            All {totalAyahs} ayahs loaded
+          </p>
         )}
+
+        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-500"
+            style={{ width: `${readPct}%` }}
+          />
+        </div>
+        <p className="text-xs text-center text-muted-foreground">
+          {visibleAyahs} / {totalAyahs} ayahs loaded
+        </p>
 
         {showScrollTop && (
           <Button
@@ -379,6 +496,7 @@ export function QuranReader() {
       <div className="grid gap-2">
         {filteredSurahs.map((surah) => {
           const complete = isComplete(surah.number);
+          const bookmarkedAyah = bookmarks[surah.number] || 0;
           return (
             <button
               key={surah.number}
@@ -404,6 +522,12 @@ export function QuranReader() {
                   <Badge variant="outline" className="text-[10px] flex-shrink-0">
                     {surah.numberOfAyahs}
                   </Badge>
+                  {bookmarkedAyah > 0 && (
+                    <Badge variant="secondary" className="text-[10px] flex-shrink-0 gap-1">
+                      <MapPin className="w-2.5 h-2.5" />
+                      {bookmarkedAyah}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{surah.englishNameTranslation}</p>
               </div>

@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
 import sql from '../_lib/db.js';
 import { hashPassword, verifyPassword, generateToken, getUserFromRequest } from '../_lib/auth.js';
-import { sendPasswordResetEmail } from '../_lib/email.js';
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../_lib/email.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -50,6 +50,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await sql`INSERT INTO pomodoro_settings (user_id) VALUES (${userId})`;
 
       const token = generateToken({ userId, email });
+
+      sendWelcomeEmail(email, name).catch((err) => console.error('[Welcome Email] Failed:', err));
+
       return res.status(201).json({ success: true, token, user: { id: userId, email, displayName: name, avatarUrl: '', bio: '', username: cleanUsername } });
     }
 
