@@ -568,13 +568,34 @@ export function BookLibrary() {
                   onChange={(e) => setEditingBook({ ...editingBook, title: e.target.value })}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Author</Label>
                 <Input
                   value={editingBook.author}
                   onChange={(e) => setEditingBook({ ...editingBook, author: e.target.value })}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Cover Image URL</Label>
+                <div className="flex gap-3 items-start">
+                  <Input
+                    placeholder="https://... (paste image link)"
+                    value={editingBook.coverUrl}
+                    onChange={(e) => setEditingBook({ ...editingBook, coverUrl: e.target.value })}
+                    className="flex-1"
+                  />
+                  {editingBook.coverUrl && (
+                    <img
+                      src={editingBook.coverUrl}
+                      alt="Cover preview"
+                      className="w-12 h-16 rounded object-cover border"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Paste a direct image link (jpg, png, webp)</p>
               </div>
               
               <div className="space-y-2">
