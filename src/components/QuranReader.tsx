@@ -148,7 +148,7 @@ export function QuranReader() {
     setLoadingMore(true);
     setTimeout(() => {
       setVisibleAyahs(prev => {
-        const next = Math.min(prev + 30, surahData.ayahs.length);
+        const next = Math.min(prev + 12, surahData.ayahs.length);
         if (next >= surahData.ayahs.length) setAllAyahsLoaded(true);
         return next;
       });
@@ -169,15 +169,25 @@ export function QuranReader() {
   const loadSurah = useCallback(async (surah: SurahInfo) => {
     setSelectedSurah(surah);
     setView('surah');
-    setVisibleAyahs(30);
+    setVisibleAyahs(12);
     setAllAyahsLoaded(false);
     try {
       const res = await fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/ar.alafasy`);
       const json = await res.json();
       if (json.code === 200) {
-        setSurahData(json.data);
-        const total = json.data.ayahs.length;
-        if (total <= 30) setAllAyahsLoaded(true);
+        const data = json.data;
+        const isFatihah = surah.number === 1;
+        const isTawbah = surah.number === 9;
+        if (!isFatihah && !isTawbah && data.ayahs.length > 0) {
+          const bsm = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
+          const firstText = data.ayahs[0].text;
+          if (firstText.includes(bsm)) {
+            data.ayahs[0] = { ...data.ayahs[0], text: firstText.replace(bsm, '').trim() };
+          }
+        }
+        setSurahData(data);
+        const total = data.ayahs.length;
+        if (total <= 12) setAllAyahsLoaded(true);
 
         const savedBookmark = loadBookmarks()[surah.number] || 1;
         setTimeout(() => {
@@ -233,7 +243,6 @@ export function QuranReader() {
     const readPct = Math.round((visibleAyahs / surahData.ayahs.length) * 100);
     const bookmarkAyah = bookmarks[selectedSurah.number] || 0;
     const totalAyahs = surahData.ayahs.length;
-    const isBasmalahSurah = selectedSurah.number === 1 || selectedSurah.number === 9;
 
     return (
       <div className="space-y-4" ref={containerRef}>
@@ -273,21 +282,6 @@ export function QuranReader() {
             >
               Jump to it
             </Button>
-          </div>
-        )}
-
-        {!isBasmalahSurah && (
-          <div className="text-center py-4">
-            <p
-              dir="rtl"
-              style={{
-                fontFamily: themeData.fontFamily,
-                fontSize: ayahFontSize,
-                lineHeight: ayahLineHeight,
-              }}
-            >
-              بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-            </p>
           </div>
         )}
 
