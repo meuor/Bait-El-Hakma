@@ -19,6 +19,8 @@ import {
   VolumeX,
   Shuffle,
   SkipForward,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -120,7 +122,7 @@ function FloatingPlayer({ videoUrl, isYouTube, onClose, isMinimized, onToggleMin
 
 export function VideoPlayer() {
   const { state, dispatch } = useApp();
-  const { videoSource } = state;
+  const { videoSource, pinnedItems } = state;
   
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [activeTab, setActiveTab] = useState('youtube');
@@ -270,6 +272,15 @@ export function VideoPlayer() {
                   <PictureInPicture className="w-4 h-4 mr-2" />{isPiPActive ? 'Exit PiP' : 'PiP Mode'}
                 </Button>
               )}
+              <Button
+                variant={pinnedItems[videoSource.type === 'local' ? 'localVideo' : 'youtubeVideo'] ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => dispatch({ type: 'TOGGLE_PIN', payload: videoSource.type === 'local' ? 'localVideo' : 'youtubeVideo' })}
+                className="gap-2"
+              >
+                {pinnedItems[videoSource.type === 'local' ? 'localVideo' : 'youtubeVideo'] ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                {pinnedItems[videoSource.type === 'local' ? 'localVideo' : 'youtubeVideo'] ? 'Unpin' : 'Pin'}
+              </Button>
               <Button variant="outline" size="sm" onClick={toggleFloating}>
                 <ExternalLink className="w-4 h-4 mr-2" />{isFloating ? 'Dock' : 'Float'}
               </Button>

@@ -25,6 +25,8 @@ import {
   Brain,
   Bed,
   CheckCircle2,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { PomodoroSession, TimerState } from '@/types';
@@ -61,7 +63,7 @@ const playCompleteSound = () => {
 
 export function PomodoroTimer() {
   const { state, dispatch } = useApp();
-  const { pomodoroSettings, pomodoroHistory } = state;
+  const { pomodoroSettings, pomodoroHistory, pinnedItems } = state;
   
   const [timeLeft, setTimeLeft] = useState(pomodoroSettings.focusTime * 60);
   const [timerState, setTimerState] = useState<TimerState>('idle');
@@ -250,7 +252,7 @@ export function PomodoroTimer() {
           <span>Today: {todaySessions.length} sessions</span>
         </Badge>
         <Badge variant="secondary" className="gap-2 px-3 py-1">
-          <Timer className="w-4 h-4" />
+          <TimerIcon className="w-4 h-4" />
           <span>{todayFocusMinutes} min focused</span>
         </Badge>
         <Badge variant="secondary" className="gap-2 px-3 py-1">
@@ -261,9 +263,20 @@ export function PomodoroTimer() {
       {/* Main Timer Card */}
       <Card className="max-w-md mx-auto">
         <CardHeader className="text-center pb-2">
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${sessionInfo.bgColor} ${sessionInfo.color} mx-auto`}>
-            <SessionIcon className="w-5 h-5" />
-            <span className="font-medium">{sessionInfo.label}</span>
+          <div className="flex items-center justify-center gap-2">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${sessionInfo.bgColor} ${sessionInfo.color}`}>
+              <SessionIcon className="w-5 h-5" />
+              <span className="font-medium">{sessionInfo.label}</span>
+            </div>
+            <Button
+              variant={pinnedItems.timer ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => dispatch({ type: 'TOGGLE_PIN', payload: 'timer' })}
+              className="gap-2"
+            >
+              {pinnedItems.timer ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+              {pinnedItems.timer ? 'Unpin' : 'Pin Timer'}
+            </Button>
           </div>
         </CardHeader>
         
@@ -513,7 +526,7 @@ export function PomodoroTimer() {
 }
 
 // Timer icon for stats
-function Timer(props: React.SVGProps<SVGSVGElement>) {
+function TimerIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}

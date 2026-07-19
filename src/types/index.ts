@@ -188,6 +188,13 @@ export interface AppState {
   activityData: ActivityData;
 }
 
+// Pin Types
+export interface PinnedItems {
+  timer: boolean;
+  localVideo: boolean;
+  youtubeVideo: boolean;
+}
+
 // Navigation
 export type AppTab = 
   | 'pomodoro' 

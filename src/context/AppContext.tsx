@@ -12,7 +12,8 @@ import type {
   Todo,
   Challenge,
   ActivityData,
-  AppTab
+  AppTab,
+  PinnedItems
 } from '@/types';
 import { 
   pomodoroAPI, 
@@ -57,6 +58,7 @@ interface State {
   dataSource: 'api' | 'local';
   timerDisplay: TimerDisplay | null;
   activeVideo: ActiveVideo | null;
+  pinnedItems: PinnedItems;
 }
 
 // Action Types
@@ -94,6 +96,7 @@ type Action =
   | { type: 'SET_DATA_SOURCE'; payload: 'api' | 'local' }
   | { type: 'SET_TIMER_DISPLAY'; payload: TimerDisplay | null }
   | { type: 'SET_ACTIVE_VIDEO'; payload: ActiveVideo | null }
+  | { type: 'TOGGLE_PIN'; payload: keyof PinnedItems }
   | { type: 'LOAD_STATE'; payload: Partial<State> };
 
 // Default Pomodoro Settings
@@ -147,6 +150,7 @@ const initialState: State = {
   dataSource: 'local',
   timerDisplay: null,
   activeVideo: null,
+  pinnedItems: { timer: false, localVideo: false, youtubeVideo: false },
 };
 
 // Reducer
@@ -256,6 +260,14 @@ function appReducer(state: State, action: Action): State {
       return { ...state, timerDisplay: action.payload };
     case 'SET_ACTIVE_VIDEO':
       return { ...state, activeVideo: action.payload };
+    case 'TOGGLE_PIN':
+      return {
+        ...state,
+        pinnedItems: {
+          ...state.pinnedItems,
+          [action.payload]: !state.pinnedItems[action.payload],
+        },
+      };
     case 'LOAD_STATE':
       return { ...state, ...action.payload };
     default:
@@ -618,6 +630,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       todos: state.todos,
       challenges: state.challenges,
       activityData: state.activityData,
+      pinnedItems: state.pinnedItems,
     };
     localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(dataToSave));
   }, [
@@ -630,6 +643,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.todos,
     state.challenges,
     state.activityData,
+    state.pinnedItems,
   ]);
 
   // Sync a single action to the API
