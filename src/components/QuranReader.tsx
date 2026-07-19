@@ -195,6 +195,10 @@ export function QuranReader() {
         if (total <= 12) setAllAyahsLoaded(true);
 
         const savedBookmark = loadBookmarks()[surah.number] || 1;
+        if (savedBookmark > 12) {
+          setVisibleAyahs(savedBookmark + 2);
+          if (savedBookmark + 2 >= total) setAllAyahsLoaded(true);
+        }
         setTimeout(() => {
           if (savedBookmark > 1) {
             const el = ayahRefs.current.get(savedBookmark);
@@ -281,8 +285,14 @@ export function QuranReader() {
               size="sm"
               className="h-7 text-xs"
               onClick={() => {
-                const el = ayahRefs.current.get(bookmarkAyah);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (bookmarkAyah > visibleAyahs) {
+                  setVisibleAyahs(bookmarkAyah + 2);
+                  if (bookmarkAyah + 2 >= totalAyahs) setAllAyahsLoaded(true);
+                }
+                setTimeout(() => {
+                  const el = ayahRefs.current.get(bookmarkAyah);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
               }}
             >
               Jump to it
