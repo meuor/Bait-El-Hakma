@@ -96,26 +96,6 @@ function toArabicNumber(n: number): string {
   return String(n).split('').map(d => arabicDigits[parseInt(d)]).join('');
 }
 
-function AyahVerseMarker({ number, theme }: { number: number; theme: MushafTheme }) {
-  const arabic = toArabicNumber(number);
-  return (
-    <span
-      className="inline-flex items-center justify-center mx-1 select-none"
-      style={{
-        fontFamily: theme === 'madina-1441' ? "'Amiri Quran', serif" : "'Amiri', serif",
-        fontSize: theme === 'madina-1441' ? '1.1rem' : '0.95rem',
-        color: 'hsl(var(--primary))',
-        opacity: 0.7,
-        verticalAlign: 'baseline',
-        position: 'relative',
-        top: '-2px',
-      }}
-    >
-      ﴿{arabic}﴾
-    </span>
-  );
-}
-
 export function QuranReader() {
   const [view, setView] = useState<'list' | 'surah'>('list');
   const [selectedSurah, setSelectedSurah] = useState<SurahInfo | null>(null);
@@ -244,8 +224,8 @@ export function QuranReader() {
   const themeData = MUSHAF_THEMES.find(t => t.id === theme) || MUSHAF_THEMES[0];
   const isComplete = (sn: number) => progress.completedSurahs.includes(sn);
 
-  const ayahFontSize = theme === 'madina-1441' ? '1.65rem' : theme === 'madina-classic' ? '1.5rem' : '1.4rem';
-  const ayahLineHeight = theme === 'madina-1441' ? '2.6' : theme === 'madina-classic' ? '2.4' : '2.2';
+  const ayahFontSize = theme === 'madina-1441' ? '2em' : theme === 'madina-classic' ? '1.8em' : '1.65em';
+  const ayahLineHeight = '1.65em';
 
   if (view === 'surah' && surahData && selectedSurah) {
     const shownAyahs = surahData.ayahs.slice(0, visibleAyahs);
@@ -253,6 +233,7 @@ export function QuranReader() {
     const readPct = Math.round((visibleAyahs / surahData.ayahs.length) * 100);
     const bookmarkAyah = bookmarks[selectedSurah.number] || 0;
     const totalAyahs = surahData.ayahs.length;
+    const isBasmalahSurah = selectedSurah.number === 1 || selectedSurah.number === 9;
 
     return (
       <div className="space-y-4" ref={containerRef}>
@@ -295,33 +276,32 @@ export function QuranReader() {
           </div>
         )}
 
-        <div className="text-center p-6">
-          <p
-            dir="rtl"
-            style={{
-              fontFamily: themeData.fontFamily,
-              fontSize: ayahFontSize,
-              lineHeight: ayahLineHeight,
-            }}
-          >
-            بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-          </p>
-        </div>
-
-        <div
-          className="rounded-xl border border-border/50 overflow-hidden"
-          style={{ background: 'hsl(var(--card))' }}
-        >
-          <div className="p-5 md:p-8">
+        {!isBasmalahSurah && (
+          <div className="text-center py-4">
             <p
               dir="rtl"
-              className="text-center"
               style={{
                 fontFamily: themeData.fontFamily,
                 fontSize: ayahFontSize,
                 lineHeight: ayahLineHeight,
-                letterSpacing: theme === 'unicode' ? '0' : '0.01em',
-                wordSpacing: '0.15em',
+              }}
+            >
+              بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+            </p>
+          </div>
+        )}
+
+        <div className="rounded-xl border border-border/50 overflow-hidden" style={{ background: 'hsl(var(--card))' }}>
+          <div className="p-5 md:p-8">
+            <p
+              dir="rtl"
+              style={{
+                fontFamily: themeData.fontFamily,
+                fontSize: ayahFontSize,
+                lineHeight: ayahLineHeight,
+                textAlign: 'justify',
+                wordSpacing: '0.1em',
+                letterSpacing: theme === 'unicode' ? '0' : '0.02em',
               }}
             >
               {shownAyahs.map((ayah) => {
@@ -333,15 +313,28 @@ export function QuranReader() {
                       if (el) ayahRefs.current.set(ayah.numberInSurah, el);
                     }}
                     onClick={() => setBookmark(selectedSurah.number, ayah.numberInSurah)}
-                    className={`cursor-pointer transition-all duration-200 rounded-sm inline ${
+                    className={`cursor-pointer transition-all duration-200 ${
                       isBookmarked
-                        ? 'bg-primary/20 ring-2 ring-primary/40 px-1 -mx-1'
-                        : 'hover:bg-primary/10 hover:px-1 hover:-mx-1'
+                        ? 'bg-primary/20 ring-2 ring-primary/40 rounded-sm'
+                        : 'hover:bg-primary/10 rounded-sm'
                     }`}
-                    title={isBookmarked ? `This is your last read (ayah ${ayah.numberInSurah}). Click another ayah to change.` : `Tap to mark as last read`}
+                    title={isBookmarked ? `Last read (ayah ${ayah.numberInSurah}). Click another to change.` : `Tap to mark as last read`}
                   >
                     {ayah.text}
-                    <AyahVerseMarker number={ayah.numberInSurah} theme={theme} />
+                    <span
+                      className="inline-flex items-center justify-center mx-1 select-none"
+                      style={{
+                        fontFamily: theme === 'madina-1441' ? "'Amiri Quran', serif" : "'Amiri', serif",
+                        fontSize: '0.75em',
+                        color: isBookmarked ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.5)',
+                        verticalAlign: 'baseline',
+                        position: 'relative',
+                        top: '-1px',
+                        fontWeight: isBookmarked ? 700 : 400,
+                      }}
+                    >
+                      ﴿{toArabicNumber(ayah.numberInSurah)}﴾
+                    </span>
                   </span>
                 );
               })}
@@ -368,10 +361,7 @@ export function QuranReader() {
         )}
 
         <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
-            style={{ width: `${readPct}%` }}
-          />
+          <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${readPct}%` }} />
         </div>
         <p className="text-xs text-center text-muted-foreground">
           {visibleAyahs} / {totalAyahs} ayahs loaded
