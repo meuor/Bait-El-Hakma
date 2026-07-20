@@ -76,7 +76,7 @@ function AppContent() {
   const handleLogout = useCallback(() => {
     setUser(null);
     setToken(null);
-    setAuthView('login');
+    setAuthView('landing');
   }, []);
 
   const handleUpdateUser = useCallback((updatedUser: AuthUser) => {
