@@ -21,11 +21,12 @@ import { ChallengeTracker } from '@/sections/ChallengeTracker';
 import { Toaster } from '@/components/ui/sonner';
 import { SyncStatus } from '@/components/SyncStatus';
 import { MiniPlayer } from '@/components/MiniPlayer';
+import { LandingPage } from '@/components/LandingPage';
 import { motion } from 'framer-motion';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 
-type AuthView = 'login' | 'register' | 'forgot-password' | 'reset-password';
+type AuthView = 'landing' | 'login' | 'register' | 'forgot-password' | 'reset-password';
 
 function AppContent() {
   const { state } = useApp();
@@ -33,7 +34,7 @@ function AppContent() {
 
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [authView, setAuthView] = useState<AuthView>('login');
+  const [authView, setAuthView] = useState<AuthView>('landing');
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [publicProfileUsername, setPublicProfileUsername] = useState<string | null>(null);
   const [resetEmail, setResetEmail] = useState('');
@@ -108,6 +109,14 @@ function AppContent() {
   }
 
   if (!user || !token) {
+    if (authView === 'landing') {
+      return (
+        <LandingPage
+          onLogin={() => setAuthView('login')}
+          onRegister={() => setAuthView('register')}
+        />
+      );
+    }
     if (authView === 'register') {
       return (
         <RegisterForm
