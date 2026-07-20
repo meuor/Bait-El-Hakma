@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   BookOpen,
   Timer,
@@ -11,7 +12,8 @@ import {
   Sparkles,
   ArrowRight,
   ChevronRight,
-  Youtube,
+  X,
+  ZoomIn,
 } from 'lucide-react';
 import './LandingPage.css';
 
@@ -111,6 +113,9 @@ const steps = [
 ];
 
 export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [lightboxTitle, setLightboxTitle] = useState('');
+
   return (
     <div className="landing">
       {/* Navigation */}
@@ -204,8 +209,15 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
           <div className="landing-showcase-grid">
             {screenshots.map((s, i) => (
-              <div key={i} className="landing-showcase-item">
+              <div
+                key={i}
+                className="landing-showcase-item"
+                onClick={() => { setLightboxImg(s.img); setLightboxTitle(s.title); }}
+              >
                 <img src={s.img} alt={s.title} loading="lazy" />
+                <div className="landing-showcase-zoom">
+                  <ZoomIn className="w-6 h-6" />
+                </div>
                 <div className="landing-showcase-overlay">
                   <h4>{s.title}</h4>
                   <p>{s.desc}</p>
@@ -277,6 +289,16 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           </div>
         </div>
       </footer>
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div className="landing-lightbox" onClick={() => setLightboxImg(null)}>
+          <button className="landing-lightbox-close" onClick={() => setLightboxImg(null)}>
+            <X className="w-6 h-6" />
+          </button>
+          <img src={lightboxImg} alt={lightboxTitle} />
+          <div className="landing-lightbox-title">{lightboxTitle}</div>
+        </div>
+      )}
     </div>
   );
 }
