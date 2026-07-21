@@ -132,6 +132,7 @@ export function QuranReader() {
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
+  // Push to cloud - debounced
   useEffect(() => {
     const token = localStorage.getItem('bait-el-hakma-token');
     if (!token) return;
@@ -144,14 +145,29 @@ export function QuranReader() {
         dailyPages,
         mushafTheme: theme,
         lastRead: getLastRead() || {},
-      }).catch(() => {});
+      }).catch((err) => {
+        console.warn('Quran cloud sync failed, will retry:', err);
+        // Retry once after 3 seconds
+        setTimeout(() => {
+          quranAPI.save({
+            bookmarks,
+            completedSurahs: progress.completedSurahs,
+            dailyCompleted,
+            dailyPages,
+            mushafTheme: theme,
+            lastRead: getLastRead() || {},
+          }).catch((e) => console.error('Quran cloud sync retry failed:', e));
+        }, 3000);
+      });
     }, 1500);
   }, [bookmarks, progress.completedSurahs, dailyCompleted, dailyPages, theme]);
 
+  // Pull from cloud on mount - smart merge (cloud only overwrites if it has data)
   useEffect(() => {
     const token = localStorage.getItem('bait-el-hakma-token');
     if (!token) return;
     quranAPI.get().then((data) => {
+      // Merge: only apply cloud data if it has meaningful content
       if (data.bookmarks && Object.keys(data.bookmarks).length > 0) {
         setBookmarks(data.bookmarks);
         localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(data.bookmarks));
@@ -176,7 +192,10 @@ export function QuranReader() {
       if (data.lastRead?.surah) {
         localStorage.setItem(LAST_READ_KEY, JSON.stringify(data.lastRead));
       }
-    }).catch(() => {});
+      console.log('Quran data synced from cloud');
+    }).catch((err) => {
+      console.warn('Quran cloud pull failed:', err);
+    });
   }, []);
 
   useEffect(() => {
@@ -542,7 +561,7 @@ export function QuranReader() {
             <span className="hidden sm:inline text-xs">{themeData.name}</span>
           </Button>
           {showThemePicker && (
-            <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-lg shadow-xl p-1 w-52">
+            <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-lg shadow-xl p-1 w-48 sm:w-52">
               {MUSHAF_THEMES.map(t => (
                 <button
                   key={t.id}

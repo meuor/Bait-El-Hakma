@@ -201,6 +201,49 @@
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Mobile Responsive Overrides */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .landing-footer {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 640px) {
+  /* Quran fonts scale down on mobile */
+  .mushaf-theme-madina-1441 {
+    font-size: 1.3rem;
+    line-height: 2.2;
+  }
+  .mushaf-theme-madina-classic {
+    font-size: 1.2rem;
+    line-height: 2.0;
+  }
+  .mushaf-theme-unicode {
+    font-size: 1.15rem;
+    line-height: 1.9;
+  }
+
+  /* Floating player responsive */
+  .floating-player {
+    width: calc(100vw - 2rem) !important;
+    right: 0.5rem !important;
+    bottom: 5rem !important;
+  }
+
+  /* Timer ring scales down */
+  .timer-ring {
+    width: 220px !important;
+    height: 220px !important;
+  }
+}
+
+/* Remove universal transition for performance on mobile */
+@media (hover: none) {
+  * {
+    transition: none !important;
+  }
+}
+
 /* Kanban Board Styles */
 .kanban-column {
   min-height: 200px;

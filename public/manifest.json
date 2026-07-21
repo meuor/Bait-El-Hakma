@@ -8,12 +8,13 @@
   "theme_color": "#8b5cf6",
   "orientation": "any",
   "scope": "/",
+  "id": "/",
   "icons": [
     {
       "src": "/logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/logo.png",
@@ -22,7 +23,26 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Quran Reader",
+      "short_name": "Quran",
+      "url": "/?tab=motivation",
+      "description": "Read the Quran with multiple themes"
+    },
+    {
+      "name": "Pomodoro Timer",
+      "short_name": "Timer",
+      "url": "/?tab=pomodoro",
+      "description": "Focus timer with customizable intervals"
+    },
+    {
+      "name": "Daily Tasks",
+      "short_name": "Tasks",
+      "url": "/?tab=todo",
+      "description": "Plan and track your daily tasks"
+    }
+  ],
   "categories": ["productivity", "education", "lifestyle"],
-  "lang": "en",
-  "dir": "ltr"
+  "lang": "en"
 }

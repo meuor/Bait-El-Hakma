@@ -217,7 +217,7 @@ export function KanbanBoard() {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-sm flex-1">{card.title}</h4>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                        <div className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex gap-1 shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"

@@ -50,9 +50,9 @@ export function MiniPlayer() {
   const progress = timerDisplay ? ((timerDisplay.totalTime - timerDisplay.timeLeft) / timerDisplay.totalTime) * 100 : 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
-      <div className="container mx-auto px-4 pb-4">
-        <div className="flex items-end gap-3 justify-end">
+    <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="container mx-auto px-2 sm:px-4 pb-3 sm:pb-4">
+        <div className="flex items-end gap-2 sm:gap-3 justify-end overflow-x-auto max-w-full">
           {/* Timer mini player - show if active or pinned */}
           {(hasTimer || pinnedItems.timer) && (
             <Card className={`pointer-events-auto shadow-xl overflow-hidden flex-shrink-0 ${hasTimer ? 'border-primary/20' : 'border-muted opacity-80'}`}>
@@ -78,7 +78,7 @@ export function MiniPlayer() {
 
           {/* Local video mini player - show if pinned */}
           {pinnedItems.localVideo && hasLocalVideo && (
-            <Card className="pointer-events-auto shadow-xl overflow-hidden flex-shrink-0 w-72 border-muted">
+            <Card className="pointer-events-auto shadow-xl overflow-hidden flex-shrink-0 w-56 sm:w-72 border-muted">
               <div className="relative">
                 <div className="aspect-video bg-black">
                   <video
@@ -112,7 +112,7 @@ export function MiniPlayer() {
 
           {/* YouTube video mini player - show if active or pinned */}
           {(hasActiveVideo || (pinnedItems.youtubeVideo && hasYouTubeVideo)) && (
-            <Card className="pointer-events-auto shadow-xl overflow-hidden flex-shrink-0 w-72">
+            <Card className="pointer-events-auto shadow-xl overflow-hidden flex-shrink-0 w-56 sm:w-72">
               <div className="relative">
                 <div className="aspect-video bg-black">
                   {(() => {
