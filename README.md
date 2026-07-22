@@ -6,7 +6,7 @@
 <h3 align="center">بيت الحكمة — House of Wisdom</h3>
 
 <p align="center">
-  A comprehensive productivity web application with cloud sync, authentication, Quran reader, and beautiful themes.
+  A comprehensive productivity web application with cloud sync, authentication, full Quran reader with audio, and beautiful themes.
 </p>
 
 <p align="center">
@@ -79,6 +79,31 @@ Create an account to sync your data across devices. Your data is securely stored
 
 ## Features
 
+### Quran Reader (Full Mushaf)
+- **All 114 Surahs** with Arabic text from `api.alquran.cloud`
+- **Medina-style layout** — centered ayahs, ornamental verse markers ﴿١﴾, spacious design
+- **Inline audio player** — tap any ayah to play; mini controls appear below it
+- **Auto-advance** — play continues through ayahs automatically until you stop
+- **13 reciters** — Alafasy, Husary, Minshawi, Sudais, Ajmi, Hudhaify, Abdul Basit, and more
+- **Repeat modes** — repeat a single ayah (∞) or repeat 3 times then advance (3x)
+- **Memorization mode** — hide all ayahs and tap to reveal one by one for self-testing
+- **Mushaf themes** — Madina 1441, Madina Classic, Unicode (switchable from toolbar)
+- **Cloud sync** — bookmarks, progress, theme, and last-read position synced to your account
+- **Basmalah handling** — only shown as a header for Surah Al-Baqarah; stripped from all ayahs
+- **Surah search & filter** — search by name/number, filter by Meccan/Medinan
+
+### Quran Dashboard
+- **Juz grid** — 30-cell visual grid color-coded by completion percentage
+- **Weekly activity bar chart** — track your daily reading sessions
+- **Surah progress list** — see which surahs you've completed
+- **Achievements** — 16 unlockable badges (First Steps, Al-Fatihah Master, Juz 30, Week Warrior, Month Master, Hafiz, etc.)
+- **Day streak tracking** — consecutive days of reading
+
+### Daily Reading (الورد اليومي)
+- Auto-calculated daily portion to finish Quran in 30 days
+- Configurable pages per day (2/4/6/8/10)
+- Progress bar with daily completion toggle
+
 ### Pomodoro Timer
 - Customizable focus/break intervals
 - Circular SVG progress ring with smooth animations
@@ -121,11 +146,7 @@ Create an account to sync your data across devices. Your data is securely stored
 - Achievement badges
 - Streak tracking
 
-### Motivation & Quran
-- **Full Quran Reader** — All 114 Surahs with Arabic text (Alafasy recitation)
-- **الورد اليومي (Daily Reading)** — Auto-calculated daily portion to finish Quran in 30 days
-- **Last page auto-saved** — Resume reading from where you left off
-- **Surah search & filter** — Search by name/number, filter by Meccan/Medinan
+### Motivation
 - Hadith collection with narrator & source
 - Verse of the Day (random Quranic verse)
 - Motivational quotes
@@ -153,6 +174,16 @@ Bait El-Hakma features a complete authentication system:
 - **Access from any device** by signing in
 - **Data migration** tool to import existing local data
 - **Cloud sync status** banner — auto-hides after 5 seconds
+- **Quran progress sync** — bookmarks, completed surahs, theme, and last-read synced
+
+---
+
+## PWA
+
+- **Installable** — add to home screen on mobile and desktop
+- **Quick shortcuts** — Quran, Timer, Tasks from home screen
+- **Offline support** — service worker with versioned caches
+- **Mobile optimized** — safe-area-inset for iPhone, responsive touch targets
 
 ---
 
@@ -183,7 +214,8 @@ Bait El-Hakma features a complete authentication system:
 | Icons | Lucide React |
 | Auth | JWT + bcryptjs |
 | Email | Resend API (password reset) |
-| Quran API | api.alquran.cloud |
+| Quran API | api.alquran.cloud (text + audio CDN) |
+| Audio CDN | cdn.islamic.network (13 reciters, 128kbps) |
 | Database | Neon PostgreSQL (serverless) |
 | Hosting | Vercel |
 
@@ -193,7 +225,7 @@ Bait El-Hakma features a complete authentication system:
 
 ```
 Bait-El-Hakma/
-├── api/                        # Vercel Serverless Functions (9 endpoints)
+├── api/                        # Vercel Serverless Functions (10 endpoints)
 │   ├── _lib/                   # Shared utilities (db, auth, email)
 │   ├── auth/                   # Auth (register, login, profile, username, public-profile, password reset)
 │   ├── kanban/                 # Kanban board CRUD (columns + cards)
@@ -202,21 +234,26 @@ Bait-El-Hakma/
 │   ├── todos/                  # Daily todos CRUD
 │   ├── challenges/             # Challenges CRUD
 │   ├── settings/               # User settings (UPSERT)
+│   ├── quran/                  # Quran progress sync (bookmarks, theme, last-read)
+│   ├── profile/                # Public profile pages
 │   └── migrate/                # Safe data migration (CREATE IF NOT EXISTS)
 ├── src/
 │   ├── components/
 │   │   ├── auth/               # LoginForm, RegisterForm, ProfilePage, PublicProfile, ForgotPasswordForm, ResetPasswordForm
 │   │   ├── ui/                 # 73+ shadcn/ui components
-│   │   ├── QuranReader.tsx     # Full Quran reader (114 surahs, auto-save last page)
+│   │   ├── QuranReader.tsx     # Full Quran reader with inline audio, memorization, reciter selector
+│   │   ├── QuranDashboard.tsx  # Juz grid, weekly stats, achievements, surah progress
+│   │   ├── QuranAudio.tsx      # Standalone audio player (unused, kept for reference)
+│   │   ├── LandingPage.tsx     # Public landing page with hero, features, screenshots
 │   │   ├── Header.tsx          # Header with cloud sync indicator
 │   │   ├── Footer.tsx          # Footer with support links
 │   │   ├── MiniPlayer.tsx      # Floating Pomodoro timer + video player
 │   │   ├── SyncStatus.tsx      # Cloud sync status banner (auto-hides 5s)
-│   │   └── TabNavigation.tsx   # Bottom tab navigation
+│   │   └── TabNavigation.tsx   # Bottom tab navigation (auto-scroll, 44px touch targets)
 │   ├── data/
 │   │   └── quranData.ts        # All 114 surahs metadata + daily reading calculator
 │   ├── context/
-│   │   ├── AppContext.tsx       # Central state + API sync
+│   │   ├── AppContext.tsx       # Central state + API sync + pinned items
 │   │   └── ThemeContext.tsx     # Theme management
 │   ├── sections/               # Feature sections
 │   │   ├── PomodoroTimer.tsx
@@ -225,16 +262,22 @@ Bait-El-Hakma/
 │   │   ├── BookLibrary.tsx
 │   │   ├── DailyTodo.tsx
 │   │   ├── ActivityStats.tsx
-│   │   ├── Motivation.tsx      # Updated: Hadith, Verse, Quotes, + Quran Reader
+│   │   ├── Motivation.tsx      # Hadith, Verse, Quotes, + Quran Reader tab
 │   │   └── ChallengeTracker.tsx
 │   ├── lib/
-│   │   ├── api.ts              # API client (auth + all CRUD + password reset)
+│   │   ├── api.ts              # API client (auth + all CRUD + password reset + quran sync)
 │   │   └── utils.ts            # Utility functions
 │   ├── types/index.ts          # TypeScript types
-│   └── index.css               # Themes & global styles
+│   └── index.css               # Themes, mobile responsive, safe-area-inset
 ├── public/
-│   └── logo.png
+│   ├── logo.png
+│   ├── manifest.json           # PWA manifest with shortcuts
+│   ├── sw.js                   # Service worker (versioned caches)
+│   ├── robots.txt              # SEO
+│   └── sitemap.xml             # SEO
+├── screenshots/                # Landing page screenshots
 ├── vercel.json                 # Rewrites: /@username, /api/*
+├── index.html                  # SEO meta tags, JSON-LD structured data
 ├── package.json
 └── vite.config.ts
 ```
@@ -295,23 +338,6 @@ Every push to `master` triggers a new deployment.
 
 ---
 
-## Recent Fixes & Updates
-
-- **Fixed 500 errors** — `getUserFromRequest` now handles VercelRequest headers correctly
-- **Fixed data sync** — Full snake_case→camelCase mapping for all API responses
-- **Fixed public profile** — Username regex bug that stripped all characters
-- **Fixed settings/kcolumn upsert** — ON CONFLICT prevents duplicate key errors
-- **Safe migration** — `CREATE TABLE IF NOT EXISTS` preserves existing data
-- **MiniPlayer** — Pomodoro timer & video player visible across all tabs
-- **Auto-rotate videos** — 5-min cycle with category filters and 12 suggestions
-- **Login error feedback** — Red visual indicators for wrong credentials
-- **Password reset** — Email-based 6-character code (***-*** format)
-- **SyncStatus banner** — Auto-hides after 5 seconds
-- **Full Quran reader** — 114 surahs, daily reading portion, auto-save last page
-- **Footer support links** — Email, Report Issue, GitHub
-
----
-
 ## Contributing
 
 1. Fork the repository
@@ -341,5 +367,5 @@ Every push to `master` triggers a new deployment.
   <strong>بيت الحكمة</strong> — House of Wisdom
 </p>
 <p align="center">
-  Created &amp; inspired by <strong>Rajaei Muhammed</strong> &amp; <strong>Kimi AI</strong> ❤️ | All back-end by <strong>OpenCode</strong> ❤️
+  Created &amp; inspired by <strong>Rajaei Muhammed</strong> &amp; <strong>Kimi AI</strong> | All back-end by <strong>OpenCode</strong>
 </p>
