@@ -6,7 +6,7 @@ import {
   ScrollText, BookOpen, ArrowLeft, Bookmark, ChevronUp,
   CheckCircle2, Loader2, Palette, MapPin, Eye, EyeOff,
   Brain, LayoutGrid, Play, Pause, SkipForward, SkipBack, X,
-  Volume2, VolumeX, Headphones,
+  Volume2, VolumeX, Headphones, Repeat, Repeat1,
 } from 'lucide-react';
 import { SURAH_LIST, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
 import { quranAPI } from '@/lib/api';
@@ -128,14 +128,16 @@ export function QuranReader() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'none' | 'ayah' | 'ayah3x'>('none');
+  const repeatCountRef = useRef(0);
   const [pendingScrollAyah, setPendingScrollAyah] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const ayahRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioStateRef = useRef({ surahData: null as SurahData | null, playingAyah: null as number | null, audioMuted: false });
+  const audioStateRef = useRef({ surahData: null as SurahData | null, playingAyah: null as number | null, audioMuted: false, repeatMode: 'none' as 'none' | 'ayah' | 'ayah3x' });
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  audioStateRef.current = { surahData, playingAyah, audioMuted };
+  audioStateRef.current = { surahData, playingAyah, audioMuted, repeatMode };
 
   const totalRead = progress.completedSurahs.reduce((sum, sn) => {
     const s = SURAH_LIST.find(x => x.number === sn);
@@ -297,8 +299,28 @@ export function QuranReader() {
     audioRef.current = audio;
 
     const onEnded = () => {
-      const { surahData: sd, playingAyah: pa, audioMuted: am } = audioStateRef.current;
+      const { surahData: sd, playingAyah: pa, audioMuted: am, repeatMode: rm } = audioStateRef.current;
       if (!sd || pa === null) return;
+
+      if (rm === 'ayah' || rm === 'ayah3x') {
+        if (rm === 'ayah3x') {
+          repeatCountRef.current++;
+          if (repeatCountRef.current >= 3) {
+            repeatCountRef.current = 0;
+          } else {
+            audio.currentTime = 0;
+            audio.volume = am ? 0 : 0.8;
+            audio.play().then(() => setIsAudioPlaying(true)).catch(() => setIsAudioPlaying(false));
+            return;
+          }
+        } else {
+          audio.currentTime = 0;
+          audio.volume = am ? 0 : 0.8;
+          audio.play().then(() => setIsAudioPlaying(true)).catch(() => setIsAudioPlaying(false));
+          return;
+        }
+      }
+
       const idx = sd.ayahs.findIndex(a => a.numberInSurah === pa);
       if (idx < sd.ayahs.length - 1) {
         const nextAyah = sd.ayahs[idx + 1];
@@ -339,11 +361,13 @@ export function QuranReader() {
     const ayah = surahData.ayahs.find(a => a.numberInSurah === ayahNum);
     if (!ayah) return;
 
+    repeatCountRef.current = 0;
     const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`;
     audio.src = url;
     audio.volume = audioMuted ? 0 : 0.8;
     audio.load();
     setPlayingAyah(ayahNum);
+    setSelectedAyah(ayahNum);
     setAudioLoading(true);
 
     try {
@@ -487,7 +511,7 @@ export function QuranReader() {
   const themeData = MUSHAF_THEMES.find(t => t.id === theme) || MUSHAF_THEMES[0];
   const isComplete = (sn: number) => progress.completedSurahs.includes(sn);
   const ayahFontSize = theme === 'madina-1441' ? '2em' : theme === 'madina-classic' ? '1.8em' : '1.65em';
-  const ayahLineHeight = '1.65em';
+  const ayahLineHeight = '2em';
   const anyAudioActive = playingAyah !== null;
 
   if (view === 'surah' && surahData && selectedSurah) {
@@ -557,7 +581,13 @@ export function QuranReader() {
               <Badge variant="secondary" className="text-xs">{hiddenAyahs.size}/{totalAyahs} hidden</Badge>
             </>
           )}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1.5">
+            {repeatMode !== 'none' && (
+              <Badge variant="secondary" className="gap-1 text-xs">
+                <Repeat className="w-3 h-3" />
+                {repeatMode === 'ayah3x' ? '3x' : '∞'}
+              </Badge>
+            )}
             <Badge variant={anyAudioActive ? 'default' : 'outline'} className="gap-1 text-xs">
               <Headphones className="w-3 h-3" />
               {anyAudioActive ? `Playing ${playingAyah}` : 'Tap ayah to play'}
@@ -566,110 +596,133 @@ export function QuranReader() {
         </div>
 
         {selectedSurah.number === 2 && (
-          <div className="text-center py-3">
-            <p dir="rtl" style={{ fontFamily: themeData.fontFamily, fontSize: ayahFontSize, lineHeight: ayahLineHeight }}>
+          <div className="text-center py-4">
+            <p dir="rtl" style={{ fontFamily: themeData.fontFamily, fontSize: ayahFontSize, lineHeight: ayahLineHeight, textAlign: 'center' }}>
               بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
             </p>
           </div>
         )}
 
-        <div className="rounded-xl border border-border/50 overflow-hidden" style={{ background: 'hsl(var(--card))' }}>
-          <div className="p-5 md:p-8 space-y-1">
-            {shownAyahs.map((ayah) => {
-              const isBookmarked = bookmarkAyah === ayah.numberInSurah;
-              const isHidden = memMode && hiddenAyahs.has(ayah.number);
-              const isSelected = selectedAyah === ayah.numberInSurah;
-              const isPlaying = playingAyah === ayah.numberInSurah;
+        <div className="rounded-xl border border-border/30 overflow-hidden shadow-sm" style={{ background: 'hsl(var(--card))' }}>
+          <div className="p-6 md:p-10">
+            <div className="space-y-5">
+              {shownAyahs.map((ayah) => {
+                const isBookmarked = bookmarkAyah === ayah.numberInSurah;
+                const isHidden = memMode && hiddenAyahs.has(ayah.number);
+                const isSelected = selectedAyah === ayah.numberInSurah;
+                const isPlaying = playingAyah === ayah.numberInSurah;
 
-              return (
-                <div key={ayah.number} className="relative">
-                  <div
-                    ref={(el) => { if (el) ayahRefs.current.set(ayah.numberInSurah, el); }}
-                    dir="rtl"
-                    onClick={() => handleAyahClick(ayah)}
-                    style={{
-                      fontFamily: themeData.fontFamily,
-                      fontSize: ayahFontSize,
-                      lineHeight: ayahLineHeight,
-                      textAlign: 'justify',
-                      wordSpacing: '0.1em',
-                      letterSpacing: theme === 'unicode' ? '0' : '0.02em',
-                    }}
-                    className={`cursor-pointer transition-all duration-200 rounded-lg px-1 ${
-                      isHidden
-                        ? 'bg-destructive/10 text-destructive/30 border border-dashed border-destructive/20'
-                        : isPlaying
-                          ? 'bg-primary/15 ring-2 ring-primary/40'
-                          : isSelected
-                            ? 'bg-primary/10 ring-1 ring-primary/30'
-                            : isBookmarked
+                return (
+                  <div key={ayah.number} className="relative">
+                    <div
+                      ref={(el) => { if (el) ayahRefs.current.set(ayah.numberInSurah, el); }}
+                      dir="rtl"
+                      onClick={() => handleAyahClick(ayah)}
+                      style={{
+                        fontFamily: themeData.fontFamily,
+                        fontSize: ayahFontSize,
+                        lineHeight: ayahLineHeight,
+                        textAlign: 'center',
+                        wordSpacing: '0.05em',
+                        letterSpacing: theme === 'unicode' ? '0' : '0.01em',
+                      }}
+                      className={`cursor-pointer transition-all duration-200 rounded-xl px-3 py-2 ${
+                        isHidden
+                          ? 'bg-destructive/5 text-destructive/30 border border-dashed border-destructive/15'
+                          : isPlaying
+                            ? 'bg-primary/10 ring-2 ring-primary/40 shadow-sm'
+                            : isSelected
                               ? 'bg-primary/5 ring-1 ring-primary/20'
-                              : 'hover:bg-primary/5'
-                    }`}
-                  >
-                    {isHidden ? '···' : ayah.text}
-                    {!isHidden && (
-                      <span
-                        className="inline-flex items-center justify-center mx-1 select-none"
-                        style={{
-                          fontFamily: theme === 'madina-1441' ? "'Amiri Quran', serif" : "'Amiri', serif",
-                          fontSize: '0.75em',
-                          color: isPlaying ? 'hsl(var(--primary))' : isBookmarked ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.5)',
-                          verticalAlign: 'baseline',
-                          position: 'relative',
-                          top: '-1px',
-                          fontWeight: isPlaying || isBookmarked ? 700 : 400,
-                        }}
-                      >
-                        ﴿{toArabicNumber(ayah.numberInSurah)}﴾
-                      </span>
-                    )}
-                  </div>
+                              : isBookmarked
+                                ? 'bg-primary/5 ring-1 ring-primary/15'
+                                : 'hover:bg-primary/5'
+                      }`}
+                    >
+                      {isHidden ? (
+                        <span className="tracking-widest">• • •</span>
+                      ) : (
+                        <>
+                          {ayah.text}
+                          <span
+                            className="inline-flex items-center justify-center mx-2 select-none"
+                            style={{
+                              fontFamily: "'Amiri Quran', 'Amiri', serif",
+                              fontSize: '0.65em',
+                              color: isPlaying ? 'hsl(var(--primary))' : isBookmarked ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.4)',
+                              verticalAlign: 'baseline',
+                              fontWeight: isPlaying || isBookmarked ? 700 : 400,
+                            }}
+                          >
+                            ﴿{toArabicNumber(ayah.numberInSurah)}﴾
+                          </span>
+                        </>
+                      )}
+                    </div>
 
-                  {isSelected && !memMode && (
-                    <div className="flex items-center gap-1.5 p-1.5 mt-0.5 mb-1 bg-muted/50 rounded-lg border border-border/30 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0"
-                        onClick={(e) => { e.stopPropagation(); playPrevAyah(); }}
-                        disabled={playingAyah === null || surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah) <= 0}
-                      >
-                        <SkipBack className="w-3 h-3" />
-                      </Button>
+                    {isSelected && !memMode && (
+                      <div className="flex items-center justify-center gap-1 p-1.5 mt-1 mb-1 bg-muted/40 rounded-xl border border-border/20 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); playPrevAyah(); }}
+                          disabled={playingAyah === null || surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah) <= 0}
+                        >
+                          <SkipBack className="w-3 h-3" />
+                        </Button>
 
-                      <Button
-                        size="icon"
-                        className="h-8 w-8 rounded-full shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isPlaying && isAudioPlaying) {
-                            toggleAudioPlay();
-                          } else {
-                            playAyahAudio(ayah.numberInSurah);
-                          }
-                        }}
-                      >
-                        {audioLoading && isPlaying ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : isPlaying && isAudioPlaying ? (
-                          <Pause className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4 ml-0.5" />
-                        )}
-                      </Button>
+                        <Button
+                          size="icon"
+                          className="h-9 w-9 rounded-full shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isPlaying && isAudioPlaying) {
+                              toggleAudioPlay();
+                            } else {
+                              playAyahAudio(ayah.numberInSurah);
+                            }
+                          }}
+                        >
+                          {audioLoading && isPlaying ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : isPlaying && isAudioPlaying ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4 ml-0.5" />
+                          )}
+                        </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0"
-                        onClick={(e) => { e.stopPropagation(); playNextAyah(); }}
-                        disabled={playingAyah === null || surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah) >= surahData.ayahs.length - 1}
-                      >
-                        <SkipForward className="w-3 h-3" />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); playNextAyah(); }}
+                          disabled={playingAyah === null || surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah) >= surahData.ayahs.length - 1}
+                        >
+                          <SkipForward className="w-3 h-3" />
+                        </Button>
 
-                      {anyAudioActive && (
+                        <div className="w-px h-4 bg-border/50 mx-0.5" />
+
+                        <Button
+                          variant={repeatMode !== 'none' ? 'secondary' : 'ghost'}
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (repeatMode === 'none') setRepeatMode('ayah');
+                            else if (repeatMode === 'ayah') setRepeatMode('ayah3x');
+                            else setRepeatMode('none');
+                          }}
+                          title={repeatMode === 'none' ? 'Repeat' : repeatMode === 'ayah' ? 'Repeat: On' : 'Repeat: 3x'}
+                        >
+                          {repeatMode === 'ayah3x' ? (
+                            <span className="text-[10px] font-bold">3x</span>
+                          ) : (
+                            <Repeat className={`w-3.5 h-3.5 ${repeatMode !== 'none' ? 'text-primary' : ''}`} />
+                          )}
+                        </Button>
+
                         <Button
                           variant="ghost"
                           size="icon"
@@ -678,34 +731,32 @@ export function QuranReader() {
                         >
                           {audioMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
                         </Button>
-                      )}
 
-                      <span className="text-[10px] text-muted-foreground mx-1 shrink-0">
-                        {ayah.numberInSurah}/{totalAyahs}
-                      </span>
+                        <div className="w-px h-4 bg-border/50 mx-0.5" />
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0 ml-auto"
-                        onClick={(e) => { e.stopPropagation(); setBookmark(selectedSurah.number, ayah.numberInSurah); }}
-                      >
-                        <Bookmark className={`w-3 h-3 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); setBookmark(selectedSurah.number, ayah.numberInSurah); }}
+                        >
+                          <Bookmark className={`w-3 h-3 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
+                        </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0"
-                        onClick={(e) => { e.stopPropagation(); setSelectedAyah(null); }}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); setSelectedAyah(null); }}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
