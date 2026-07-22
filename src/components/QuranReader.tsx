@@ -472,17 +472,25 @@ export function QuranReader() {
       const json = await res.json();
       if (json.code === 200) {
         const data = json.data;
-        const bsm = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
+        const norm = (s: string) => s
+          .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u06E1\u0640\u06E2\u06E3]/g, '')
+          .replace(/\u06CC/g, '\u064A').replace(/\u0671/g, '\u0627')
+          .replace(/\s+/g, ' ').trim();
+        const bsmNorm = 'بسم الله الرحمن الرحيم';
+        const hasBasmala = (t: string) => norm(t).startsWith(bsmNorm);
+        const stripBasmala = (t: string) => {
+          if (!hasBasmala(t)) return t;
+          const d = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u06E1\u0640\u06E2\u06E3]/;
+          let i = 0, c = 0;
+          for (; i < t.length && c < bsmNorm.length; i++) { if (!d.test(t[i])) c++; }
+          while (i < t.length && (t[i] === ' ' || d.test(t[i]))) i++;
+          return t.substring(i);
+        };
 
         if (surah.number === 1) {
-          data.ayahs = data.ayahs.filter((a: Ayah) => !a.text.includes(bsm));
+          data.ayahs = data.ayahs.filter((a: Ayah) => !hasBasmala(a.text));
         } else if (data.ayahs.length > 0) {
-          data.ayahs = data.ayahs.map((a: Ayah, i: number) => {
-            if (i === 0 && a.text.includes(bsm)) {
-              return { ...a, text: a.text.replace(bsm, '').trim() };
-            }
-            return a;
-          });
+          data.ayahs[0] = { ...data.ayahs[0], text: stripBasmala(data.ayahs[0].text) };
         }
 
         setSurahData(data);
