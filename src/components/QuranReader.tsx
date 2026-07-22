@@ -6,7 +6,7 @@ import {
   ScrollText, BookOpen, ArrowLeft, Bookmark, ChevronUp,
   CheckCircle2, Loader2, Palette, MapPin, Eye, EyeOff,
   Brain, LayoutGrid, Play, Pause, SkipForward, SkipBack, X,
-  Volume2, VolumeX, Headphones, Repeat, Repeat1,
+  Volume2, VolumeX, Headphones, Repeat, Mic2,
 } from 'lucide-react';
 import { SURAH_LIST, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
 import { quranAPI } from '@/lib/api';
@@ -32,6 +32,22 @@ const MUSHAF_THEMES: { id: MushafTheme; name: string; nameAr: string; fontFamily
   { id: 'madina-1441', name: 'Madina 1441', nameAr: 'المصحف المريني', fontFamily: "'Amiri Quran', 'Amiri', serif" },
   { id: 'madina-classic', name: 'Madina Classic', nameAr: 'المدینین کلاسیک', fontFamily: "'Amiri', serif" },
   { id: 'unicode', name: 'Mushaf Unicode', nameAr: 'المصحف الیونیکود', fontFamily: "'Noto Naskh Arabic', serif" },
+];
+
+const RECITERS = [
+  { id: 'ar.alafasy', name: 'Mishary Alafasy', nameAr: 'مشاري العفاسي' },
+  { id: 'ar.muhammadjinni', name: 'Muhammad Jinni', nameAr: 'محمد جنّي' },
+  { id: 'ar.muayyad', name: 'Muayyad Al-Muaeeq', nameAr: 'مؤيد المويقق' },
+  { id: 'ar.minshawi', name: 'Minshawi', nameAr: 'المنشاوي' },
+  { id: 'ar.minshawimujawwad', name: 'Minshawi Mujawwad', nameAr: 'المنشاوي مجود' },
+  { id: 'ar.husary', name: 'Husary', nameAr: 'الحصري' },
+  { id: 'ar.husarymujawwad', name: 'Husary Mujawwad', nameAr: 'الحصري مجود' },
+  { id: 'ar.ayyoub', name: 'Ayyoub', nameAr: 'أيوب' },
+  { id: 'ar.shaatree', name: 'Abdul Basit (Shaatree)', nameAr: 'عبدالباسط عبدالصمد' },
+  { id: 'ar.ahmedajamy', name: 'Ahmed Al Ajmi', nameAr: 'أحمد العجمي' },
+  { id: 'ar.md_yusuf', name: 'Md. Siddiqur Rahman', nameAr: 'محمد يوسف' },
+  { id: 'ar.parhizgar', name: 'Parhizgar', nameAr: 'بهرزگر' },
+  { id: 'ar.hudhaify', name: 'Hudhaify', nameAr: 'الحذيفي' },
 ];
 
 const LAST_READ_KEY = 'quran-last-read';
@@ -129,15 +145,19 @@ export function QuranReader() {
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'none' | 'ayah' | 'ayah3x'>('none');
+  const [reciter, setReciter] = useState(() => {
+    try { return localStorage.getItem('quran-reciter') || 'ar.alafasy'; } catch { return 'ar.alafasy'; }
+  });
+  const [showReciters, setShowReciters] = useState(false);
   const repeatCountRef = useRef(0);
   const [pendingScrollAyah, setPendingScrollAyah] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const ayahRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioStateRef = useRef({ surahData: null as SurahData | null, playingAyah: null as number | null, audioMuted: false, repeatMode: 'none' as 'none' | 'ayah' | 'ayah3x' });
+  const audioStateRef = useRef({ surahData: null as SurahData | null, playingAyah: null as number | null, audioMuted: false, repeatMode: 'none' as 'none' | 'ayah' | 'ayah3x', reciter: 'ar.alafasy' });
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  audioStateRef.current = { surahData, playingAyah, audioMuted, repeatMode };
+  audioStateRef.current = { surahData, playingAyah, audioMuted, repeatMode, reciter };
 
   const totalRead = progress.completedSurahs.reduce((sum, sn) => {
     const s = SURAH_LIST.find(x => x.number === sn);
@@ -299,7 +319,7 @@ export function QuranReader() {
     audioRef.current = audio;
 
     const onEnded = () => {
-      const { surahData: sd, playingAyah: pa, audioMuted: am, repeatMode: rm } = audioStateRef.current;
+      const { surahData: sd, playingAyah: pa, audioMuted: am, repeatMode: rm, reciter: ri } = audioStateRef.current;
       if (!sd || pa === null) return;
 
       if (rm === 'ayah' || rm === 'ayah3x') {
@@ -325,7 +345,7 @@ export function QuranReader() {
       if (idx < sd.ayahs.length - 1) {
         const nextAyah = sd.ayahs[idx + 1];
         setPlayingAyah(nextAyah.numberInSurah);
-        const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${nextAyah.number}.mp3`;
+        const url = `https://cdn.islamic.network/quran/audio/128/${ri}/${nextAyah.number}.mp3`;
         audio.src = url;
         audio.volume = am ? 0 : 0.8;
         audio.load();
@@ -362,7 +382,7 @@ export function QuranReader() {
     if (!ayah) return;
 
     repeatCountRef.current = 0;
-    const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`;
+    const url = `https://cdn.islamic.network/quran/audio/128/${reciter}/${ayah.number}.mp3`;
     audio.src = url;
     audio.volume = audioMuted ? 0 : 0.8;
     audio.load();
@@ -379,7 +399,7 @@ export function QuranReader() {
         setAudioLoading(false);
       }
     }
-  }, [surahData, audioMuted]);
+  }, [surahData, audioMuted, reciter]);
 
   const toggleAudioPlay = async () => {
     const audio = audioRef.current;
@@ -453,16 +473,16 @@ export function QuranReader() {
       if (json.code === 200) {
         const data = json.data;
         const bsm = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
-        const isFatihah = surah.number === 1;
-        const isTawbah = surah.number === 9;
 
-        if (isFatihah) {
+        if (surah.number === 1) {
           data.ayahs = data.ayahs.filter((a: Ayah) => !a.text.includes(bsm));
-        } else if (!isTawbah && data.ayahs.length > 0) {
-          const firstText = data.ayahs[0].text;
-          if (firstText.includes(bsm)) {
-            data.ayahs[0] = { ...data.ayahs[0], text: firstText.replace(bsm, '').trim() };
-          }
+        } else if (data.ayahs.length > 0) {
+          data.ayahs = data.ayahs.map((a: Ayah, i: number) => {
+            if (i === 0 && a.text.includes(bsm)) {
+              return { ...a, text: a.text.replace(bsm, '').trim() };
+            }
+            return a;
+          });
         }
 
         setSurahData(data);
@@ -581,18 +601,53 @@ export function QuranReader() {
               <Badge variant="secondary" className="text-xs">{hiddenAyahs.size}/{totalAyahs} hidden</Badge>
             </>
           )}
-          <div className="ml-auto flex items-center gap-1.5">
-            {repeatMode !== 'none' && (
-              <Badge variant="secondary" className="gap-1 text-xs">
-                <Repeat className="w-3 h-3" />
-                {repeatMode === 'ayah3x' ? '3x' : '∞'}
-              </Badge>
+
+          <div className="relative ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={() => setShowReciters(!showReciters)}
+            >
+              <Mic2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{RECITERS.find(r => r.id === reciter)?.nameAr || ''}</span>
+            </Button>
+            {showReciters && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowReciters(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-xl shadow-xl p-1 w-56 max-h-72 overflow-y-auto">
+                  {RECITERS.map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        setReciter(r.id);
+                        localStorage.setItem('quran-reciter', r.id);
+                        setShowReciters(false);
+                        if (isAudioPlaying) playAyahAudio(playingAyah || 1);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${
+                        reciter === r.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                      }`}
+                    >
+                      <span className="font-medium block">{r.name}</span>
+                      <span className="block text-[10px] opacity-70" dir="rtl">{r.nameAr}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
-            <Badge variant={anyAudioActive ? 'default' : 'outline'} className="gap-1 text-xs">
-              <Headphones className="w-3 h-3" />
-              {anyAudioActive ? `Playing ${playingAyah}` : 'Tap ayah to play'}
-            </Badge>
           </div>
+
+          {repeatMode !== 'none' && (
+            <Badge variant="secondary" className="gap-1 text-xs">
+              <Repeat className="w-3 h-3" />
+              {repeatMode === 'ayah3x' ? '3x' : '∞'}
+            </Badge>
+          )}
+          <Badge variant={anyAudioActive ? 'default' : 'outline'} className="gap-1 text-xs">
+            <Headphones className="w-3 h-3" />
+            {anyAudioActive ? `Playing ${playingAyah}` : 'Tap ayah to play'}
+          </Badge>
         </div>
 
         {selectedSurah.number === 2 && (
