@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   ScrollText, BookOpen, ArrowLeft, Bookmark, ChevronUp,
-  CheckCircle2, Loader2, Palette, MapPin, Headphones,
-  Eye, EyeOff, Brain, LayoutGrid,
+  CheckCircle2, Loader2, Palette, MapPin, Eye, EyeOff,
+  Brain, LayoutGrid, Play, Pause, SkipForward, SkipBack, X,
+  Volume2, VolumeX, Headphones,
 } from 'lucide-react';
-import { SURAH_LIST, getDailyPortion, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
+import { SURAH_LIST, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
 import { quranAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { QuranDashboard } from './QuranDashboard';
-import { QuranAudio } from './QuranAudio';
 
 interface Ayah {
   number: number;
@@ -121,15 +121,21 @@ export function QuranReader() {
   const [dailyPages, setDailyPages] = useState(() => {
     try { return parseInt(localStorage.getItem('quran-daily-pages') || '4') || 4; } catch { return 4; }
   });
-  // Memorization mode
   const [memMode, setMemMode] = useState(false);
   const [hiddenAyahs, setHiddenAyahs] = useState<Set<number>>(new Set());
-  const [showAudio, setShowAudio] = useState(false);
-  const [currentPlayingAyah, setCurrentPlayingAyah] = useState(1);
+  const [selectedAyah, setSelectedAyah] = useState<number | null>(null);
+  const [playingAyah, setPlayingAyah] = useState<number | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [audioMuted, setAudioMuted] = useState(false);
   const [pendingScrollAyah, setPendingScrollAyah] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const ayahRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
+  const ayahRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioStateRef = useRef({ surahData: null as SurahData | null, playingAyah: null as number | null, audioMuted: false });
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  audioStateRef.current = { surahData, playingAyah, audioMuted };
 
   const totalRead = progress.completedSurahs.reduce((sum, sn) => {
     const s = SURAH_LIST.find(x => x.number === sn);
@@ -141,7 +147,6 @@ export function QuranReader() {
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
-  // Push to cloud - debounced
   useEffect(() => {
     const token = localStorage.getItem('bait-el-hakma-token');
     if (!token) return;
@@ -156,7 +161,6 @@ export function QuranReader() {
         lastRead: getLastRead() || {},
       }).catch((err) => {
         console.warn('Quran cloud sync failed, will retry:', err);
-        // Retry once after 3 seconds
         setTimeout(() => {
           quranAPI.save({
             bookmarks,
@@ -171,12 +175,10 @@ export function QuranReader() {
     }, 1500);
   }, [bookmarks, progress.completedSurahs, dailyCompleted, dailyPages, theme]);
 
-  // Pull from cloud on mount - smart merge (cloud only overwrites if it has data)
   useEffect(() => {
     const token = localStorage.getItem('bait-el-hakma-token');
     if (!token) return;
     quranAPI.get().then((data) => {
-      // Merge: only apply cloud data if it has meaningful content
       if (data.bookmarks && Object.keys(data.bookmarks).length > 0) {
         setBookmarks(data.bookmarks);
         localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(data.bookmarks));
@@ -201,7 +203,6 @@ export function QuranReader() {
       if (data.lastRead?.surah) {
         localStorage.setItem(LAST_READ_KEY, JSON.stringify(data.lastRead));
       }
-      console.log('Quran data synced from cloud');
     }).catch((err) => {
       console.warn('Quran cloud pull failed:', err);
     });
@@ -212,13 +213,9 @@ export function QuranReader() {
     const handleScroll = () => {
       const scrollTop = el === window ? window.scrollY : (el as HTMLElement).scrollTop;
       setShowScrollTop(scrollTop > 400);
-
       if (view === 'surah' && surahData && el !== window) {
         const container = el as HTMLElement;
-        const scrollHeight = container.scrollHeight;
-        const clientHeight = container.clientHeight;
-        const currentScroll = container.scrollTop;
-        if (scrollHeight - currentScroll - clientHeight < 300 && !allAyahsLoaded) {
+        if (container.scrollHeight - container.scrollTop - container.clientHeight < 300 && !allAyahsLoaded) {
           loadMoreAyahs();
         }
       }
@@ -230,13 +227,12 @@ export function QuranReader() {
   useEffect(() => {
     if (!pendingScrollAyah || !surahData) return;
     let attempts = 0;
-    const maxAttempts = 10;
     const tryScroll = () => {
       const el = ayahRefs.current.get(pendingScrollAyah);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setPendingScrollAyah(null);
-      } else if (attempts < maxAttempts) {
+      } else if (attempts < 10) {
         attempts++;
         setTimeout(tryScroll, 200);
       } else {
@@ -245,6 +241,14 @@ export function QuranReader() {
     };
     setTimeout(tryScroll, 150);
   }, [pendingScrollAyah, surahData, visibleAyahs]);
+
+  useEffect(() => {
+    if (playingAyah === null || !surahData) return;
+    const el = ayahRefs.current.get(playingAyah);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [playingAyah, surahData]);
 
   const loadMoreAyahs = useCallback(() => {
     if (loadingMore || !surahData || allAyahsLoaded) return;
@@ -272,27 +276,149 @@ export function QuranReader() {
   const toggleAyahHidden = useCallback((ayahNumber: number) => {
     setHiddenAyahs(prev => {
       const next = new Set(prev);
-      if (next.has(ayahNumber)) {
-        next.delete(ayahNumber);
-      } else {
-        next.add(ayahNumber);
-      }
+      if (next.has(ayahNumber)) next.delete(ayahNumber);
+      else next.add(ayahNumber);
       return next;
     });
   }, []);
 
   const hideAllAyahs = useCallback(() => {
     if (!surahData) return;
-    const allNums = new Set(surahData.ayahs.map(a => a.number));
-    setHiddenAyahs(allNums);
+    setHiddenAyahs(new Set(surahData.ayahs.map(a => a.number)));
     toast.success('All ayahs hidden — test yourself!');
   }, [surahData]);
 
-  const revealAllAyahs = useCallback(() => {
-    setHiddenAyahs(new Set());
+  const revealAllAyahs = useCallback(() => setHiddenAyahs(new Set()), []);
+
+  // Initialize audio element once
+  useEffect(() => {
+    const audio = new Audio();
+    audio.preload = 'auto';
+    audioRef.current = audio;
+
+    const onEnded = () => {
+      const { surahData: sd, playingAyah: pa, audioMuted: am } = audioStateRef.current;
+      if (!sd || pa === null) return;
+      const idx = sd.ayahs.findIndex(a => a.numberInSurah === pa);
+      if (idx < sd.ayahs.length - 1) {
+        const nextAyah = sd.ayahs[idx + 1];
+        setPlayingAyah(nextAyah.numberInSurah);
+        const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${nextAyah.number}.mp3`;
+        audio.src = url;
+        audio.volume = am ? 0 : 0.8;
+        audio.load();
+        audio.play().then(() => setIsAudioPlaying(true)).catch(() => setIsAudioPlaying(false));
+      } else {
+        setIsAudioPlaying(false);
+        setPlayingAyah(null);
+      }
+    };
+
+    const onCanPlay = () => setAudioLoading(false);
+    const onWaiting = () => setAudioLoading(true);
+    const onError = () => { setIsAudioPlaying(false); setAudioLoading(false); };
+
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('canplay', onCanPlay);
+    audio.addEventListener('waiting', onWaiting);
+    audio.addEventListener('error', onError);
+
+    return () => {
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('canplay', onCanPlay);
+      audio.removeEventListener('waiting', onWaiting);
+      audio.removeEventListener('error', onError);
+      audio.pause();
+      audio.src = '';
+    };
   }, []);
 
+  const playAyahAudio = useCallback(async (ayahNum: number) => {
+    const audio = audioRef.current;
+    if (!audio || !surahData) return;
+    const ayah = surahData.ayahs.find(a => a.numberInSurah === ayahNum);
+    if (!ayah) return;
+
+    const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`;
+    audio.src = url;
+    audio.volume = audioMuted ? 0 : 0.8;
+    audio.load();
+    setPlayingAyah(ayahNum);
+    setAudioLoading(true);
+
+    try {
+      await audio.play();
+      setIsAudioPlaying(true);
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        setIsAudioPlaying(false);
+        setAudioLoading(false);
+      }
+    }
+  }, [surahData, audioMuted]);
+
+  const toggleAudioPlay = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isAudioPlaying) {
+      audio.pause();
+      setIsAudioPlaying(false);
+      return;
+    }
+    if (audio.src && !audio.ended && audio.currentTime > 0) {
+      try { await audio.play(); setIsAudioPlaying(true); return; } catch {}
+    }
+    if (playingAyah) {
+      playAyahAudio(playingAyah);
+    } else if (selectedAyah) {
+      playAyahAudio(selectedAyah);
+    } else if (surahData && surahData.ayahs.length > 0) {
+      playAyahAudio(surahData.ayahs[0].numberInSurah);
+    }
+  };
+
+  const playPrevAyah = () => {
+    if (!surahData || playingAyah === null) return;
+    const idx = surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah);
+    if (idx > 0) {
+      const prev = surahData.ayahs[idx - 1].numberInSurah;
+      setSelectedAyah(prev);
+      playAyahAudio(prev);
+    }
+  };
+
+  const playNextAyah = () => {
+    if (!surahData || playingAyah === null) return;
+    const idx = surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah);
+    if (idx < surahData.ayahs.length - 1) {
+      const next = surahData.ayahs[idx + 1].numberInSurah;
+      setSelectedAyah(next);
+      playAyahAudio(next);
+    }
+  };
+
+  const stopAudio = () => {
+    const audio = audioRef.current;
+    if (audio) { audio.pause(); audio.currentTime = 0; }
+    setIsAudioPlaying(false);
+    setPlayingAyah(null);
+  };
+
+  const handleAyahClick = useCallback((ayah: Ayah) => {
+    if (memMode) {
+      toggleAyahHidden(ayah.number);
+      return;
+    }
+    if (selectedAyah === ayah.numberInSurah) {
+      setSelectedAyah(null);
+    } else {
+      setSelectedAyah(ayah.numberInSurah);
+    }
+  }, [memMode, selectedAyah, toggleAyahHidden]);
+
   const loadSurah = useCallback(async (surah: SurahInfo) => {
+    stopAudio();
+    setSelectedAyah(null);
     setSelectedSurah(surah);
     setView('surah');
     setVisibleAyahs(12);
@@ -324,7 +450,6 @@ export function QuranReader() {
           setVisibleAyahs(savedBookmark + 2);
           if (savedBookmark + 2 >= total) setAllAyahsLoaded(true);
         }
-        setCurrentPlayingAyah(savedBookmark > 1 ? savedBookmark : 1);
         setPendingScrollAyah(savedBookmark > 1 ? savedBookmark : null);
       }
     } catch (err) {
@@ -361,9 +486,9 @@ export function QuranReader() {
   const last = getLastRead();
   const themeData = MUSHAF_THEMES.find(t => t.id === theme) || MUSHAF_THEMES[0];
   const isComplete = (sn: number) => progress.completedSurahs.includes(sn);
-
   const ayahFontSize = theme === 'madina-1441' ? '2em' : theme === 'madina-classic' ? '1.8em' : '1.65em';
   const ayahLineHeight = '1.65em';
+  const anyAudioActive = playingAyah !== null;
 
   if (view === 'surah' && surahData && selectedSurah) {
     const shownAyahs = surahData.ayahs.slice(0, visibleAyahs);
@@ -375,7 +500,7 @@ export function QuranReader() {
     return (
       <div className="space-y-4" ref={containerRef}>
         <div className="flex items-center gap-2 sticky top-0 z-30 bg-background/95 backdrop-blur-sm py-2 -mx-1 px-1">
-          <Button variant="ghost" size="sm" onClick={() => { setView('list'); setSurahData(null); }}>
+          <Button variant="ghost" size="sm" onClick={() => { stopAudio(); setSelectedAyah(null); setView('list'); setSurahData(null); }}>
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
@@ -399,24 +524,18 @@ export function QuranReader() {
               <MapPin className="w-4 h-4" />
               <span>Your bookmark: Ayah {bookmarkAyah}</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => {
-                if (bookmarkAyah > visibleAyahs) {
-                  setVisibleAyahs(bookmarkAyah + 2);
-                  if (bookmarkAyah + 2 >= totalAyahs) setAllAyahsLoaded(true);
-                }
-                setPendingScrollAyah(bookmarkAyah);
-              }}
-            >
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => {
+              if (bookmarkAyah > visibleAyahs) {
+                setVisibleAyahs(bookmarkAyah + 2);
+                if (bookmarkAyah + 2 >= totalAyahs) setAllAyahsLoaded(true);
+              }
+              setPendingScrollAyah(bookmarkAyah);
+            }}>
               Jump to it
             </Button>
           </div>
         )}
 
-        {/* Memorization Mode Controls */}
         <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={memMode ? 'default' : 'outline'}
@@ -425,96 +544,68 @@ export function QuranReader() {
             className="gap-1.5"
           >
             <Brain className="w-4 h-4" />
-            {memMode ? 'Memorize Mode ON' : 'Memorize'}
+            {memMode ? 'Memorize ON' : 'Memorize'}
           </Button>
           {memMode && (
             <>
               <Button variant="outline" size="sm" onClick={hideAllAyahs} className="gap-1.5">
-                <EyeOff className="w-3.5 h-3.5" />
-                Hide All
+                <EyeOff className="w-3.5 h-3.5" /> Hide All
               </Button>
               <Button variant="outline" size="sm" onClick={revealAllAyahs} className="gap-1.5">
-                <Eye className="w-3.5 h-3.5" />
-                Reveal All
+                <Eye className="w-3.5 h-3.5" /> Reveal All
               </Button>
-              <Badge variant="secondary" className="text-xs">
-                {hiddenAyahs.size}/{totalAyahs} hidden
-              </Badge>
+              <Badge variant="secondary" className="text-xs">{hiddenAyahs.size}/{totalAyahs} hidden</Badge>
             </>
           )}
-          <Button
-            variant={showAudio ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setShowAudio(!showAudio)}
-            className="gap-1.5 ml-auto"
-          >
-            <Headphones className="w-4 h-4" />
-            Audio
-          </Button>
+          <div className="ml-auto">
+            <Badge variant={anyAudioActive ? 'default' : 'outline'} className="gap-1 text-xs">
+              <Headphones className="w-3 h-3" />
+              {anyAudioActive ? `Playing ${playingAyah}` : 'Tap ayah to play'}
+            </Badge>
+          </div>
         </div>
-
-        {/* Audio Player */}
-        {showAudio && surahData && (
-          <QuranAudio
-            surahNumber={selectedSurah.number}
-            ayahs={surahData.ayahs}
-            currentAyah={currentPlayingAyah}
-            onAyahChange={setCurrentPlayingAyah}
-          />
-        )}
 
         {selectedSurah.number === 2 && (
           <div className="text-center py-3">
-            <p
-              dir="rtl"
-              style={{
-                fontFamily: themeData.fontFamily,
-                fontSize: ayahFontSize,
-                lineHeight: ayahLineHeight,
-              }}
-            >
+            <p dir="rtl" style={{ fontFamily: themeData.fontFamily, fontSize: ayahFontSize, lineHeight: ayahLineHeight }}>
               بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
             </p>
           </div>
         )}
 
         <div className="rounded-xl border border-border/50 overflow-hidden" style={{ background: 'hsl(var(--card))' }}>
-          <div className="p-5 md:p-8">
-            <p
-              dir="rtl"
-              style={{
-                fontFamily: themeData.fontFamily,
-                fontSize: ayahFontSize,
-                lineHeight: ayahLineHeight,
-                textAlign: 'justify',
-                wordSpacing: '0.1em',
-                letterSpacing: theme === 'unicode' ? '0' : '0.02em',
-              }}
-            >
-              {shownAyahs.map((ayah) => {
-                const isBookmarked = bookmarkAyah === ayah.numberInSurah;
-                const isHidden = memMode && hiddenAyahs.has(ayah.number);
-                return (
-                  <span
-                    key={ayah.number}
-                    ref={(el) => {
-                      if (el) ayahRefs.current.set(ayah.numberInSurah, el);
+          <div className="p-5 md:p-8 space-y-1">
+            {shownAyahs.map((ayah) => {
+              const isBookmarked = bookmarkAyah === ayah.numberInSurah;
+              const isHidden = memMode && hiddenAyahs.has(ayah.number);
+              const isSelected = selectedAyah === ayah.numberInSurah;
+              const isPlaying = playingAyah === ayah.numberInSurah;
+
+              return (
+                <div key={ayah.number} className="relative">
+                  <div
+                    ref={(el) => { if (el) ayahRefs.current.set(ayah.numberInSurah, el); }}
+                    dir="rtl"
+                    onClick={() => handleAyahClick(ayah)}
+                    style={{
+                      fontFamily: themeData.fontFamily,
+                      fontSize: ayahFontSize,
+                      lineHeight: ayahLineHeight,
+                      textAlign: 'justify',
+                      wordSpacing: '0.1em',
+                      letterSpacing: theme === 'unicode' ? '0' : '0.02em',
                     }}
-                    onClick={() => {
-                      if (memMode) {
-                        toggleAyahHidden(ayah.number);
-                      } else {
-                        setBookmark(selectedSurah.number, ayah.numberInSurah);
-                      }
-                    }}
-                    className={`cursor-pointer transition-all duration-200 ${
+                    className={`cursor-pointer transition-all duration-200 rounded-lg px-1 ${
                       isHidden
-                        ? 'bg-destructive/10 text-destructive/30 rounded-sm border border-dashed border-destructive/20 px-1'
-                        : isBookmarked
-                          ? 'bg-primary/20 ring-2 ring-primary/40 rounded-sm'
-                          : 'hover:bg-primary/10 rounded-sm'
+                        ? 'bg-destructive/10 text-destructive/30 border border-dashed border-destructive/20'
+                        : isPlaying
+                          ? 'bg-primary/15 ring-2 ring-primary/40'
+                          : isSelected
+                            ? 'bg-primary/10 ring-1 ring-primary/30'
+                            : isBookmarked
+                              ? 'bg-primary/5 ring-1 ring-primary/20'
+                              : 'hover:bg-primary/5'
                     }`}
-                    title={isHidden ? 'Tap to reveal' : isBookmarked ? `Last read (ayah ${ayah.numberInSurah})` : `Tap to ${memMode ? 'hide/reveal' : 'mark as last read'}`}
                   >
                     {isHidden ? '···' : ayah.text}
                     {!isHidden && (
@@ -523,20 +614,98 @@ export function QuranReader() {
                         style={{
                           fontFamily: theme === 'madina-1441' ? "'Amiri Quran', serif" : "'Amiri', serif",
                           fontSize: '0.75em',
-                          color: isBookmarked ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.5)',
+                          color: isPlaying ? 'hsl(var(--primary))' : isBookmarked ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.5)',
                           verticalAlign: 'baseline',
                           position: 'relative',
                           top: '-1px',
-                          fontWeight: isBookmarked ? 700 : 400,
+                          fontWeight: isPlaying || isBookmarked ? 700 : 400,
                         }}
                       >
                         ﴿{toArabicNumber(ayah.numberInSurah)}﴾
                       </span>
                     )}
-                  </span>
-                );
-              })}
-            </p>
+                  </div>
+
+                  {isSelected && !memMode && (
+                    <div className="flex items-center gap-1.5 p-1.5 mt-0.5 mb-1 bg-muted/50 rounded-lg border border-border/30 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={(e) => { e.stopPropagation(); playPrevAyah(); }}
+                        disabled={playingAyah === null || surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah) <= 0}
+                      >
+                        <SkipBack className="w-3 h-3" />
+                      </Button>
+
+                      <Button
+                        size="icon"
+                        className="h-8 w-8 rounded-full shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isPlaying && isAudioPlaying) {
+                            toggleAudioPlay();
+                          } else {
+                            playAyahAudio(ayah.numberInSurah);
+                          }
+                        }}
+                      >
+                        {audioLoading && isPlaying ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : isPlaying && isAudioPlaying ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4 ml-0.5" />
+                        )}
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={(e) => { e.stopPropagation(); playNextAyah(); }}
+                        disabled={playingAyah === null || surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah) >= surahData.ayahs.length - 1}
+                      >
+                        <SkipForward className="w-3 h-3" />
+                      </Button>
+
+                      {anyAudioActive && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); setAudioMuted(!audioMuted); }}
+                        >
+                          {audioMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                        </Button>
+                      )}
+
+                      <span className="text-[10px] text-muted-foreground mx-1 shrink-0">
+                        {ayah.numberInSurah}/{totalAyahs}
+                      </span>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0 ml-auto"
+                        onClick={(e) => { e.stopPropagation(); setBookmark(selectedSurah.number, ayah.numberInSurah); }}
+                      >
+                        <Bookmark className={`w-3 h-3 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={(e) => { e.stopPropagation(); setSelectedAyah(null); }}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -589,7 +758,6 @@ export function QuranReader() {
         <p className="text-sm text-muted-foreground">المصحف الشريف — Complete Quran (114 Surahs)</p>
       </div>
 
-      {/* View Tabs */}
       <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
         <Button
           variant={view === 'list' || view === 'surah' ? 'default' : 'ghost'}
@@ -597,8 +765,7 @@ export function QuranReader() {
           onClick={() => setView('list')}
           className="flex-1 gap-2"
         >
-          <BookOpen className="w-4 h-4" />
-          Read
+          <BookOpen className="w-4 h-4" /> Read
         </Button>
         <Button
           variant={view === 'dashboard' ? 'default' : 'ghost'}
@@ -606,8 +773,7 @@ export function QuranReader() {
           onClick={() => setView('dashboard')}
           className="flex-1 gap-2"
         >
-          <LayoutGrid className="w-4 h-4" />
-          Dashboard
+          <LayoutGrid className="w-4 h-4" /> Dashboard
         </Button>
       </div>
 
@@ -643,16 +809,14 @@ export function QuranReader() {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium flex items-center gap-2">
-                <Bookmark className="w-4 h-4 text-primary" />
-                Resume Reading
+                <Bookmark className="w-4 h-4 text-primary" /> Resume Reading
               </p>
               <p className="text-xs text-muted-foreground">
                 Surah {SURAH_LIST.find(s => s.number === last.surah)?.englishName || ''} — Ayah {last.ayah}
               </p>
             </div>
             <Button size="sm" onClick={loadFromLastRead}>
-              <BookOpen className="w-4 h-4 mr-1" />
-              Continue
+              <BookOpen className="w-4 h-4 mr-1" /> Continue
             </Button>
           </CardContent>
         </Card>
@@ -709,69 +873,49 @@ export function QuranReader() {
         </div>
       </div>
 
-      <input
-        type="text"
-        placeholder="Search surah name or number..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-      />
+      <div className="space-y-2">
+        {filteredSurahs.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <ScrollText className="w-3.5 h-3.5" />
+            <span>{filteredSurahs.length} surahs</span>
+          </div>
+        )}
 
-      <div className="grid gap-2">
-        {filteredSurahs.map((surah) => {
-          const complete = isComplete(surah.number);
-          const bookmarkedAyah = bookmarks[surah.number] || 0;
-          return (
-            <button
-              key={surah.number}
-              onClick={() => loadSurah(surah)}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
-                complete
-                  ? 'border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10'
-                  : 'border-border/50 hover:border-primary/30 hover:bg-muted/50'
-              }`}
-            >
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                complete ? 'bg-emerald-500/20' : 'bg-primary/10'
-              }`}>
-                {complete ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                ) : (
-                  <span className="text-sm font-bold text-primary">{surah.number}</span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium truncate">{surah.englishName}</span>
-                  <Badge variant="outline" className="text-[10px] flex-shrink-0">
-                    {surah.numberOfAyahs}
-                  </Badge>
-                  {bookmarkedAyah > 0 && (
-                    <Badge variant="secondary" className="text-[10px] flex-shrink-0 gap-1">
-                      <MapPin className="w-2.5 h-2.5" />
-                      {bookmarkedAyah}
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground truncate">{surah.englishNameTranslation}</p>
-              </div>
-              <p
-                className="text-lg flex-shrink-0"
-                dir="rtl"
-                style={{ fontFamily: themeData.fontFamily }}
-              >
-                {surah.name}
-              </p>
-            </button>
-          );
-        })}
+        {filteredSurahs.map(surah => (
+          <div
+            key={surah.number}
+            onClick={() => loadSurah(surah)}
+            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
+              isComplete(surah.number) ? 'bg-primary/5 border-primary/20' : 'bg-card hover:bg-muted/50'
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${
+              isComplete(surah.number) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}>
+              {surah.number}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm truncate">{surah.englishName}</p>
+              <p className="text-xs text-muted-foreground truncate" dir="rtl">{surah.name}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-xs text-muted-foreground">{surah.numberOfAyahs} ayahs</p>
+              <Badge variant={surah.revelationType === 'Meccan' ? 'secondary' : 'outline'} className="text-[10px] mt-0.5">
+                {surah.revelationType}
+              </Badge>
+            </div>
+            {bookmarks[surah.number] && (
+              <Bookmark className="w-4 h-4 text-primary shrink-0 fill-primary" />
+            )}
+          </div>
+        ))}
+
+        {filteredSurahs.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">No surahs found</p>
+        )}
       </div>
-
-      {filteredSurahs.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">No surahs found</p>
+      </>
       )}
-    </>
-    )}
     </div>
   );
 }
@@ -787,130 +931,68 @@ function DailyReadingCard({
   dailyCompleted: Record<string, boolean>;
   setDailyCompleted: (v: Record<string, boolean>) => void;
   dailyPages: number;
-  setDailyPages: (v: number) => void;
+  setDailyPages: (n: number) => void;
 }) {
-  const DAILY_KEY = 'quran-daily-progress';
-  const PAGES_KEY = 'quran-daily-pages';
+  const today = new Date().toISOString().split('T')[0];
+  const isTodayDone = dailyCompleted[today] || false;
+  const [showSettings, setShowSettings] = useState(false);
 
-  const [editing, setEditing] = useState(false);
-  const [tempPages, setTempPages] = useState(String(dailyPages));
+  const getTodayPortion = () => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const totalPages = 604;
+    const startPage = ((dayOfYear * dailyPages) % totalPages) + 1;
+    return { startPage, endPage: startPage + dailyPages - 1 };
+  };
 
-  const today = new Date();
-  const todayKey = today.toISOString().split('T')[0];
-  const dayOfMonth = today.getDate();
-  const isTodayDone = !!dailyCompleted[todayKey];
-  const portion = getDailyPortion(dayOfMonth, dailyPages);
-  const startSurah = SURAH_LIST.find(s => s.number === portion.startSurah);
-  const endSurah = SURAH_LIST.find(s => s.number === portion.endSurah);
-
-  const completedCount = Object.values(dailyCompleted).filter(Boolean).length;
-  const totalDays = 30;
-  const progressPct = Math.round((completedCount / totalDays) * 100);
-  const estDays = Math.ceil(TOTAL_AYAHS / (dailyPages * 12));
-
-  const toggleToday = () => {
-    const updated = { ...dailyCompleted, [todayKey]: !isTodayDone };
+  const toggleTodayDone = () => {
+    const updated = { ...dailyCompleted, [today]: !isTodayDone };
     setDailyCompleted(updated);
-    localStorage.setItem(DAILY_KEY, JSON.stringify(updated));
-    toast.success(isTodayDone ? 'Marked as not completed' : 'Daily reading completed! 🎉');
+    localStorage.setItem('quran-daily-progress', JSON.stringify(updated));
   };
 
-  const savePages = () => {
-    const val = parseInt(tempPages);
-    if (val >= 1 && val <= 20) {
-      setDailyPages(val);
-      localStorage.setItem(PAGES_KEY, String(val));
-      setEditing(false);
-    } else {
-      toast.error('Pages must be between 1 and 20');
-    }
-  };
+  const portion = getTodayPortion();
 
   return (
-    <Card className={`border transition-colors ${isTodayDone ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-gradient-to-r from-emerald-500/5 to-primary/5 border-emerald-500/20'}`}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <ScrollText className="w-4 h-4 text-emerald-500" />
-            الورد اليومي — Daily Reading
-          </span>
-          <span className="text-xs font-normal text-muted-foreground">
-            {completedCount}/{totalDays} days ({progressPct}%)
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-          <div
-            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <p className="text-muted-foreground">
-            {isTodayDone ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">✓ Today's reading completed</span>
-            ) : (
-              <>Read: <strong>Surah {startSurah?.englishName}</strong> ({portion.startAyah})
-                {portion.startSurah !== portion.endSurah && (
-                  <> → <strong>Surah {endSurah?.englishName}</strong> ({portion.endAyah})</>
-                )}
-              </>
-            )}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{dailyPages} pages/day</span>
-          <span>•</span>
-          <span>~{estDays} days to complete</span>
-          <span>•</span>
-          {editing ? (
-            <span className="flex items-center gap-1">
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={tempPages}
-                onChange={(e) => setTempPages(e.target.value)}
-                className="w-12 px-1 py-0.5 rounded border border-border bg-background text-center text-xs"
-                onKeyDown={(e) => e.key === 'Enter' && savePages()}
-              />
-              <Button variant="ghost" size="sm" className="h-5 px-1.5 text-xs" onClick={savePages}>✓</Button>
-              <Button variant="ghost" size="sm" className="h-5 px-1.5 text-xs" onClick={() => setEditing(false)}>✕</Button>
-            </span>
-          ) : (
-            <button
-              onClick={() => { setTempPages(String(dailyPages)); setEditing(true); }}
-              className="text-primary hover:underline cursor-pointer"
-            >
-              Edit
-            </button>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          {!isTodayDone && (
-            <Button size="sm" onClick={() => startSurah && onReadSurah(startSurah)}>
-              <BookOpen className="w-4 h-4 mr-1" />
-              Start Reading
+    <Card className={isTodayDone ? 'bg-emerald-500/5 border-emerald-500/20' : ''}>
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium flex items-center gap-2">
+              {isTodayDone ? '✅' : '📖'} Daily Reading — {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Pages {portion.startPage}–{portion.endPage} ({dailyPages} pages/day)
+            </p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowSettings(!showSettings)}>
+              ⚙️
             </Button>
-          )}
-          <Button
-            size="sm"
-            variant={isTodayDone ? 'outline' : 'default'}
-            className={isTodayDone ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' : ''}
-            onClick={toggleToday}
-          >
-            <CheckCircle2 className="w-4 h-4 mr-1" />
-            {isTodayDone ? 'Done ✓' : 'Mark Done'}
-          </Button>
+            <Button
+              variant={isTodayDone ? 'default' : 'outline'}
+              size="sm"
+              onClick={toggleTodayDone}
+            >
+              {isTodayDone ? 'Done' : 'Mark Done'}
+            </Button>
+          </div>
         </div>
-
-        <p className="text-xs text-muted-foreground">
-          {today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-        </p>
+        {showSettings && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Pages:</span>
+            {[2, 4, 6, 8, 10].map(n => (
+              <Button
+                key={n}
+                variant={dailyPages === n ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 w-8 text-xs"
+                onClick={() => { setDailyPages(n); localStorage.setItem('quran-daily-pages', String(n)); }}
+              >
+                {n}
+              </Button>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
