@@ -4,11 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   ScrollText, BookOpen, ArrowLeft, Bookmark, ChevronUp,
-  CheckCircle2, Loader2, Palette, MapPin,
+  CheckCircle2, Loader2, Palette, MapPin, Headphones,
+  Eye, EyeOff, Brain, LayoutGrid,
 } from 'lucide-react';
 import { SURAH_LIST, getDailyPortion, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
 import { quranAPI } from '@/lib/api';
 import { toast } from 'sonner';
+import { QuranDashboard } from './QuranDashboard';
+import { QuranAudio } from './QuranAudio';
 
 interface Ayah {
   number: number;
@@ -99,7 +102,7 @@ function toArabicNumber(n: number): string {
 }
 
 export function QuranReader() {
-  const [view, setView] = useState<'list' | 'surah'>('list');
+  const [view, setView] = useState<'list' | 'surah' | 'dashboard'>('list');
   const [selectedSurah, setSelectedSurah] = useState<SurahInfo | null>(null);
   const [surahData, setSurahData] = useState<SurahData | null>(null);
   const [search, setSearch] = useState('');
@@ -118,6 +121,11 @@ export function QuranReader() {
   const [dailyPages, setDailyPages] = useState(() => {
     try { return parseInt(localStorage.getItem('quran-daily-pages') || '4') || 4; } catch { return 4; }
   });
+  // Memorization mode
+  const [memMode, setMemMode] = useState(false);
+  const [hiddenAyahs, setHiddenAyahs] = useState<Set<number>>(new Set());
+  const [showAudio, setShowAudio] = useState(false);
+  const [currentPlayingAyah, setCurrentPlayingAyah] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const ayahRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -239,6 +247,29 @@ export function QuranReader() {
       setProgress(prev => ({ ...prev, completedSurahs: updated }));
       toast.success('Surah marked as complete!');
     }
+  }, []);
+
+  const toggleAyahHidden = useCallback((ayahNumber: number) => {
+    setHiddenAyahs(prev => {
+      const next = new Set(prev);
+      if (next.has(ayahNumber)) {
+        next.delete(ayahNumber);
+      } else {
+        next.add(ayahNumber);
+      }
+      return next;
+    });
+  }, []);
+
+  const hideAllAyahs = useCallback(() => {
+    if (!surahData) return;
+    const allNums = new Set(surahData.ayahs.map(a => a.number));
+    setHiddenAyahs(allNums);
+    toast.success('All ayahs hidden — test yourself!');
+  }, [surahData]);
+
+  const revealAllAyahs = useCallback(() => {
+    setHiddenAyahs(new Set());
   }, []);
 
   const loadSurah = useCallback(async (surah: SurahInfo) => {
@@ -374,6 +405,53 @@ export function QuranReader() {
           </div>
         )}
 
+        {/* Memorization Mode Controls */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant={memMode ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => { setMemMode(!memMode); setHiddenAyahs(new Set()); }}
+            className="gap-1.5"
+          >
+            <Brain className="w-4 h-4" />
+            {memMode ? 'Memorize Mode ON' : 'Memorize'}
+          </Button>
+          {memMode && (
+            <>
+              <Button variant="outline" size="sm" onClick={hideAllAyahs} className="gap-1.5">
+                <EyeOff className="w-3.5 h-3.5" />
+                Hide All
+              </Button>
+              <Button variant="outline" size="sm" onClick={revealAllAyahs} className="gap-1.5">
+                <Eye className="w-3.5 h-3.5" />
+                Reveal All
+              </Button>
+              <Badge variant="secondary" className="text-xs">
+                {hiddenAyahs.size}/{totalAyahs} hidden
+              </Badge>
+            </>
+          )}
+          <Button
+            variant={showAudio ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowAudio(!showAudio)}
+            className="gap-1.5 ml-auto"
+          >
+            <Headphones className="w-4 h-4" />
+            Audio
+          </Button>
+        </div>
+
+        {/* Audio Player */}
+        {showAudio && surahData && (
+          <QuranAudio
+            surahNumber={selectedSurah.number}
+            ayahs={surahData.ayahs}
+            currentAyah={currentPlayingAyah}
+            onAyahChange={setCurrentPlayingAyah}
+          />
+        )}
+
         {selectedSurah.number === 2 && (
           <div className="text-center py-3">
             <p
@@ -404,35 +482,46 @@ export function QuranReader() {
             >
               {shownAyahs.map((ayah) => {
                 const isBookmarked = bookmarkAyah === ayah.numberInSurah;
+                const isHidden = memMode && hiddenAyahs.has(ayah.number);
                 return (
                   <span
                     key={ayah.number}
                     ref={(el) => {
                       if (el) ayahRefs.current.set(ayah.numberInSurah, el);
                     }}
-                    onClick={() => setBookmark(selectedSurah.number, ayah.numberInSurah)}
+                    onClick={() => {
+                      if (memMode) {
+                        toggleAyahHidden(ayah.number);
+                      } else {
+                        setBookmark(selectedSurah.number, ayah.numberInSurah);
+                      }
+                    }}
                     className={`cursor-pointer transition-all duration-200 ${
-                      isBookmarked
-                        ? 'bg-primary/20 ring-2 ring-primary/40 rounded-sm'
-                        : 'hover:bg-primary/10 rounded-sm'
+                      isHidden
+                        ? 'bg-destructive/10 text-destructive/30 rounded-sm border border-dashed border-destructive/20 px-1'
+                        : isBookmarked
+                          ? 'bg-primary/20 ring-2 ring-primary/40 rounded-sm'
+                          : 'hover:bg-primary/10 rounded-sm'
                     }`}
-                    title={isBookmarked ? `Last read (ayah ${ayah.numberInSurah}). Click another to change.` : `Tap to mark as last read`}
+                    title={isHidden ? 'Tap to reveal' : isBookmarked ? `Last read (ayah ${ayah.numberInSurah})` : `Tap to ${memMode ? 'hide/reveal' : 'mark as last read'}`}
                   >
-                    {ayah.text}
-                    <span
-                      className="inline-flex items-center justify-center mx-1 select-none"
-                      style={{
-                        fontFamily: theme === 'madina-1441' ? "'Amiri Quran', serif" : "'Amiri', serif",
-                        fontSize: '0.75em',
-                        color: isBookmarked ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.5)',
-                        verticalAlign: 'baseline',
-                        position: 'relative',
-                        top: '-1px',
-                        fontWeight: isBookmarked ? 700 : 400,
-                      }}
-                    >
-                      ﴿{toArabicNumber(ayah.numberInSurah)}﴾
-                    </span>
+                    {isHidden ? '···' : ayah.text}
+                    {!isHidden && (
+                      <span
+                        className="inline-flex items-center justify-center mx-1 select-none"
+                        style={{
+                          fontFamily: theme === 'madina-1441' ? "'Amiri Quran', serif" : "'Amiri', serif",
+                          fontSize: '0.75em',
+                          color: isBookmarked ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.5)',
+                          verticalAlign: 'baseline',
+                          position: 'relative',
+                          top: '-1px',
+                          fontWeight: isBookmarked ? 700 : 400,
+                        }}
+                      >
+                        ﴿{toArabicNumber(ayah.numberInSurah)}﴾
+                      </span>
+                    )}
                   </span>
                 );
               })}
@@ -489,6 +578,36 @@ export function QuranReader() {
         <p className="text-sm text-muted-foreground">المصحف الشريف — Complete Quran (114 Surahs)</p>
       </div>
 
+      {/* View Tabs */}
+      <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
+        <Button
+          variant={view === 'list' || view === 'surah' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setView('list')}
+          className="flex-1 gap-2"
+        >
+          <BookOpen className="w-4 h-4" />
+          Read
+        </Button>
+        <Button
+          variant={view === 'dashboard' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setView('dashboard')}
+          className="flex-1 gap-2"
+        >
+          <LayoutGrid className="w-4 h-4" />
+          Dashboard
+        </Button>
+      </div>
+
+      {view === 'dashboard' && (
+        <QuranDashboard
+          completedSurahs={progress.completedSurahs}
+          onReadSurah={(s) => { setView('list'); loadSurah(s); }}
+        />
+      )}
+
+      {view !== 'dashboard' && (<>
       <Card className="overflow-hidden">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -640,6 +759,8 @@ export function QuranReader() {
       {filteredSurahs.length === 0 && (
         <p className="text-center text-muted-foreground py-8">No surahs found</p>
       )}
+    </>
+    )}
     </div>
   );
 }
