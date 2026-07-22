@@ -27,16 +27,16 @@ const RECITERS: Reciter[] = [
   { id: 'ar.md_yusuf', name: 'Md. Siddiqur Rahman', nameAr: 'محمد يوسف' },
   { id: 'ar.parhizgar', name: 'Parhizgar', nameAr: 'بهرزگر' },
   { id: 'ar.hudhaify', name: 'Hudhaify', nameAr: 'الحذيفي' },
-  { id: 'ar.ayyoub', name: 'Ayyoub', nameAr: 'أيوب' },
 ];
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 interface QuranAudioProps {
   surahNumber: number;
-  ayahs: { number: number; numberInSurah: number }[];
+  ayahs: { number: number; numberInSurah: number; text?: string }[];
   currentAyah: number;
   onAyahChange: (ayahNum: number) => void;
+  currentAyahGlobalNumber?: number;
 }
 
 export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: QuranAudioProps) {
@@ -48,25 +48,43 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
   const [isMuted, setIsMuted] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'none' | 'ayah' | 'range'>('none');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
 
   const selectedReciter = RECITERS.find(r => r.id === reciter) || RECITERS[0];
 
+  const getGlobalNumber = useCallback((ayahNum: number): number => {
+    const ayah = ayahs.find(a => a.numberInSurah === ayahNum);
+    return ayah ? ayah.number : ayahNum;
+  }, [ayahs]);
+
   const getAudioUrl = useCallback((ayahNum: number) => {
-    const padded = String(surahNumber).padStart(3, '0');
-    const ayahPadded = String(ayahNum).padStart(3, '0');
-    return `https://cdn.islamic.network/quran/audio/${reciter === 'ar.alafasy' ? '128' : '64'}/${reciter}/${padded}${ayahPadded}.mp3`;
-  }, [surahNumber, reciter]);
+    const globalNum = getGlobalNumber(ayahNum);
+    return `https://cdn.islamic.network/quran/audio/128/${reciter}/${globalNum}.mp3`;
+  }, [reciter, getGlobalNumber]);
 
   const playAyah = useCallback((ayahNum: number) => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.src = '';
     }
-    const audio = new Audio(getAudioUrl(ayahNum));
+    setAudioError(null);
+    const url = getAudioUrl(ayahNum);
+    console.log('Playing audio:', url);
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.preload = 'auto';
+    audio.src = url;
     audio.playbackRate = speed;
     audio.volume = isMuted ? 0 : volume;
     audioRef.current = audio;
 
+    audio.onerror = () => {
+      setAudioError(`Failed to load audio for ayah ${ayahNum}`);
+      setIsPlaying(false);
+    };
+
     audio.onended = () => {
+      setAudioError(null);
       if (repeatMode === 'ayah') {
         playAyah(ayahNum);
       } else {
@@ -80,8 +98,13 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
       }
     };
 
-    audio.play().catch(() => setIsPlaying(false));
-    setIsPlaying(true);
+    audio.play().then(() => {
+      setIsPlaying(true);
+    }).catch((err) => {
+      console.error('Audio play failed:', err);
+      setAudioError('Tap play again (browser requires user interaction)');
+      setIsPlaying(false);
+    });
   }, [getAudioUrl, speed, volume, isMuted, repeatMode, ayahs, onAyahChange]);
 
   const togglePlay = () => {
@@ -222,6 +245,12 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
           <Volume2 className="w-3 h-3 text-muted-foreground shrink-0" />
         </div>
       </div>
+
+      {audioError && (
+        <p className="text-[11px] text-center text-destructive bg-destructive/5 rounded-md px-2 py-1">
+          {audioError}
+        </p>
+      )}
     </div>
   );
 }

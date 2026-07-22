@@ -126,6 +126,7 @@ export function QuranReader() {
   const [hiddenAyahs, setHiddenAyahs] = useState<Set<number>>(new Set());
   const [showAudio, setShowAudio] = useState(false);
   const [currentPlayingAyah, setCurrentPlayingAyah] = useState(1);
+  const [pendingScrollAyah, setPendingScrollAyah] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const ayahRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -226,6 +227,25 @@ export function QuranReader() {
     return () => el.removeEventListener('scroll', handleScroll);
   }, [view, surahData, allAyahsLoaded]);
 
+  useEffect(() => {
+    if (!pendingScrollAyah || !surahData) return;
+    let attempts = 0;
+    const maxAttempts = 10;
+    const tryScroll = () => {
+      const el = ayahRefs.current.get(pendingScrollAyah);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setPendingScrollAyah(null);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(tryScroll, 200);
+      } else {
+        setPendingScrollAyah(null);
+      }
+    };
+    setTimeout(tryScroll, 150);
+  }, [pendingScrollAyah, surahData, visibleAyahs]);
+
   const loadMoreAyahs = useCallback(() => {
     if (loadingMore || !surahData || allAyahsLoaded) return;
     setLoadingMore(true);
@@ -304,14 +324,8 @@ export function QuranReader() {
           setVisibleAyahs(savedBookmark + 2);
           if (savedBookmark + 2 >= total) setAllAyahsLoaded(true);
         }
-        setTimeout(() => {
-          if (savedBookmark > 1) {
-            const el = ayahRefs.current.get(savedBookmark);
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-        }, 400);
+        setCurrentPlayingAyah(savedBookmark > 1 ? savedBookmark : 1);
+        setPendingScrollAyah(savedBookmark > 1 ? savedBookmark : null);
       }
     } catch (err) {
       console.error('Failed to load surah:', err);
@@ -394,10 +408,7 @@ export function QuranReader() {
                   setVisibleAyahs(bookmarkAyah + 2);
                   if (bookmarkAyah + 2 >= totalAyahs) setAllAyahsLoaded(true);
                 }
-                setTimeout(() => {
-                  const el = ayahRefs.current.get(bookmarkAyah);
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 100);
+                setPendingScrollAyah(bookmarkAyah);
               }}
             >
               Jump to it
