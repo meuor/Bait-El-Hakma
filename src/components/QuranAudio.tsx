@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import {
   Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
-  Repeat, ChevronDown,
+  Repeat, ChevronDown, Loader2,
 } from 'lucide-react';
 
 interface Reciter {
@@ -33,87 +33,148 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 interface QuranAudioProps {
   surahNumber: number;
-  ayahs: { number: number; numberInSurah: number; text?: string }[];
+  ayahs: { number: number; numberInSurah: number }[];
   currentAyah: number;
   onAyahChange: (ayahNum: number) => void;
-  currentAyahGlobalNumber?: number;
 }
 
 export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: QuranAudioProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [reciter, setReciter] = useState('ar.alafasy');
   const [speed, setSpeed] = useState(1);
   const [showReciters, setShowReciters] = useState(false);
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<'none' | 'ayah' | 'range'>('none');
+  const [repeatMode, setRepeatMode] = useState<'none' | 'ayah'>('none');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
 
+  // Use refs for values needed in event handlers (avoid stale closures)
+  const stateRef = useRef({ repeatMode, currentAyah, ayahs, reciter, onAyahChange });
+  stateRef.current = { repeatMode, currentAyah, ayahs, reciter, onAyahChange };
+
   const selectedReciter = RECITERS.find(r => r.id === reciter) || RECITERS[0];
 
-  const getGlobalNumber = useCallback((ayahNum: number): number => {
-    const ayah = ayahs.find(a => a.numberInSurah === ayahNum);
-    return ayah ? ayah.number : ayahNum;
-  }, [ayahs]);
+  const buildUrl = useCallback((ayahNum: number, reciterId: string, ayahList: typeof ayahs) => {
+    const ayah = ayahList.find(a => a.numberInSurah === ayahNum);
+    if (!ayah) return null;
+    return `https://cdn.islamic.network/quran/audio/128/${reciterId}/${ayah.number}.mp3`;
+  }, []);
 
-  const getAudioUrl = useCallback((ayahNum: number) => {
-    const globalNum = getGlobalNumber(ayahNum);
-    return `https://cdn.islamic.network/quran/audio/128/${reciter}/${globalNum}.mp3`;
-  }, [reciter, getGlobalNumber]);
-
-  const playAyah = useCallback((ayahNum: number) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = '';
-    }
-    setAudioError(null);
-    const url = getAudioUrl(ayahNum);
-    console.log('Playing audio:', url);
+  // Create audio element once, attach event listeners using refs
+  useEffect(() => {
     const audio = new Audio();
-    audio.crossOrigin = 'anonymous';
     audio.preload = 'auto';
-    audio.src = url;
-    audio.playbackRate = speed;
-    audio.volume = isMuted ? 0 : volume;
     audioRef.current = audio;
 
-    audio.onerror = () => {
-      setAudioError(`Failed to load audio for ayah ${ayahNum}`);
-      setIsPlaying(false);
-    };
-
-    audio.onended = () => {
+    const onEnded = () => {
+      const { repeatMode: rm, currentAyah: ca, ayahs: al, reciter: ri, onAyahChange: oc } = stateRef.current;
       setAudioError(null);
-      if (repeatMode === 'ayah') {
-        playAyah(ayahNum);
+      setLoading(false);
+
+      if (rm === 'ayah') {
+        audio.currentTime = 0;
+        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        return;
+      }
+
+      const nextIdx = al.findIndex(a => a.numberInSurah === ca) + 1;
+      if (nextIdx < al.length) {
+        const nextAyah = al[nextIdx].numberInSurah;
+        oc(nextAyah);
+        audio.src = `https://cdn.islamic.network/quran/audio/128/${ri}/${al[nextIdx].number}.mp3`;
+        audio.load();
+        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
       } else {
-        const nextIdx = ayahs.findIndex(a => a.numberInSurah === ayahNum) + 1;
-        if (nextIdx < ayahs.length) {
-          onAyahChange(ayahs[nextIdx].numberInSurah);
-          playAyah(ayahs[nextIdx].numberInSurah);
-        } else {
-          setIsPlaying(false);
-        }
+        setIsPlaying(false);
       }
     };
 
-    audio.play().then(() => {
-      setIsPlaying(true);
-    }).catch((err) => {
-      console.error('Audio play failed:', err);
-      setAudioError('Tap play again (browser requires user interaction)');
+    const onError = () => {
+      setAudioError('Failed to load audio');
       setIsPlaying(false);
-    });
-  }, [getAudioUrl, speed, volume, isMuted, repeatMode, ayahs, onAyahChange]);
+      setLoading(false);
+    };
 
-  const togglePlay = () => {
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      playAyah(currentAyah);
+    const onCanPlay = () => setLoading(false);
+    const onWaiting = () => setLoading(true);
+
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('error', onError);
+    audio.addEventListener('canplay', onCanPlay);
+    audio.addEventListener('waiting', onWaiting);
+
+    return () => {
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('error', onError);
+      audio.removeEventListener('canplay', onCanPlay);
+      audio.removeEventListener('waiting', onWaiting);
+      audio.pause();
+      audio.src = '';
+      audioRef.current = null;
+    };
+  }, []);
+
+  // Update volume/speed live
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+      audioRef.current.volume = isMuted ? 0 : volume;
     }
+  }, [speed, volume, isMuted]);
+
+  const playAyah = useCallback(async (ayahNum: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    setAudioError(null);
+    const url = buildUrl(ayahNum, reciter, ayahs);
+    if (!url) return;
+
+    // Always set new source to be safe
+    audio.src = url;
+    audio.playbackRate = speed;
+    audio.volume = isMuted ? 0 : volume;
+    audio.load();
+
+    try {
+      await audio.play();
+      setIsPlaying(true);
+    } catch (err) {
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      if (!isAbort) {
+        console.error('Audio play failed:', err);
+        setAudioError('Tap play to start');
+        setIsPlaying(false);
+      }
+    }
+  }, [ayahs, reciter, speed, volume, isMuted, buildUrl]);
+
+  const togglePlay = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Resume from pause
+    if (audio.src && !audio.ended && audio.currentTime > 0) {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+        setAudioError(null);
+        return;
+      } catch {
+        // Fall through to fresh play
+      }
+    }
+
+    // Fresh play
+    playAyah(currentAyah);
   };
 
   const playNext = () => {
@@ -121,7 +182,7 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
     if (idx < ayahs.length - 1) {
       const next = ayahs[idx + 1].numberInSurah;
       onAyahChange(next);
-      if (isPlaying) playAyah(next);
+      playAyah(next);
     }
   };
 
@@ -130,29 +191,12 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
     if (idx > 0) {
       const prev = ayahs[idx - 1].numberInSurah;
       onAyahChange(prev);
-      if (isPlaying) playAyah(prev);
+      playAyah(prev);
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = speed;
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-  }, [speed, volume, isMuted]);
-
   return (
     <div className="border border-border rounded-xl bg-card p-3 space-y-3">
-      {/* Reciter Selector */}
       <div className="flex items-center justify-between">
         <div className="relative">
           <button
@@ -169,7 +213,11 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
               {RECITERS.map(r => (
                 <button
                   key={r.id}
-                  onClick={() => { setReciter(r.id); setShowReciters(false); }}
+                  onClick={() => {
+                    setReciter(r.id);
+                    setShowReciters(false);
+                    if (isPlaying) playAyah(currentAyah);
+                  }}
                   className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors ${
                     reciter === r.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                   }`}
@@ -186,7 +234,6 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
         </Badge>
       </div>
 
-      {/* Controls */}
       <div className="flex items-center justify-center gap-2">
         <Button
           variant="ghost"
@@ -204,7 +251,13 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
           className="h-10 w-10 rounded-full"
           onClick={togglePlay}
         >
-          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+          {loading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="w-5 h-5" />
+          ) : (
+            <Play className="w-5 h-5 ml-0.5" />
+          )}
         </Button>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={playNext}>
           <SkipForward className="w-4 h-4" />
@@ -219,7 +272,6 @@ export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: Qu
         </Button>
       </div>
 
-      {/* Speed + Volume */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1">
           {SPEEDS.map(s => (
