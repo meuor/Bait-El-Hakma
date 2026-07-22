@@ -272,6 +272,18 @@ export function QuranReader() {
     }
   }, [playingAyah, surahData]);
 
+  useEffect(() => {
+    if (playingAyah === null || !surahData || allAyahsLoaded) return;
+    const idx = surahData.ayahs.findIndex(a => a.numberInSurah === playingAyah);
+    if (idx >= visibleAyahs - 3) {
+      const target = Math.min(idx + 24, surahData.ayahs.length);
+      if (target > visibleAyahs) {
+        setVisibleAyahs(target);
+        if (target >= surahData.ayahs.length) setAllAyahsLoaded(true);
+      }
+    }
+  }, [playingAyah, surahData, visibleAyahs, allAyahsLoaded]);
+
   const loadMoreAyahs = useCallback(() => {
     if (loadingMore || !surahData || allAyahsLoaded) return;
     setLoadingMore(true);
