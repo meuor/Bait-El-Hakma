@@ -655,7 +655,7 @@ export function QuranReader() {
           </Badge>
         </div>
 
-        {selectedSurah.number === 2 && (
+        {selectedSurah.number !== 9 && (
           <div className="text-center py-4">
             <p dir="rtl" style={{ fontFamily: themeData.fontFamily, fontSize: ayahFontSize, lineHeight: ayahLineHeight, textAlign: 'center' }}>
               بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
