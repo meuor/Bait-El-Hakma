@@ -23,6 +23,7 @@ import { SyncStatus } from '@/components/SyncStatus';
 import { MiniPlayer } from '@/components/MiniPlayer';
 import { LandingPage } from '@/components/LandingPage';
 import { WhatsNew, useWhatsNewAutoShow } from '@/components/WhatsNew';
+import { syncManager } from '@/lib/SyncManager';
 import { motion } from 'framer-motion';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
@@ -69,6 +70,14 @@ function AppContent() {
       setIsLoadingAuth(false);
     };
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      syncManager.flush();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
   const handleLogin = useCallback((loggedInUser: AuthUser, newToken: string) => {

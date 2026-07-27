@@ -1,19 +1,26 @@
 import { useApp } from '@/context/AppContext';
-import { Cloud, CloudOff, Loader2, AlertTriangle } from 'lucide-react';
+import { Cloud, CloudOff, Loader2, AlertTriangle, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
+import { syncManager, type SyncStatus } from '@/lib/SyncManager';
 
 export function SyncStatus() {
   const { state } = useApp();
-  const { apiStatus, syncErrors, lastApiError } = state;
+  const { apiStatus, syncErrors } = state;
   const [expanded, setExpanded] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ pending: 0, lastError: null, isOnline: true });
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasErrors = syncErrors.length > 0;
-  const errorMsg = lastApiError || (syncErrors.length > 0 ? syncErrors[syncErrors.length - 1] : null);
+  const errorMsg = syncStatus.lastError || (syncErrors.length > 0 ? syncErrors[syncErrors.length - 1] : null);
 
   useEffect(() => {
-    if (apiStatus === 'online') {
+    const unsub = syncManager.subscribe(setSyncStatus);
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    if (syncStatus.pending === 0 && !syncStatus.lastError && !hasErrors) {
       setVisible(true);
       if (hideTimer.current) clearTimeout(hideTimer.current);
       hideTimer.current = setTimeout(() => setVisible(false), 5000);
@@ -27,7 +34,7 @@ export function SyncStatus() {
     return () => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
     };
-  }, [apiStatus]);
+  }, [syncStatus.pending, syncStatus.lastError, hasErrors]);
 
   if (apiStatus === 'checking') {
     return (
@@ -40,7 +47,7 @@ export function SyncStatus() {
     );
   }
 
-  if (apiStatus === 'offline' && !hasErrors) {
+  if (apiStatus === 'offline' && !hasErrors && !syncStatus.lastError) {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50">
         <div className="bg-orange-500/10 border-t border-orange-500/20 px-4 py-2 flex items-center justify-center gap-2 text-sm text-orange-700 dark:text-orange-400">
@@ -51,7 +58,24 @@ export function SyncStatus() {
     );
   }
 
-  if (hasErrors || (apiStatus === 'offline' && errorMsg)) {
+  if (syncStatus.pending > 0) {
+    return (
+      <motion.div
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 40, opacity: 0 }}
+        className="fixed bottom-0 left-0 right-0 z-50"
+      >
+        <div className="bg-blue-500/10 border-t border-blue-500/20 px-4 py-2 flex items-center justify-center gap-2 text-sm text-blue-700 dark:text-blue-400">
+          <Upload className="h-3.5 w-3.5 animate-bounce" />
+          <span>Syncing to cloud ({syncStatus.pending} pending)</span>
+          <Loader2 className="h-3 w-3 animate-spin" />
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (hasErrors || syncStatus.lastError) {
     return (
       <AnimatePresence>
         <motion.div
@@ -74,14 +98,6 @@ export function SyncStatus() {
             {expanded && errorMsg && (
               <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-500/5 rounded p-2 max-w-lg mx-auto">
                 <p className="font-mono break-all">{errorMsg}</p>
-                <p className="mt-2 text-muted-foreground">
-                  <strong>Possible causes:</strong>
-                </p>
-                <ul className="list-disc ml-4 mt-1 space-y-0.5 text-muted-foreground">
-                  <li>DATABASE_URL not set in Vercel env vars</li>
-                  <li>JWT_SECRET not set in Vercel env vars</li>
-                  <li>Database schema not run in Neon SQL Editor</li>
-                </ul>
               </div>
             )}
           </div>
@@ -90,7 +106,7 @@ export function SyncStatus() {
     );
   }
 
-  if (apiStatus === 'online' && visible) {
+  if (syncStatus.isOnline && visible && !hasErrors) {
     return (
       <motion.div
         initial={{ y: 0, opacity: 1 }}

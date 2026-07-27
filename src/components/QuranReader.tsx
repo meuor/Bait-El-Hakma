@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { SURAH_LIST, TOTAL_AYAHS, type SurahInfo } from '@/data/quranData';
 import { quranAPI } from '@/lib/api';
+import { syncManager } from '@/lib/SyncManager';
 import { toast } from 'sonner';
 import { QuranDashboard } from './QuranDashboard';
 
@@ -155,7 +156,6 @@ export function QuranReader() {
   const ayahRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioStateRef = useRef({ surahData: null as SurahData | null, playingAyah: null as number | null, audioMuted: false, repeatMode: 'none' as 'none' | 'ayah' | 'ayah3x', reciter: 'ar.alafasy' });
-  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   audioStateRef.current = { surahData, playingAyah, audioMuted, repeatMode, reciter };
 
@@ -172,29 +172,14 @@ export function QuranReader() {
   useEffect(() => {
     const token = localStorage.getItem('bait-el-hakma-token');
     if (!token) return;
-    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
-    syncTimerRef.current = setTimeout(() => {
-      quranAPI.save({
-        bookmarks,
-        completedSurahs: progress.completedSurahs,
-        dailyCompleted,
-        dailyPages,
-        mushafTheme: theme,
-        lastRead: getLastRead() || {},
-      }).catch((err) => {
-        console.warn('Quran cloud sync failed, will retry:', err);
-        setTimeout(() => {
-          quranAPI.save({
-            bookmarks,
-            completedSurahs: progress.completedSurahs,
-            dailyCompleted,
-            dailyPages,
-            mushafTheme: theme,
-            lastRead: getLastRead() || {},
-          }).catch((e) => console.error('Quran cloud sync retry failed:', e));
-        }, 3000);
-      });
-    }, 1500);
+    syncManager.enqueue('quran', () => quranAPI.save({
+      bookmarks,
+      completedSurahs: progress.completedSurahs,
+      dailyCompleted,
+      dailyPages,
+      mushafTheme: theme,
+      lastRead: getLastRead() || {},
+    }));
   }, [bookmarks, progress.completedSurahs, dailyCompleted, dailyPages, theme]);
 
   useEffect(() => {

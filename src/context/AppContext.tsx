@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import type { 
   Theme, 
   User, 
@@ -23,6 +23,7 @@ import {
   challengesAPI, 
   settingsAPI
 } from '@/lib/api';
+import { syncManager } from '@/lib/SyncManager';
 
 // App State Interface
 interface TimerDisplay {
@@ -314,42 +315,34 @@ const API_SYNC_ACTIONS = new Set([
   'DELETE_CHALLENGE',
 ]);
 
+function getSyncKey(action: Action): string | null {
+  switch (action.type) {
+    case 'SET_POMODORO_SETTINGS': return 'settings';
+    case 'ADD_POMODORO_SESSION': return `pomodoro:${action.payload.id}`;
+    case 'SET_KANBAN_COLUMNS': return 'kanban:columns';
+    case 'ADD_KANBAN_CARD': return `kanban:card:${action.payload.id}`;
+    case 'UPDATE_KANBAN_CARD': return `kanban:card:${action.payload.id}`;
+    case 'DELETE_KANBAN_CARD': return `kanban:card:del:${action.payload}`;
+    case 'ADD_BOOK': return `book:${action.payload.id}`;
+    case 'UPDATE_BOOK': return `book:${action.payload.id}`;
+    case 'DELETE_BOOK': return `book:del:${action.payload}`;
+    case 'ADD_TODO': return `todo:${action.payload.id}`;
+    case 'UPDATE_TODO': return `todo:${action.payload.id}`;
+    case 'DELETE_TODO': return `todo:del:${action.payload}`;
+    case 'ADD_CHALLENGE': return `challenge:${action.payload.id}`;
+    case 'UPDATE_CHALLENGE': return `challenge:${action.payload.id}`;
+    case 'DELETE_CHALLENGE': return `challenge:del:${action.payload}`;
+    default: return null;
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const syncErrorsRef = useRef<string[]>([]);
-  const failedQueueRef = useRef<Array<{ action: Action; retries: number }>>([]);
-  const isRetryingRef = useRef(false);
 
-  // Process retry queue
-  const processRetryQueue = useCallback(async () => {
-    if (isRetryingRef.current || failedQueueRef.current.length === 0) return;
-    isRetryingRef.current = true;
-
-    const queue = [...failedQueueRef.current];
-    failedQueueRef.current = [];
-
-    for (const item of queue) {
-      try {
-        await syncActionToAPI(item.action);
-        dispatch({ type: 'CLEAR_SYNC_ERRORS' });
-      } catch {
-        if (item.retries < 2) {
-          failedQueueRef.current.push({ action: item.action, retries: item.retries + 1 });
-        } else {
-          const errorMsg = `Failed to sync ${item.action.type.replace(/_/g, ' ').toLowerCase()}`;
-          if (!syncErrorsRef.current.includes(errorMsg)) {
-            syncErrorsRef.current.push(errorMsg);
-            dispatch({ type: 'ADD_SYNC_ERROR', payload: errorMsg });
-          }
-        }
-      }
-    }
-
-    isRetryingRef.current = false;
-
-    if (failedQueueRef.current.length > 0) {
-      setTimeout(processRetryQueue, 10000);
-    }
+  // Start the periodic sync timer on mount
+  useEffect(() => {
+    syncManager.start();
+    return () => syncManager.stop();
   }, []);
 
   // Load state from API or localStorage on mount
@@ -648,12 +641,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Sync a single action to the API
   const syncActionToAPI = useCallback(async (action: Action) => {
-    if (!isAPIAvailable() || !getToken()) {
-      console.log('Sync skipped: no API or no token');
-      return;
-    }
-
-    console.log('Syncing to API:', action.type);
+    if (!isAPIAvailable() || !getToken()) return;
 
     switch (action.type) {
       case 'SET_POMODORO_SETTINGS':
@@ -706,30 +694,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // API-backed dispatch wrapper
-  const apiDispatch = useCallback(async (action: Action) => {
-    // Always update local state immediately
+  // Dispatch that enqueues sync actions to the periodic SyncManager
+  const apiDispatch = useCallback((action: Action) => {
     dispatch(action);
 
-    // Only sync API-relevant actions
     if (!API_SYNC_ACTIONS.has(action.type)) return;
     if (!isAPIAvailable() || !getToken()) return;
 
-    try {
-      await syncActionToAPI(action);
-      dispatch({ type: 'SET_API_STATUS', payload: 'online' });
-      dispatch({ type: 'SET_DATA_SOURCE', payload: 'api' });
-      console.log('Synced:', action.type);
-    } catch (error) {
-      console.error('API sync error for', action.type, ':', error);
-      const errorMsg = `Failed to sync ${action.type.replace(/_/g, ' ').toLowerCase()}: ${error instanceof Error ? error.message : 'unknown error'}`;
-      dispatch({ type: 'ADD_SYNC_ERROR', payload: errorMsg });
+    const key = getSyncKey(action);
+    if (!key) return;
 
-      // Queue for retry
-      failedQueueRef.current.push({ action, retries: 0 });
-      setTimeout(processRetryQueue, 5000);
-    }
-  }, [syncActionToAPI, processRetryQueue]);
+    syncManager.enqueue(key, () => syncActionToAPI(action));
+  }, [syncActionToAPI]);
 
   return (
     <AppContext.Provider value={{ state, dispatch: apiDispatch as React.Dispatch<Action> }}>
