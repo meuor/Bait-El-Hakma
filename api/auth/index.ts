@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
-import sql from '../_lib/db.js';
+import sql, { ensureSchema } from '../_lib/db.js';
 import { hashPassword, verifyPassword, generateToken, getUserFromRequest } from '../_lib/auth.js';
 import { sendPasswordResetEmail, sendWelcomeEmail } from '../_lib/email.js';
 
@@ -12,6 +12,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const action = (req.query.action as string) || req.body?.action || '';
+
+  await ensureSchema();
 
   try {
     // POST /api/auth?action=register

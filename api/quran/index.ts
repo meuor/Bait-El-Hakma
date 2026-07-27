@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import sql from '../_lib/db.js';
+import sql, { ensureSchema } from '../_lib/db.js';
 import { getUserFromRequest } from '../_lib/auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,6 +13,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
 
   const userId = authUser.userId;
+
+  await ensureSchema();
 
   if (req.method === 'GET') {
     try {

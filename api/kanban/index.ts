@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import sql from '../_lib/db.js';
+import sql, { ensureSchema } from '../_lib/db.js';
 import { getUserFromRequest } from '../_lib/auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -14,6 +14,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const type = (req.query.type as string) || 'cards';
   const uid = authUser.userId;
+
+  await ensureSchema();
 
   try {
     if (type === 'columns') {
