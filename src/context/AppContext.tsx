@@ -551,6 +551,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       dispatch({ type: 'LOAD_STATE', payload: loadedState });
+
+      // Persist cloud data to localStorage so account switching properly overwrites stale cache
+      try {
+        const dataToSave = {
+          pomodoroSettings: loadedState.pomodoroSettings,
+          pomodoroHistory: loadedState.pomodoroHistory,
+          videoSource: null,
+          kanbanColumns: loadedState.kanbanColumns,
+          kanbanCards: loadedState.kanbanCards,
+          books: loadedState.books,
+          todos: loadedState.todos,
+          challenges: loadedState.challenges,
+          activityData: state.activityData,
+          pinnedItems: state.pinnedItems,
+        };
+        localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(dataToSave));
+      } catch { /* ignore storage errors */ }
     };
 
     const loadFromLocalStorage = () => {
