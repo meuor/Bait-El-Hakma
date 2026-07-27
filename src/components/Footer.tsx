@@ -1,7 +1,11 @@
-import { Heart, Github, Mail, ExternalLink } from 'lucide-react';
+import { Heart, Github, Mail, ExternalLink, Sparkle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function Footer() {
+interface FooterProps {
+  onWhatsNew?: () => void;
+}
+
+export function Footer({ onWhatsNew }: FooterProps) {
   return (
     <footer className="border-t border-border bg-muted/30 mt-auto">
       <div className="container mx-auto px-4 py-4">
@@ -19,6 +23,17 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-1">
+            {onWhatsNew && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onWhatsNew}
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <Sparkle className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">What's New</span>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

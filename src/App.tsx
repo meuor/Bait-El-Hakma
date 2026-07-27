@@ -22,6 +22,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { SyncStatus } from '@/components/SyncStatus';
 import { MiniPlayer } from '@/components/MiniPlayer';
 import { LandingPage } from '@/components/LandingPage';
+import { WhatsNew, useWhatsNewAutoShow } from '@/components/WhatsNew';
 import { motion } from 'framer-motion';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
@@ -39,6 +40,8 @@ function AppContent() {
   const [publicProfileUsername, setPublicProfileUsername] = useState<string | null>(null);
   const [resetEmail, setResetEmail] = useState('');
   const [resetCode, setResetCode] = useState('');
+  const { show: showWhatsNew, setShow: setShowWhatsNew } = useWhatsNewAutoShow();
+  const [manualWhatsNew, setManualWhatsNew] = useState(false);
 
   // Check for /@username route on mount
   useEffect(() => {
@@ -185,10 +188,12 @@ function AppContent() {
         </AnimatePresenceWrapper>
       </main>
       
-      <Footer />
+      <Footer onWhatsNew={() => setManualWhatsNew(true)} />
       <MiniPlayer />
       <SyncStatus />
       <Toaster />
+      <WhatsNew open={showWhatsNew} onOpenChange={setShowWhatsNew} trigger="auto" />
+      <WhatsNew open={manualWhatsNew} onOpenChange={setManualWhatsNew} trigger="manual" />
     </div>
   );
 }
