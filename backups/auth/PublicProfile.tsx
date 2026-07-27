@@ -3,7 +3,6 @@ import { authAPI } from '@/lib/api';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, BookOpen, CheckSquare, Timer, Trophy, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface PublicProfileData {
   id: string;
@@ -54,18 +53,18 @@ export function PublicProfile({ username, onBack }: PublicProfileProps) {
 
   if (loading) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-violet-600 mx-auto mb-4" />
           <p className="text-muted-foreground">Loading profile...</p>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
         <div className="text-center">
           <img src="/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
@@ -77,7 +76,7 @@ export function PublicProfile({ username, onBack }: PublicProfileProps) {
             Go to App
           </Button>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -95,7 +94,7 @@ export function PublicProfile({ username, onBack }: PublicProfileProps) {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="min-h-screen bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
       <div className="max-w-2xl mx-auto py-8">
         <Button variant="ghost" onClick={onBack} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -136,6 +135,6 @@ export function PublicProfile({ username, onBack }: PublicProfileProps) {
           </CardContent>
         </Card>
       </div>
-    </motion.div>
+    </div>
   );
 }

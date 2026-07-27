@@ -22,7 +22,6 @@ import {
   Pin,
   PinOff,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 const extractYouTubeId = (url: string): string | null => {
@@ -213,9 +212,9 @@ export function VideoPlayer() {
   const categories = ['all', ...new Set(suggestedVideos.map(v => v.category))];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {!videoSource && (
-        <Card className="tab-card">
+        <Card>
           <CardHeader>
             <CardTitle>Choose Video Source</CardTitle>
           </CardHeader>
@@ -353,7 +352,7 @@ export function VideoPlayer() {
           onToggleMinimize={() => setIsMinimized(!isMinimized)}
         />
       )}
-    </motion.div>
+    </div>
   );
 }
 

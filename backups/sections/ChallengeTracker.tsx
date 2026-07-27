@@ -26,7 +26,6 @@ import {
   Heart,
   Zap,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import type { Challenge } from '@/types';
 
@@ -173,7 +172,7 @@ export function ChallengeTracker() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -464,6 +463,6 @@ export function ChallengeTracker() {
           )}
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </div>
   );
 }

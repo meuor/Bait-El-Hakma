@@ -27,7 +27,6 @@ import {
   Flame,
   Award,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { MigrateData } from '@/components/MigrateData';
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
@@ -145,7 +144,7 @@ export function ActivityStats() {
   }, [pomodoroHistory, todos, books, challenges]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Activity Statistics</h2>
@@ -154,7 +153,7 @@ export function ActivityStats() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="tab-card">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -472,6 +471,6 @@ export function ActivityStats() {
       <div className="mt-8">
         <MigrateData />
       </div>
-    </motion.div>
+    </div>
   );
 }

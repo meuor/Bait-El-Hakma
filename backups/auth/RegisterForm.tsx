@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface RegisterFormProps {
   onLogin: (user: AuthUser, token: string) => void;
@@ -91,8 +90,8 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
-      <Card className="tab-card w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <img src="/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <CardTitle className="text-2xl">
@@ -256,6 +255,6 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
           </form>
         )}
       </Card>
-    </motion.div>
+    </div>
   );
 }

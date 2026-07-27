@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import type { KanbanCard, Label as LabelType } from '@/types';
 
@@ -145,7 +144,7 @@ export function KanbanBoard() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {/* Board Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -411,6 +410,6 @@ export function KanbanBoard() {
           )}
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </div>
   );
 }

@@ -423,3 +423,5 @@ button:active {
   line-height: 2.4;
   letter-spacing: 0;
 }
+
+@import './styles/tabs.css';

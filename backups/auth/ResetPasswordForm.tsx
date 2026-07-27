@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft, KeyRound, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface ResetPasswordFormProps {
   email: string;
@@ -111,8 +110,8 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
-      <Card className="tab-card w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <img src="/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <CardTitle className="text-2xl">
@@ -252,6 +251,6 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
           </Button>
         </CardFooter>
       </Card>
-    </motion.div>
+    </div>
   );
 }

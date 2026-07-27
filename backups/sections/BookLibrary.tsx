@@ -18,7 +18,6 @@ import {
   Edit2,
   Trash2,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import type { Book, BookTag, BookNote } from '@/types';
 
@@ -162,7 +161,7 @@ export function BookLibrary() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -632,6 +631,6 @@ export function BookLibrary() {
           )}
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </div>
   );
 }

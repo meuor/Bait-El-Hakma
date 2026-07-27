@@ -1,0 +1,112 @@
+/* Tab Sections — Enhanced Design */
+
+.tab-section {
+  animation: tabEnter 0.3s ease-out;
+}
+
+@keyframes tabEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-card {
+  backdrop-filter: blur(8px);
+  background: hsl(var(--card) / 0.85);
+  border: 1px solid hsl(var(--border) / 0.6);
+  transition: all 0.2s ease;
+}
+
+.tab-card:hover {
+  border-color: hsl(var(--primary) / 0.15);
+  box-shadow: 0 4px 20px hsl(var(--primary) / 0.06);
+}
+
+.tab-card-glow {
+  position: relative;
+}
+
+.tab-card-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.2), transparent 40%, hsl(var(--primary) / 0.05));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.tab-badge {
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--border) / 0.3);
+  transition: all 0.2s ease;
+}
+
+.tab-badge:hover {
+  border-color: hsl(var(--primary) / 0.2);
+  background: hsl(var(--primary) / 0.06);
+}
+
+.tab-item {
+  transition: all 0.2s ease;
+}
+
+.tab-item:hover {
+  background: hsl(var(--primary) / 0.04);
+  border-color: hsl(var(--border) / 0.4);
+}
+
+.tab-item-active {
+  background: hsl(var(--primary) / 0.06);
+  border-color: hsl(var(--primary) / 0.15);
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.05);
+}
+
+.tab-progress {
+  background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.6) 100%);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.tab-input {
+  transition: all 0.2s ease;
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+.tab-input:focus {
+  border-color: hsl(var(--primary) / 0.3);
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.08);
+}
+
+.tab-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid hsl(var(--border) / 0.3);
+}
+
+.tab-section-header h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.tab-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tab-grid-2 { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.tab-grid-3 { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+
+@media (max-width: 640px) {
+  .tab-grid-2,
+  .tab-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}

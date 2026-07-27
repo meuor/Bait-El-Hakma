@@ -15,7 +15,6 @@ import {
   Moon,
   Sun,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import type { Todo } from '@/types';
 
@@ -141,11 +140,11 @@ export function DailyTodo() {
   }, []);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {/* Date Display */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Gregorian Calendar */}
-        <Card className="tab-card bg-gradient-to-br from-primary/5 to-primary/10">
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <Sun className="w-5 h-5 text-yellow-500" />
@@ -332,6 +331,6 @@ export function DailyTodo() {
           <p className="text-sm text-muted-foreground mt-2">— Chinese Proverb</p>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

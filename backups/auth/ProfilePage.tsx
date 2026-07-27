@@ -25,7 +25,6 @@ import {
   Link,
   CheckCircle,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface ProfilePageProps {
   user: AuthUser;
@@ -150,9 +149,9 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section max-w-2xl mx-auto p-4 space-y-6">
+    <div className="max-w-2xl mx-auto p-4 space-y-6">
       {/* Profile Header */}
-      <Card className="tab-card">
+      <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
@@ -385,6 +384,6 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

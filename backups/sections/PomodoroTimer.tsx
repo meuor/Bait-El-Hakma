@@ -28,7 +28,6 @@ import {
   Pin,
   PinOff,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PomodoroSession, TimerState } from '@/types';
 
@@ -245,10 +244,10 @@ export function PomodoroTimer() {
   const todayFocusMinutes = todaySessions.reduce((acc, s) => acc + s.duration, 0);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {/* Stats Bar */}
       <div className="flex flex-wrap items-center justify-center gap-4">
-        <Badge variant="secondary" className="tab-badge gap-2 px-3 py-1">
+        <Badge variant="secondary" className="gap-2 px-3 py-1">
           <CheckCircle2 className="w-4 h-4" />
           <span>Today: {todaySessions.length} sessions</span>
         </Badge>
@@ -522,7 +521,7 @@ export function PomodoroTimer() {
           </CardContent>
         </Card>
       )}
-    </motion.div>
+    </div>
   );
 }
 

@@ -14,7 +14,6 @@ import {
   Sun,
   ScrollText,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { QuranReader } from '@/components/QuranReader';
 
@@ -304,7 +303,7 @@ export function Motivation() {
   }, [refreshHadith, refreshVerse, refreshQuote]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold">Daily Motivation</h2>
@@ -539,6 +538,6 @@ export function Motivation() {
           </p>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
