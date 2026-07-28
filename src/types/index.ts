@@ -16,27 +16,81 @@ export interface User {
 }
 
 // Pomodoro Types
+export type ActivityMode =
+  | 'reading' | 'coding' | 'watching' | 'working'
+  | 'studying' | 'gaming' | 'writing' | 'exercising'
+  | 'meditating' | 'learning' | 'designing' | 'other';
+
+export interface ActivityModeConfig {
+  id: ActivityMode;
+  label: string;
+  icon: string;
+  color: string;
+}
+
+export const activityModes: ActivityModeConfig[] = [
+  { id: 'reading', label: 'Reading', icon: 'BookOpen', color: 'text-blue-500' },
+  { id: 'coding', label: 'Coding', icon: 'Code', color: 'text-emerald-500' },
+  { id: 'watching', label: 'Watching', icon: 'Film', color: 'text-red-500' },
+  { id: 'working', label: 'Working', icon: 'Briefcase', color: 'text-amber-500' },
+  { id: 'studying', label: 'Studying', icon: 'GraduationCap', color: 'text-violet-500' },
+  { id: 'gaming', label: 'Gaming', icon: 'Gamepad2', color: 'text-purple-500' },
+  { id: 'writing', label: 'Writing', icon: 'PenLine', color: 'text-pink-500' },
+  { id: 'exercising', label: 'Exercising', icon: 'Dumbbell', color: 'text-orange-500' },
+  { id: 'meditating', label: 'Meditating', icon: 'Heart', color: 'text-rose-500' },
+  { id: 'learning', label: 'Learning', icon: 'Lightbulb', color: 'text-yellow-500' },
+  { id: 'designing', label: 'Designing', icon: 'Palette', color: 'text-cyan-500' },
+  { id: 'other', label: 'Other', icon: 'MoreHorizontal', color: 'text-muted-foreground' },
+];
+
+export type PomodoroTheme =
+  | 'classic' | 'ocean' | 'forest' | 'sunset'
+  | 'lavender' | 'rose' | 'midnight' | 'amber';
+
+export interface PomodoroThemeConfig {
+  id: PomodoroTheme;
+  label: string;
+  ringColor: string;
+  bgFrom: string;
+  bgTo: string;
+}
+
+export const pomodoroThemes: PomodoroThemeConfig[] = [
+  { id: 'classic', label: 'Classic', ringColor: 'hsl(var(--primary))', bgFrom: 'from-primary/5', bgTo: 'to-primary/10' },
+  { id: 'ocean', label: 'Ocean', ringColor: '#0ea5e9', bgFrom: 'from-sky-500/10', bgTo: 'to-cyan-500/10' },
+  { id: 'forest', label: 'Forest', ringColor: '#22c55e', bgFrom: 'from-green-500/10', bgTo: 'to-emerald-500/10' },
+  { id: 'sunset', label: 'Sunset', ringColor: '#f97316', bgFrom: 'from-orange-500/10', bgTo: 'to-rose-500/10' },
+  { id: 'lavender', label: 'Lavender', ringColor: '#a855f7', bgFrom: 'from-purple-500/10', bgTo: 'to-violet-500/10' },
+  { id: 'rose', label: 'Rose', ringColor: '#ec4899', bgFrom: 'from-pink-500/10', bgTo: 'to-rose-500/10' },
+  { id: 'midnight', label: 'Midnight', ringColor: '#6366f1', bgFrom: 'from-indigo-500/10', bgTo: 'to-blue-500/10' },
+  { id: 'amber', label: 'Amber', ringColor: '#f59e0b', bgFrom: 'from-amber-500/10', bgTo: 'to-yellow-500/10' },
+];
+
 export interface PomodoroSettings {
-  focusTime: number; // in minutes
-  shortBreak: number; // in minutes
-  longBreak: number; // in minutes
+  focusTime: number;
+  shortBreak: number;
+  longBreak: number;
   cyclesBeforeLongBreak: number;
   autoStartBreaks: boolean;
   autoStartPomodoros: boolean;
   soundEnabled: boolean;
   videoSyncEnabled: boolean;
+  theme: PomodoroTheme;
 }
 
 export interface PomodoroSession {
   id: string;
   startTime: Date;
   endTime: Date | null;
-  duration: number; // in minutes
+  duration: number;
   type: 'focus' | 'shortBreak' | 'longBreak';
   completed: boolean;
+  activityMode?: ActivityMode;
+  customName?: string;
+  linkedTaskId?: string;
 }
 
-export type TimerState = 'idle' | 'running' | 'paused' | 'break';
+export type TimerState = 'idle' | 'running' | 'paused' | 'break' | 'focusEnded';
 
 // Video Player Types
 export interface VideoSource {

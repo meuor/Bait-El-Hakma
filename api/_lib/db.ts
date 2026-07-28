@@ -28,8 +28,14 @@ export async function ensureSchema() {
       duration INTEGER NOT NULL,
       type TEXT NOT NULL,
       completed BOOLEAN NOT NULL DEFAULT false,
+      activity_mode TEXT DEFAULT '',
+      custom_name TEXT DEFAULT '',
+      linked_task_id TEXT DEFAULT '',
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`;
+    await sql`ALTER TABLE pomodoro_sessions ADD COLUMN IF NOT EXISTS activity_mode TEXT DEFAULT ''`;
+    await sql`ALTER TABLE pomodoro_sessions ADD COLUMN IF NOT EXISTS custom_name TEXT DEFAULT ''`;
+    await sql`ALTER TABLE pomodoro_sessions ADD COLUMN IF NOT EXISTS linked_task_id TEXT DEFAULT ''`;
 
     await sql`CREATE TABLE IF NOT EXISTS kanban_columns (
       id TEXT PRIMARY KEY,
@@ -109,6 +115,7 @@ export async function ensureSchema() {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )`;
     await sql`ALTER TABLE pomodoro_settings ADD COLUMN IF NOT EXISTS video_sync_enabled BOOLEAN DEFAULT false`;
+    await sql`ALTER TABLE pomodoro_settings ADD COLUMN IF NOT EXISTS theme TEXT DEFAULT 'classic'`;
 
     await sql`CREATE TABLE IF NOT EXISTS password_resets (
       id TEXT PRIMARY KEY,

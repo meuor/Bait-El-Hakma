@@ -26,11 +26,38 @@ import {
   Calendar,
   Flame,
   Award,
+  Brain,
+  Coffee,
+  Bed,
+  BookOpen as BookOpenIcon,
+  Code,
+  Film,
+  Briefcase,
+  GraduationCap,
+  Gamepad2,
+  PenLine,
+  Dumbbell,
+  Heart,
+  Lightbulb,
+  Palette,
+  MoreHorizontal,
 } from 'lucide-react';
+import { activityModes } from '@/types';
 import { motion } from 'framer-motion';
 import { MigrateData } from '@/components/MigrateData';
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
+
+const activityColorMap: Record<string, string> = {
+  reading: '#3b82f6', coding: '#22c55e', watching: '#ef4444', working: '#f59e0b',
+  studying: '#8b5cf6', gaming: '#a855f7', writing: '#ec4899', exercising: '#f97316',
+  meditating: '#f43f5e', learning: '#eab308', designing: '#06b6d4', other: '#6b7280',
+};
+
+const activityIconMap: Record<string, React.ComponentType<any>> = {
+  BookOpen: BookOpenIcon, Code, Film, Briefcase, GraduationCap, Gamepad2,
+  PenLine, Dumbbell, Heart, Lightbulb, Palette, MoreHorizontal, Brain, Coffee, Bed,
+};
 
 export function ActivityStats() {
   const { state } = useApp();
@@ -143,6 +170,29 @@ export function ActivityStats() {
       currentStreak,
     };
   }, [pomodoroHistory, todos, books, challenges]);
+
+  // Activity breakdown from pomodoro history
+  const activityBreakdown = useMemo(() => {
+    const focusSessions = pomodoroHistory.filter(s => s.type === 'focus' && s.activityMode);
+    const grouped: Record<string, { label: string; minutes: number; sessions: number; color: string }> = {};
+    for (const s of focusSessions) {
+      const mode = s.activityMode || 'other';
+      const config = activityModes.find(a => a.id === mode);
+      if (!grouped[mode]) {
+        grouped[mode] = { label: config?.label || 'Other', minutes: 0, sessions: 0, color: activityColorMap[mode] };
+      }
+      grouped[mode].minutes += s.duration;
+      grouped[mode].sessions += 1;
+    }
+    return Object.entries(grouped).map(([id, data]) => ({ id, ...data }));
+  }, [pomodoroHistory]);
+
+  const recentFocusSessions = useMemo(() => {
+    return pomodoroHistory
+      .filter(s => s.type === 'focus')
+      .slice(-10)
+      .reverse();
+  }, [pomodoroHistory]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="tab-section space-y-6">
@@ -400,6 +450,87 @@ export function ActivityStats() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Activity Breakdown */}
+      {activityBreakdown.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Brain className="w-5 h-5" />
+                Activity Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={activityBreakdown.map(a => ({ name: a.label, value: a.minutes }))}
+                      cx="50%" cy="50%"
+                      innerRadius={50} outerRadius={90}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {activityBreakdown.map((entry) => (
+                        <Cell key={entry.id} fill={activityColorMap[entry.id] || '#6b7280'} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
+                      formatter={(value: number) => [`${value} min`, 'Time Spent']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2 mt-2">
+                {activityBreakdown.map((entry) => (
+                  <div key={entry.id} className="flex items-center gap-1.5 text-xs">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: activityColorMap[entry.id] || '#6b7280' }} />
+                    <span className="font-medium">{entry.label}</span>
+                    <span className="text-muted-foreground">({entry.minutes}m, {entry.sessions}s)</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Timer className="w-5 h-5" />
+                Recent Focus Sessions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-[250px] overflow-auto">
+                {recentFocusSessions.length > 0 ? (
+                  recentFocusSessions.map((s) => {
+                    const config = s.activityMode ? activityModes.find(a => a.id === s.activityMode) : undefined;
+                    const IconComp = config ? (activityIconMap[config.icon] || Brain) : Brain;
+                    return (
+                      <div key={s.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                        {config ? (
+                          <IconComp className="w-4 h-4 shrink-0" style={{ color: activityColorMap[s.activityMode || ''] || undefined }} />
+                        ) : (
+                          <Brain className="w-4 h-4 shrink-0 text-primary" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate font-medium">{s.customName || config?.label || 'Focus Session'}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(s.startTime).toLocaleString()}</p>
+                        </div>
+                        <span className="text-sm text-muted-foreground shrink-0">{s.duration} min</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No focus sessions yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Achievement Badges */}
       <Card>

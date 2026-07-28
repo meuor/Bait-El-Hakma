@@ -22,8 +22,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(sessions);
     }
     if (req.method === 'POST') {
-      const { id, startTime, endTime, duration, type, completed } = req.body;
-      await sql`INSERT INTO pomodoro_sessions (id, user_id, start_time, end_time, duration, type, completed) VALUES (${id}, ${uid}, ${startTime}, ${endTime}, ${duration}, ${type}, ${completed})`;
+      const { id, startTime, endTime, duration, type, completed, activityMode, customName, linkedTaskId } = req.body;
+      await sql`INSERT INTO pomodoro_sessions (id, user_id, start_time, end_time, duration, type, completed, activity_mode, custom_name, linked_task_id)
+        VALUES (${id}, ${uid}, ${startTime}, ${endTime}, ${duration}, ${type}, ${completed}, ${activityMode || ''}, ${customName || ''}, ${linkedTaskId || ''})`;
       return res.status(201).json({ success: true });
     }
     if (req.method === 'DELETE') {
