@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import './styles/tabs.css';
 
 /* Theme Variables */
 :root {
@@ -423,5 +424,3 @@ button:active {
   line-height: 2.4;
   letter-spacing: 0;
 }
-
-@import './styles/tabs.css';
