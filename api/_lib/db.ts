@@ -105,8 +105,10 @@ export async function ensureSchema() {
       auto_start_breaks BOOLEAN DEFAULT false,
       auto_start_pomodoros BOOLEAN DEFAULT false,
       sound_enabled BOOLEAN DEFAULT true,
+      video_sync_enabled BOOLEAN DEFAULT false,
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )`;
+    await sql`ALTER TABLE pomodoro_settings ADD COLUMN IF NOT EXISTS video_sync_enabled BOOLEAN DEFAULT false`;
 
     await sql`CREATE TABLE IF NOT EXISTS password_resets (
       id TEXT PRIMARY KEY,

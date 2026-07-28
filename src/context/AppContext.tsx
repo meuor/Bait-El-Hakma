@@ -109,6 +109,7 @@ const defaultPomodoroSettings: PomodoroSettings = {
   autoStartBreaks: false,
   autoStartPomodoros: false,
   soundEnabled: true,
+  videoSyncEnabled: false,
 };
 
 // Default Kanban Columns
@@ -547,6 +548,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           autoStartBreaks: sv.auto_start_breaks || sv.autoStartBreaks || false,
           autoStartPomodoros: sv.auto_start_pomodoros || sv.autoStartPomodoros || false,
           soundEnabled: sv.sound_enabled !== undefined ? sv.sound_enabled : (sv.soundEnabled !== undefined ? sv.soundEnabled : true),
+          videoSyncEnabled: sv.video_sync_enabled !== undefined ? sv.video_sync_enabled : (sv.videoSyncEnabled !== undefined ? sv.videoSyncEnabled : false),
         };
       }
 

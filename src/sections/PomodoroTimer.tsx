@@ -27,6 +27,8 @@ import {
   CheckCircle2,
   Pin,
   PinOff,
+  Tv,
+  Youtube,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -96,6 +98,22 @@ export function PomodoroTimer() {
       dispatch({ type: 'SET_TIMER_DISPLAY', payload: null });
     }
   }, [timerState, timeLeft, totalTime, sessionType, dispatch]);
+
+  // Sync video playback with focus sessions
+  useEffect(() => {
+    if (!pomodoroSettings.videoSyncEnabled) return;
+
+    if (timerState === 'running' && sessionType === 'focus') {
+      if (state.videoSource) {
+        dispatch({ type: 'SET_ACTIVE_VIDEO', payload: {
+          url: state.videoSource.url,
+          title: state.videoSource.title || 'Focus Video',
+        }});
+      }
+    } else if (timerState === 'idle' || (timerState === 'running' && sessionType !== 'focus')) {
+      dispatch({ type: 'SET_ACTIVE_VIDEO', payload: null });
+    }
+  }, [timerState, sessionType, pomodoroSettings.videoSyncEnabled, state.videoSource, dispatch]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
@@ -284,23 +302,15 @@ export function PomodoroTimer() {
         <CardContent className="space-y-6">
           {/* Circular Progress */}
           <div className="relative flex items-center justify-center">
-            <svg className="timer-ring w-72 h-72">
-              {/* Background circle */}
+            <svg className="timer-ring w-56 h-56 sm:w-72 sm:h-72" viewBox="0 0 288 288">
               <circle
-                cx="144"
-                cy="144"
-                r={radius}
-                fill="none"
-                stroke="hsl(var(--muted))"
+                cx="144" cy="144" r={radius}
+                fill="none" stroke="hsl(var(--muted))"
                 strokeWidth={strokeWidth}
               />
-              {/* Progress circle */}
               <circle
-                cx="144"
-                cy="144"
-                r={radius}
-                fill="none"
-                stroke="hsl(var(--primary))"
+                cx="144" cy="144" r={radius}
+                fill="none" stroke="hsl(var(--primary))"
                 strokeWidth={strokeWidth}
                 strokeLinecap="round"
                 strokeDasharray={circumference}
@@ -308,20 +318,18 @@ export function PomodoroTimer() {
                 className="transition-all duration-1000 ease-linear"
               />
             </svg>
-            
-            {/* Time Display */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-6xl font-mono font-bold tracking-tight">
+              <span className="text-5xl sm:text-6xl font-mono font-bold tracking-tight">
                 {formatTime(timeLeft)}
               </span>
-              <span className="text-sm text-muted-foreground mt-2">
+              <span className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
                 {timerState === 'running' ? 'Running' : timerState === 'paused' ? 'Paused' : 'Ready'}
               </span>
             </div>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {timerState === 'running' ? (
               <Button
                 size="lg"
@@ -365,6 +373,14 @@ export function PomodoroTimer() {
               </Button>
             )}
           </div>
+
+          {/* Sync Status & Video Indicator */}
+          {pomodoroSettings.videoSyncEnabled && state.videoSource && timerState === 'running' && sessionType === 'focus' && (
+            <div className="flex items-center justify-center gap-2 text-xs text-primary">
+              <Youtube className="w-3.5 h-3.5" />
+              <span>Focus video synced</span>
+            </div>
+          )}
 
           {/* Sound Toggle & Settings */}
           <div className="flex items-center justify-center gap-4">
@@ -481,6 +497,23 @@ export function PomodoroTimer() {
                         setSoundEnabled(v);
                       }}
                     />
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tv className="w-4 h-4 text-muted-foreground" />
+                        <Label htmlFor="video-sync" className="font-medium">Sync with Focus Video</Label>
+                      </div>
+                      <Switch
+                        id="video-sync"
+                        checked={pomodoroSettings.videoSyncEnabled}
+                        onCheckedChange={(v) => updateSettings({ videoSyncEnabled: v })}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5 ml-6">
+                      Auto-play focus video during sessions, pause during breaks
+                    </p>
                   </div>
                 </div>
               </DialogContent>

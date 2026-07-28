@@ -110,3 +110,31 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .tab-section {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .tab-card {
+    border-radius: 0.75rem;
+  }
+
+  .tab-section-header {
+    flex-wrap: wrap;
+  }
+
+  .tab-section-header h3 {
+    font-size: 0.95rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 481px) and (max-width: 768px) {
+  .tab-section {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

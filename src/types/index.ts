@@ -24,6 +24,7 @@ export interface PomodoroSettings {
   autoStartBreaks: boolean;
   autoStartPomodoros: boolean;
   soundEnabled: boolean;
+  videoSyncEnabled: boolean;
 }
 
 export interface PomodoroSession {
