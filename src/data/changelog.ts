@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.1.0';
+export const APP_VERSION = '2.2.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -28,6 +28,27 @@ export const SYNCED_DATA_LABELS: { key: string; label: string; labelAr: string }
 ];
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.2.0',
+    date: 'July 2026',
+    title: 'Pomodoro Overhaul, Draggable Widgets & Book Pages',
+    titleAr: 'تحديث بومودورو، أدوات قابلة للسحب، وصفحات الكتب',
+    changes: [
+      { type: 'new', text: 'Pomodoro activity modes — pick what you are working on (Reading, Coding, Working, etc.)', textAr: 'أوضاع نشاط بومودورو — اختر ما تعمل عليه (قراءة، برمجة، عمل، إلخ)' },
+      { type: 'new', text: 'Custom session names & task linking — name each focus session and link it to a todo', textAr: 'أسماء جلسات مخصصة وربط المهام — تسمية كل جلسة تركيز وربطها بمهمة' },
+      { type: 'new', text: 'Manual break control — choose when to start/end/skip breaks after each focus session', textAr: 'تحكم يدوي بالاستراحة — اختر متى تبدأ/تنهي/تتجاوز الاستراحة' },
+      { type: 'new', text: '8 timer themes — Classic, Ocean, Forest, Sunset, Lavender, Rose, Midnight, Amber + Hourglass', textAr: '8 ثيمات للمؤقت — كلاسيك، أوشن، فورست، سنست، لافندر، روز، منتصف الليل، عنبر + ساعة رملية' },
+      { type: 'new', text: 'Hourglass sand animation — animated sand clock that empties as time passes', textAr: 'رسوم متحركة للساعة الرملية — ساعة رملية تفرغ مع مرور الوقت' },
+      { type: 'new', text: 'Draggable pinned widgets — move timer and video anywhere on screen', textAr: 'أدوات مثبتة قابلة للسحب — حرك المؤقت والفيديو إلى أي مكان' },
+      { type: 'new', text: 'App minimize mode — collapse the entire app into a floating draggable timer', textAr: 'وضع تصغير التطبيق — تصغير التطبيق بالكامل إلى مؤقت عائم قابل للسحب' },
+      { type: 'new', text: 'Notion-like book pages — full page view with rich content blocks (heading, text, image, link, divider)', textAr: 'صفحات كتب مشابهة لـ Notion — عرض صفحة كاملة مع كتل محتوى غنية' },
+      { type: 'new', text: 'Activity breakdown chart — pie chart of focus time grouped by activity mode', textAr: 'رسم بياني لتحليل النشاط — رسم دائري لوقت التركيز حسب وضع النشاط' },
+      { type: 'improved', text: 'Video sync — timer pause stops video, resume plays it; video stays visible but paused', textAr: 'مزامنة الفيديو — إيقاف المؤقت يوقف الفيديو، الاستئناف يشغله' },
+      { type: 'improved', text: 'Ready to Focus panel sits beside the timer on desktop', textAr: 'لوحة جاهز للتركيز بجانب المؤقت على سطح المكتب' },
+      { type: 'fixed', text: 'Video no longer disappears on timer pause — shows paused state instead', textAr: 'لم يعد الفيديو يختفي عند إيقاف المؤقت — يظهر حالة التوقف' },
+      { type: 'fixed', text: 'CSS @import order issue causing Vercel build failure', textAr: 'إصلاح مشكلة ترتيب CSS @import التي تسبب فشل البناء' },
+    ],
+  },
   {
     version: '2.1.0',
     date: 'July 2026',
