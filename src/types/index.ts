@@ -132,11 +132,14 @@ export interface Book {
   description: string;
   tags: BookTag[];
   notes: BookNote[];
+  content: ContentBlock[];
+  links: string[];
   status: 'reading' | 'completed' | 'want-to-read' | 'on-hold';
   progress: number; // 0-100
   addedAt: Date;
   completedAt?: Date;
 }
+
 
 export interface BookTag {
   id: string;
@@ -248,6 +251,23 @@ export interface PinnedItems {
   timer: boolean;
   localVideo: boolean;
   youtubeVideo: boolean;
+}
+
+export interface PinnedPositions {
+  timer: { x: number; y: number };
+  localVideo: { x: number; y: number };
+  youtubeVideo: { x: number; y: number };
+}
+
+// Book Page Content Blocks (Notion-like)
+export type ContentBlockType = 'heading' | 'text' | 'image' | 'link' | 'divider' | 'list';
+
+export interface ContentBlock {
+  id: string;
+  type: ContentBlockType;
+  content: string;
+  url?: string;
+  meta?: Record<string, string>;
 }
 
 // Navigation

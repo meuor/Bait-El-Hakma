@@ -13,7 +13,8 @@ import type {
   Challenge,
   ActivityData,
   AppTab,
-  PinnedItems
+  PinnedItems,
+  PinnedPositions
 } from '@/types';
 import { 
   pomodoroAPI, 
@@ -60,6 +61,8 @@ interface State {
   timerDisplay: TimerDisplay | null;
   activeVideo: ActiveVideo | null;
   pinnedItems: PinnedItems;
+  pinnedPositions: PinnedPositions;
+  isMinimized: boolean;
 }
 
 // Action Types
@@ -98,6 +101,9 @@ type Action =
   | { type: 'SET_TIMER_DISPLAY'; payload: TimerDisplay | null }
   | { type: 'SET_ACTIVE_VIDEO'; payload: ActiveVideo | null }
   | { type: 'TOGGLE_PIN'; payload: keyof PinnedItems }
+  | { type: 'SET_PIN_POSITION'; payload: { key: keyof PinnedPositions; position: { x: number; y: number } } }
+  | { type: 'TOGGLE_MINIMIZE' }
+  | { type: 'CLEAR_POMODORO_SESSIONS' }
   | { type: 'LOAD_STATE'; payload: Partial<State> };
 
 // Default Pomodoro Settings
@@ -154,6 +160,8 @@ const initialState: State = {
   timerDisplay: null,
   activeVideo: null,
   pinnedItems: { timer: false, localVideo: false, youtubeVideo: false },
+  pinnedPositions: { timer: { x: 0, y: 0 }, localVideo: { x: 0, y: 0 }, youtubeVideo: { x: 0, y: 0 } },
+  isMinimized: false,
 };
 
 // Reducer
@@ -268,9 +276,21 @@ function appReducer(state: State, action: Action): State {
         ...state,
         pinnedItems: {
           ...state.pinnedItems,
-          [action.payload]: !state.pinnedItems[action.payload],
+          [action.payload]: !state.pinnedItems[action.payload as keyof PinnedItems],
         },
       };
+    case 'SET_PIN_POSITION':
+      return {
+        ...state,
+        pinnedPositions: {
+          ...state.pinnedPositions,
+          [action.payload.key]: action.payload.position,
+        },
+      };
+    case 'TOGGLE_MINIMIZE':
+      return { ...state, isMinimized: !state.isMinimized };
+    case 'CLEAR_POMODORO_SESSIONS':
+      return { ...state, pomodoroHistory: [] };
     case 'LOAD_STATE':
       return { ...state, ...action.payload };
     default:
@@ -515,6 +535,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           progress: b.progress || 0,
           addedAt: new Date(b.added_at || b.addedAt),
           completedAt: b.completed_at || b.completedAt ? new Date(b.completed_at || b.completedAt) : undefined,
+          content: b.content || [],
+          links: b.links || [],
         }));
       }
 

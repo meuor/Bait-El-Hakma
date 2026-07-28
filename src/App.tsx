@@ -170,36 +170,42 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header user={user} onLogout={handleLogout} />
-      <TabNavigation />
+      {!state.isMinimized && (
+        <>
+          <Header user={user} onLogout={handleLogout} />
+          <TabNavigation />
+        </>
+      )}
       
-      <main className="flex-1 container mx-auto px-4 py-6 overflow-auto">
-        <AnimatePresenceWrapper currentTab={currentTab}>
-          {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'profile'] as const).map((tab) => (
-            <TabPanel key={tab} tab={tab} currentTab={currentTab}>
-              {tab === 'pomodoro' && <PomodoroTimer />}
-              {tab === 'video' && <VideoPlayer />}
-              {tab === 'kanban' && <KanbanBoard />}
-              {tab === 'library' && <BookLibrary />}
-              {tab === 'todo' && <DailyTodo />}
-              {tab === 'stats' && <ActivityStats />}
-              {tab === 'motivation' && <Motivation />}
-              {tab === 'challenges' && <ChallengeTracker />}
-              {tab === 'profile' && (
-                <ProfilePage
-                  user={user}
-                  onUpdate={handleUpdateUser}
-                  onLogout={handleLogout}
-                />
-              )}
-            </TabPanel>
-          ))}
-        </AnimatePresenceWrapper>
-      </main>
+      {!state.isMinimized && (
+        <main className="flex-1 container mx-auto px-4 py-6 overflow-auto">
+          <AnimatePresenceWrapper currentTab={currentTab}>
+            {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'profile'] as const).map((tab) => (
+              <TabPanel key={tab} tab={tab} currentTab={currentTab}>
+                {tab === 'pomodoro' && <PomodoroTimer />}
+                {tab === 'video' && <VideoPlayer />}
+                {tab === 'kanban' && <KanbanBoard />}
+                {tab === 'library' && <BookLibrary />}
+                {tab === 'todo' && <DailyTodo />}
+                {tab === 'stats' && <ActivityStats />}
+                {tab === 'motivation' && <Motivation />}
+                {tab === 'challenges' && <ChallengeTracker />}
+                {tab === 'profile' && (
+                  <ProfilePage
+                    user={user}
+                    onUpdate={handleUpdateUser}
+                    onLogout={handleLogout}
+                  />
+                )}
+              </TabPanel>
+            ))}
+          </AnimatePresenceWrapper>
+        </main>
+      )}
       
-      <Footer onWhatsNew={() => setManualWhatsNew(true)} />
+      {!state.isMinimized && <Footer onWhatsNew={() => setManualWhatsNew(true)} />}
       <MiniPlayer />
-      <SyncStatus />
+      {!state.isMinimized && <SyncStatus />}
       <Toaster />
       <WhatsNew open={showWhatsNew} onOpenChange={setShowWhatsNew} trigger="auto" />
       <WhatsNew open={manualWhatsNew} onOpenChange={setManualWhatsNew} trigger="manual" />

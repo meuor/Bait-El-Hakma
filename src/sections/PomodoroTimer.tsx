@@ -20,7 +20,7 @@ import {
   Coffee, Brain, Bed, CheckCircle2, Pin, PinOff, Tv, Youtube,
   BookOpen, Code, Film, Briefcase, GraduationCap, Gamepad2,
   PenLine, Dumbbell, Heart, Lightbulb, Palette, MoreHorizontal,
-  Type, ListChecks,
+  Type, ListChecks, Trash2,
 } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -148,14 +148,20 @@ export function PomodoroTimer() {
     }
   }, [timerState, timeLeft, totalTime, sessionType, dispatch]);
 
+  const videoUrlRef = useRef<string | null>(null);
   useEffect(() => {
     if (!pomodoroSettings.videoSyncEnabled) return;
-    if ((timerState === 'running' || timerState === 'paused') && sessionType === 'focus') {
+    if (timerState === 'running' && sessionType === 'focus') {
       if (state.videoSource) {
+        videoUrlRef.current = state.videoSource.url;
         dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url: state.videoSource.url, title: state.videoSource.title || 'Focus Video' } });
       }
+    } else if (timerState === 'paused' && sessionType === 'focus') {
+      // Keep video visible but stopped — show placeholder in MiniPlayer
+      // ActiveVideo is kept, MiniPlayer will show paused state
     } else if (timerState === 'idle' || timerState === 'focusEnded' || sessionType !== 'focus') {
       dispatch({ type: 'SET_ACTIVE_VIDEO', payload: null });
+      videoUrlRef.current = null;
     }
   }, [timerState, sessionType, pomodoroSettings.videoSyncEnabled, state.videoSource, dispatch]);
 
@@ -318,53 +324,54 @@ export function PomodoroTimer() {
         </Badge>
       </div>
 
-      {timerState === 'idle' && sessionType === 'focus' && (
-        <Card className="max-w-md mx-auto" style={{ background: themeBg }}>
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-lg">Ready to Focus</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">What are you working on?</Label>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                {activityOptions.map((opt) => {
-                  const Icon = opt.icon;
-                  const isSelected = activityMode === opt.id;
-                  return (
-                    <button key={opt.id} onClick={() => setActivityMode(opt.id as ActivityMode | '')}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${isSelected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50 hover:bg-accent/50'}`}>
-                      <Icon className={`w-5 h-5 ${isSelected ? 'text-primary' : opt.color}`} />
-                      <span className="text-[10px] leading-tight">{opt.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="session-name" className="text-xs text-muted-foreground mb-1.5 block">Session Name</Label>
-              <div className="relative">
-                <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input id="session-name" placeholder="What are you working on?" value={customName} onChange={(e) => setCustomName(e.target.value)} className="pl-9" />
-              </div>
-            </div>
-            {incompleteTodos.length > 0 && (
+      <div className="lg:flex lg:gap-6 lg:items-start justify-center">
+        {timerState === 'idle' && sessionType === 'focus' && (
+          <Card className="w-full lg:max-w-sm" style={{ background: themeBg }}>
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-lg">Ready to Focus</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="link-task" className="text-xs text-muted-foreground mb-1.5 block">Link to Task</Label>
-                <div className="relative">
-                  <ListChecks className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-                  <select id="link-task" value={linkedTaskId} onChange={(e) => setLinkedTaskId(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                    <option value="">No task</option>
-                    {incompleteTodos.map(t => <option key={t.id} value={t.id}>{t.content}</option>)}
-                  </select>
+                <Label className="text-xs text-muted-foreground mb-2 block">What are you working on?</Label>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                  {activityOptions.map((opt) => {
+                    const Icon = opt.icon;
+                    const isSelected = activityMode === opt.id;
+                    return (
+                      <button key={opt.id} onClick={() => setActivityMode(opt.id as ActivityMode | '')}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${isSelected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50 hover:bg-accent/50'}`}>
+                        <Icon className={`w-5 h-5 ${isSelected ? 'text-primary' : opt.color}`} />
+                        <span className="text-[10px] leading-tight">{opt.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              <div>
+                <Label htmlFor="session-name" className="text-xs text-muted-foreground mb-1.5 block">Session Name</Label>
+                <div className="relative">
+                  <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input id="session-name" placeholder="What are you working on?" value={customName} onChange={(e) => setCustomName(e.target.value)} className="pl-9" />
+                </div>
+              </div>
+              {incompleteTodos.length > 0 && (
+                <div>
+                  <Label htmlFor="link-task" className="text-xs text-muted-foreground mb-1.5 block">Link to Task</Label>
+                  <div className="relative">
+                    <ListChecks className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+                    <select id="link-task" value={linkedTaskId} onChange={(e) => setLinkedTaskId(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                      <option value="">No task</option>
+                      {incompleteTodos.map(t => <option key={t.id} value={t.id}>{t.content}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-      <Card className={`max-w-md mx-auto ${timerState === 'focusEnded' ? 'border-primary/50 ring-1 ring-primary/20' : ''}`} style={{ background: themeBg }}>
+      <Card className={`w-full max-w-md mx-auto ${timerState === 'focusEnded' ? 'border-primary/50 ring-1 ring-primary/20' : ''} ${timerState === 'idle' && sessionType === 'focus' ? 'lg:mx-0' : 'lg:mx-auto'}`} style={{ background: themeBg }}>
         <CardHeader className="text-center pb-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             {timerState === 'running' && currentActivity && currentActivity.id ? (
@@ -421,7 +428,7 @@ export function PomodoroTimer() {
             <Button size="lg" variant="outline" onClick={resetTimer} className="gap-2"><RotateCcw className="w-5 h-5" /> Reset</Button>
           </div>
 
-          {(timerState === 'running' || timerState === 'paused') && pomodoroSettings.videoSyncEnabled && state.videoSource && sessionType === 'focus' && (
+          {pomodoroSettings.videoSyncEnabled && state.videoSource && sessionType === 'focus' && (timerState === 'running' || timerState === 'paused') && (
             <div className="flex items-center justify-center gap-2 text-xs text-primary">
               <Youtube className="w-3.5 h-3.5" />
               <span>Focus video {timerState === 'paused' ? 'paused' : 'synced'}</span>
@@ -510,11 +517,15 @@ export function PomodoroTimer() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {pomodoroHistory.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Recent Sessions</CardTitle>
+            <Button variant="ghost" size="sm" className="text-destructive text-xs gap-1" onClick={() => dispatch({ type: 'CLEAR_POMODORO_SESSIONS' })}>
+              <Trash2 className="w-3.5 h-3.5" /> Clear All
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-48 overflow-auto">

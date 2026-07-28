@@ -97,6 +97,8 @@ export function BookLibrary() {
       coverUrl: newBookCoverUrl || `https://placehold.co/200x300/8b5cf6/ffffff?text=${encodeURIComponent(newBookTitle)}`,
       tags: defaultBookTags.filter(t => newBookTags.includes(t.id)),
       notes: [],
+      content: [],
+      links: [],
       status: newBookStatus,
       progress: 0,
       addedAt: new Date(),
