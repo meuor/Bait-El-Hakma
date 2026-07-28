@@ -45,7 +45,7 @@ export const activityModes: ActivityModeConfig[] = [
 
 export type PomodoroTheme =
   | 'classic' | 'ocean' | 'forest' | 'sunset'
-  | 'lavender' | 'rose' | 'midnight' | 'amber';
+  | 'lavender' | 'rose' | 'midnight' | 'amber' | 'hourglass';
 
 export interface PomodoroThemeConfig {
   id: PomodoroTheme;
@@ -63,6 +63,7 @@ export const pomodoroThemes: PomodoroThemeConfig[] = [
   { id: 'lavender', label: 'Lavender', ringColor: '#a855f7', bgFrom: 'from-purple-500/10', bgTo: 'to-violet-500/10' },
   { id: 'rose', label: 'Rose', ringColor: '#ec4899', bgFrom: 'from-pink-500/10', bgTo: 'to-rose-500/10' },
   { id: 'midnight', label: 'Midnight', ringColor: '#6366f1', bgFrom: 'from-indigo-500/10', bgTo: 'to-blue-500/10' },
+  { id: 'hourglass', label: 'Hourglass', ringColor: '#d4a853', bgFrom: 'from-amber-500/10', bgTo: 'to-yellow-500/10' },
   { id: 'amber', label: 'Amber', ringColor: '#f59e0b', bgFrom: 'from-amber-500/10', bgTo: 'to-yellow-500/10' },
 ];
 

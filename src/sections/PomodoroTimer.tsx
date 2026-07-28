@@ -36,6 +36,7 @@ const themeColors: Record<PomodoroTheme, string> = {
   rose: '#e11d48',
   midnight: '#6366f1',
   amber: '#f59e0b',
+  hourglass: '#d4a853',
 };
 
 const themeBgGradients: Record<PomodoroTheme, string> = {
@@ -47,6 +48,7 @@ const themeBgGradients: Record<PomodoroTheme, string> = {
   rose: 'linear-gradient(135deg, rgba(225,29,72,0.08), rgba(225,29,72,0.03))',
   midnight: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(99,102,241,0.03))',
   amber: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.03))',
+  hourglass: 'linear-gradient(135deg, rgba(212,168,83,0.08), rgba(212,168,83,0.03))',
 };
 
 const activityOptions: { id: ActivityMode | ''; icon: React.ComponentType<any>; label: string; color: string }[] = [
@@ -74,6 +76,7 @@ const themeSwatches: { id: PomodoroTheme; color: string; label: string }[] = [
   { id: 'rose', color: '#e11d48', label: 'Rose' },
   { id: 'midnight', color: '#6366f1', label: 'Midnight' },
   { id: 'amber', color: '#f59e0b', label: 'Amber' },
+  { id: 'hourglass', color: '#d4a853', label: 'Hourglass' },
 ];
 
 const createBeep = (frequency: number, duration: number, type: OscillatorType = 'sine') => {
@@ -394,10 +397,14 @@ export function PomodoroTimer() {
 
         <CardContent className="space-y-6">
           <div className="relative flex items-center justify-center">
-            <svg className="timer-ring w-56 h-56 sm:w-72 sm:h-72" viewBox="0 0 288 288">
-              <circle cx="144" cy="144" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={strokeWidth} />
-              <circle cx="144" cy="144" r={radius} fill="none" stroke={themeStroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-1000 ease-linear" />
-            </svg>
+            {currentTheme === 'hourglass' ? (
+              <HourglassSVG progress={progress} running={timerState === 'running'} color={themeStroke} size="large" />
+            ) : (
+              <svg className="timer-ring w-56 h-56 sm:w-72 sm:h-72" viewBox="0 0 288 288">
+                <circle cx="144" cy="144" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={strokeWidth} />
+                <circle cx="144" cy="144" r={radius} fill="none" stroke={themeStroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-1000 ease-linear" />
+              </svg>
+            )}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-5xl sm:text-6xl font-mono font-bold tracking-tight">{formatTime(timeLeft)}</span>
               <span className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
@@ -558,5 +565,69 @@ export function PomodoroTimer() {
         </Card>
       )}
     </motion.div>
+  );
+}
+
+// Hourglass SVG component with animated sand
+function HourglassSVG({ progress, running, color, size = 'large' }: { progress: number; running: boolean; color: string; size?: 'large' | 'small' }) {
+  const dim = size === 'large' ? 256 : 128;
+  const viewBox = '0 0 120 180';
+  const sandTopY = 20 + (1 - progress / 100) * 48;
+  const sandBottomY = 132 - (progress / 100) * 57;
+
+  return (
+    <svg className="timer-ring" width={dim} height={dim * 1.5} viewBox={viewBox}>
+      <defs>
+        <clipPath id="topBulb">
+          <path d="M30,20 L90,20 Q65,45 62,68 L58,68 Q55,45 30,20 Z" />
+        </clipPath>
+        <clipPath id="bottomBulb">
+          <path d="M30,132 L90,132 Q90,102 62,75 L58,75 Q30,102 30,132 Z" />
+        </clipPath>
+        <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#e8c56a" />
+          <stop offset="100%" stopColor="#d4a853" />
+        </linearGradient>
+      </defs>
+
+      {/* Glass frame */}
+      <path d="M30,20 L90,20 Q65,45 62,68 L62,75 Q90,102 90,132 L30,132 Q30,102 58,75 L58,68 Q55,45 30,20 Z"
+        fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" opacity="0.6" />
+
+      {/* Frame top and bottom bars */}
+      <line x1="28" y1="20" x2="92" y2="20" stroke={color} strokeWidth="3" strokeLinecap="round" />
+      <line x1="28" y1="132" x2="92" y2="132" stroke={color} strokeWidth="3" strokeLinecap="round" />
+
+      {/* Top sand — decreases as progress increases */}
+      <rect x="28" y={sandTopY} width="64" height={68 - sandTopY} fill="url(#sandGrad)" clipPath="url(#topBulb)" />
+
+      {/* Bottom sand — increases as progress increases */}
+      <rect x="28" y={sandBottomY} width="64" height={132 - sandBottomY} fill="url(#sandGrad)" clipPath="url(#bottomBulb)" />
+
+      {/* Falling sand particles through the neck */}
+      {running && (
+        <>
+          <circle cx="60" cy={68 + (progress / 100) * 8} r="1.2" fill="#e8c56a" opacity="0.8">
+            <animate attributeName="cy" values={`${68 + (progress / 100) * 8};${75 - (progress / 100) * 8}`}
+              dur="0.8s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="60" cy={68 + (progress / 100) * 8} r="0.8" fill="#d4a853" opacity="0.6">
+            <animate attributeName="cy" values={`${68 + (progress / 100) * 8};${75 - (progress / 100) * 8}`}
+              dur="0.6s" repeatCount="indefinite" begin="0.3s" />
+          </circle>
+          <circle cx="60" cy={68 + (progress / 100) * 8} r="1" fill="#f0d080" opacity="0.7">
+            <animate attributeName="cy" values={`${68 + (progress / 100) * 8};${75 - (progress / 100) * 8}`}
+              dur="0.7s" repeatCount="indefinite" begin="0.5s" />
+          </circle>
+        </>
+      )}
+
+      {/* Sand pile glow at bottom */}
+      {running && (
+        <ellipse cx="60" cy={sandBottomY} rx="15" ry="2" fill="#e8c56a" opacity="0.3">
+          <animate attributeName="opacity" values="0.3;0.1;0.3" dur="1.5s" repeatCount="indefinite" />
+        </ellipse>
+      )}
+    </svg>
   );
 }
