@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, useInView, useAnimation, AnimatePresence } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen, Timer, LayoutGrid, Library, CheckSquare,
+  BookOpen, Timer, LayoutGrid, Library,
   Cloud, Sparkles, ArrowRight, ChevronRight, X, ZoomIn,
-  Star, BookMarked, Headphones, Brain, Heart,
+  Star, Headphones, Brain, Heart,
 } from 'lucide-react';
 import './LandingPage.css';
 
@@ -78,7 +78,55 @@ const screenshots = [
   { img: '/screenshots/kanban-board.png', title: 'Kanban Board', desc: 'Visual drag-and-drop task management', size: 'wide' },
   { img: '/screenshots/daily-todo.png', title: 'Daily Tasks', desc: 'Plan your day with dual calendar', size: 'square' },
   { img: '/screenshots/challenge-tracker.png', title: 'Challenges', desc: 'Build habits with streaks & grids', size: 'tall' },
+  { img: '/screenshots/activity-stats.png', title: 'Activity Stats', desc: 'Track productivity with analytics', size: 'square' },
+  { img: '/screenshots/dashboard.png', title: 'Dashboard', desc: 'Central hub for all features', size: 'wide' },
+  { img: '/screenshots/profile.png', title: 'Profile', desc: 'Public profile with stats & username', size: 'square' },
 ];
+
+// Live animating timer for the landing page
+function LiveTimerPreview() {
+  const [time, setTime] = useState(1500); // 25:00
+  const [running, setRunning] = useState(false);
+  const timer = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  const toggle = () => {
+    if (running) {
+      clearInterval(timer.current);
+      setRunning(false);
+    } else {
+      setRunning(true);
+      timer.current = setInterval(() => {
+        setTime(prev => {
+          if (prev <= 1) { clearInterval(timer.current); setRunning(false); return 1500; }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  };
+
+  useEffect(() => () => clearInterval(timer.current), []);
+
+  const mins = Math.floor(time / 60);
+  const secs = time % 60;
+  const radius = 54;
+  const circ = 2 * Math.PI * radius;
+  const progress = ((1500 - time) / 1500) * 100;
+  const offset = circ - (progress / 100) * circ;
+
+  return (
+    <div className="landing-live-timer" onClick={toggle}>
+      <svg viewBox="0 0 128 128" className="landing-live-timer-ring">
+        <circle cx="64" cy="64" r={radius} fill="none" stroke="rgba(139,92,246,0.15)" strokeWidth="6" />
+        <circle cx="64" cy="64" r={radius} fill="none" stroke="#8b5cf6" strokeWidth="6" strokeLinecap="round"
+          strokeDasharray={circ} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1s linear' }} />
+      </svg>
+      <div className="landing-live-timer-inner">
+        <span className="landing-live-timer-time">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
+        <span className="landing-live-timer-label">{running ? 'Focusing' : 'Tap to start'}</span>
+      </div>
+    </div>
+  );
+}
 
 const steps = [
   { num: '01', title: 'Create your account', desc: 'Sign up in seconds with email. Pick a unique username for your public profile.', titleAr: 'أنشئ حسابك' },
@@ -303,27 +351,36 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </FadeInSection>
 
         <div className="landing-showcase-grid">
-          {screenshots.map((s, i) => (
-            <motion.div
-              key={i}
-              className={`landing-showcase-item landing-showcase-${s.size}`}
-              onClick={() => { setLightboxImg(s.img); setLightboxTitle(s.title); }}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              whileHover={{ scale: 1.03, zIndex: 10 }}
-            >
-              <img src={s.img} alt={s.title} loading="lazy" />
-              <div className="landing-showcase-zoom">
-                <ZoomIn className="w-6 h-6" />
-              </div>
-              <div className="landing-showcase-overlay">
-                <h4>{s.title}</h4>
-                <p>{s.desc}</p>
-              </div>
-            </motion.div>
-          ))}
+          {screenshots.map((s, i) => {
+            const isTimer = s.title === 'Focus Timer';
+            return (
+              <motion.div
+                key={i}
+                className={`landing-showcase-item landing-showcase-${s.size}`}
+                onClick={() => { if (!isTimer) { setLightboxImg(s.img); setLightboxTitle(s.title); } }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                whileHover={{ scale: isTimer ? 1 : 1.03, zIndex: 10 }}
+              >
+                {isTimer ? (
+                  <LiveTimerPreview />
+                ) : (
+                  <>
+                    <img src={s.img} alt={s.title} loading="lazy" />
+                    <div className="landing-showcase-zoom">
+                      <ZoomIn className="w-6 h-6" />
+                    </div>
+                  </>
+                )}
+                <div className="landing-showcase-overlay">
+                  <h4>{s.title}</h4>
+                  <p>{s.desc}</p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 

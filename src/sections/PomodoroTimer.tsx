@@ -150,7 +150,7 @@ export function PomodoroTimer() {
 
   useEffect(() => {
     if (!pomodoroSettings.videoSyncEnabled) return;
-    if (timerState === 'running' && sessionType === 'focus') {
+    if ((timerState === 'running' || timerState === 'paused') && sessionType === 'focus') {
       if (state.videoSource) {
         dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url: state.videoSource.url, title: state.videoSource.title || 'Focus Video' } });
       }
@@ -421,10 +421,10 @@ export function PomodoroTimer() {
             <Button size="lg" variant="outline" onClick={resetTimer} className="gap-2"><RotateCcw className="w-5 h-5" /> Reset</Button>
           </div>
 
-          {pomodoroSettings.videoSyncEnabled && state.videoSource && timerState === 'running' && sessionType === 'focus' && (
+          {(timerState === 'running' || timerState === 'paused') && pomodoroSettings.videoSyncEnabled && state.videoSource && sessionType === 'focus' && (
             <div className="flex items-center justify-center gap-2 text-xs text-primary">
               <Youtube className="w-3.5 h-3.5" />
-              <span>Focus video synced</span>
+              <span>Focus video {timerState === 'paused' ? 'paused' : 'synced'}</span>
             </div>
           )}
 
