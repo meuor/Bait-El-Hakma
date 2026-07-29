@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -53,15 +53,12 @@ function computeBacklinkCount(edges: GraphEdge[], nodeId: string): number {
   return count;
 }
 
-function runForceSimulation(nodes: GraphNode[], edges: GraphEdge[], iterations = 150) {
+function runForceSimulation(nodes: GraphNode[], edges: GraphEdge[], cx: number, cy: number, iterations = 150) {
   const repulsionStrength = 5000;
   const attractionStrength = 0.005;
   const centerGravity = 0.01;
   const damping = 0.85;
   const minDist = 30;
-
-  const cx = 400;
-  const cy = 300;
 
   for (let iter = 0; iter < iterations; iter++) {
     // Repulsion
@@ -136,6 +133,23 @@ export function GraphView() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const [containerSize, setContainerSize] = useState({ width: 800, height: 500 });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setContainerSize({ width, height });
+        }
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const [filterTypes, setFilterTypes] = useState<Set<string>>(new Set(ENTITY_TYPES));
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
@@ -152,6 +166,9 @@ export function GraphView() {
 
   // Build nodes and edges from state
   const { nodes, edges } = useMemo(() => {
+    const cx = containerSize.width / 2;
+    const cy = containerSize.height / 2;
+    const spread = Math.min(containerSize.width, containerSize.height) * 0.3;
     const nodeMap = new Map<string, { label: string; type: EntityType; tags: string[] }>();
     const edgeList: GraphEdge[] = [];
 
@@ -200,13 +217,13 @@ export function GraphView() {
     for (const [id, info] of nodeMap) {
       const color = TYPE_CONFIG[info.type]?.color || '#666';
       const angle = (i / nodeMap.size) * Math.PI * 2 + seed;
-      const radius = 150 + Math.random() * 100;
+      const radius = spread + Math.random() * spread * 0.5;
       nodeList.push({
         id,
         label: info.label,
         type: info.type as EntityType,
-        x: 400 + Math.cos(angle) * radius,
-        y: 300 + Math.sin(angle) * radius,
+        x: cx + Math.cos(angle) * radius,
+        y: cy + Math.sin(angle) * radius,
         vx: 0,
         vy: 0,
         radius: 20,
@@ -223,10 +240,10 @@ export function GraphView() {
       node.radius = Math.max(20, Math.min(60, 20 + node.backlinkCount * 4));
     }
 
-    runForceSimulation(nodeList, edgeList);
+    runForceSimulation(nodeList, edgeList, cx, cy);
 
     return { nodes: nodeList, edges: edgeList };
-  }, [state.books, state.todos, state.kanbanCards, state.pomodoroHistory, state.challenges, state.linkRegistry]);
+  }, [state.books, state.todos, state.kanbanCards, state.pomodoroHistory, state.challenges, state.linkRegistry, containerSize]);
 
   const filteredNodes = useMemo(() => {
     return nodes.filter(n => {
