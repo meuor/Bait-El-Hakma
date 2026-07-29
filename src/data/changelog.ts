@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.2.0';
+export const APP_VERSION = '2.3.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -28,6 +28,20 @@ export const SYNCED_DATA_LABELS: { key: string; label: string; labelAr: string }
 ];
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.3.0',
+    date: 'July 2026',
+    title: 'Bug Fixes & Data Safety',
+    titleAr: 'إصلاح الأخطاء وسلامة البيانات',
+    changes: [
+      { type: 'fixed', text: 'Fixed DatabaseView crash on profile page — missing entityType prop', textAr: 'إصلاح عطل DatabaseView في صفحة الملف الشخصي' },
+      { type: 'fixed', text: 'Fixed blank white page after sign-in — undefined entityType and GraphView tags crash', textAr: 'إصلاح الصفحة البيضاء بعد تسجيل الدخول' },
+      { type: 'fixed', text: 'Fixed Quran data loss on localStorage clear — cloud pull now retries after sign-in, sync waits for cloud load', textAr: 'إصلاح فقدان بيانات القرآن عند مسح التخزين المحلي' },
+      { type: 'fixed', text: 'Fixed Pomodoro timer SVG hourglass path interpolation (template literal bug)', textAr: 'إصلاح مسار الساعة الرملية SVG في مؤقت بومودورو' },
+      { type: 'improved', text: 'Entity data normalization — ensures tags/links defaults on all loaded entities', textAr: 'تحسين تطبيع بيانات الكيانات — إضافة حقول tags/links افتراضية' },
+      { type: 'improved', text: 'Quran cloud sync is now safe — prevents empty state from overwriting cloud data', textAr: 'تحسين مزامنة القرآن — منع الكتابة فوق البيانات السحابية بالحالة الفارغة' },
+    ],
+  },
   {
     version: '2.2.0',
     date: 'July 2026',

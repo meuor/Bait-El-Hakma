@@ -19,8 +19,6 @@ import {
   BarChart3,
   Cloud,
   CloudOff,
-  Minimize2,
-  Maximize2,
 } from 'lucide-react';
 import type { Theme } from '@/types';
 import type { AuthUser } from '@/lib/api';
@@ -41,7 +39,7 @@ interface HeaderProps {
 export function Header({ user, onLogout }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { state, dispatch } = useApp();
-  const { apiStatus, syncErrors, isMinimized } = state;
+  const { apiStatus, syncErrors } = state;
   const hasErrors = syncErrors.length > 0;
 
   const goToProfile = () => {
@@ -115,17 +113,6 @@ export function Header({ user, onLogout }: HeaderProps) {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Minimize Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => dispatch({ type: 'TOGGLE_MINIMIZE' })}
-            title={isMinimized ? 'Restore app' : 'Minimize app'}
-            className={isMinimized ? 'text-primary' : ''}
-          >
-            {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
-          </Button>
 
           {/* User Menu */}
           <DropdownMenu>
