@@ -23,12 +23,12 @@ interface GraphEdge {
   target: string;
 }
 
-const TYPE_CONFIG: Record<string, { color: string; tab: AppTab }> = {
-  'book': { color: '#8b5cf6', tab: 'library' },
-  'todo': { color: '#22c55e', tab: 'todo' },
-  'kanban-card': { color: '#f59e0b', tab: 'kanban' },
-  'pomodoro-session': { color: '#3b82f6', tab: 'pomodoro' },
-  'challenge': { color: '#ef4444', tab: 'challenges' },
+const TYPE_CONFIG: Record<string, { color: string; glow: string; tab: AppTab }> = {
+  'book': { color: '#8b5cf6', glow: 'rgba(139,92,246,0.5)', tab: 'library' },
+  'todo': { color: '#22c55e', glow: 'rgba(34,197,94,0.5)', tab: 'todo' },
+  'kanban-card': { color: '#f59e0b', glow: 'rgba(245,158,11,0.5)', tab: 'kanban' },
+  'pomodoro-session': { color: '#3b82f6', glow: 'rgba(59,130,246,0.5)', tab: 'pomodoro' },
+  'challenge': { color: '#ef4444', glow: 'rgba(239,68,68,0.5)', tab: 'challenges' },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -61,7 +61,6 @@ function runForceSimulation(nodes: GraphNode[], edges: GraphEdge[], cx: number, 
   const minDist = 30;
 
   for (let iter = 0; iter < iterations; iter++) {
-    // Repulsion
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i];
@@ -80,7 +79,6 @@ function runForceSimulation(nodes: GraphNode[], edges: GraphEdge[], cx: number, 
       }
     }
 
-    // Attraction along edges
     for (const edge of edges) {
       const source = nodes.find(n => n.id === edge.source);
       const target = nodes.find(n => n.id === edge.target);
@@ -97,13 +95,11 @@ function runForceSimulation(nodes: GraphNode[], edges: GraphEdge[], cx: number, 
       target.vy -= fy;
     }
 
-    // Center gravity
     for (const node of nodes) {
       node.vx += (cx - node.x) * centerGravity;
       node.vy += (cy - node.y) * centerGravity;
     }
 
-    // Apply velocity with damping
     for (const node of nodes) {
       node.vx *= damping;
       node.vy *= damping;
@@ -132,8 +128,27 @@ export function GraphView() {
   const { state, dispatch } = useApp();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inertiaRef = useRef<{ vx: number; vy: number; frameId: number | null }>({ vx: 0, vy: 0, frameId: null });
+  const dragRef = useRef<{
+    node: GraphNode | null;
+    startX: number; startY: number;
+    nodeX: number; nodeY: number;
+    panning: boolean;
+    panStartX: number; panStartY: number;
+    transformStartX: number; transformStartY: number;
+    lastMoveTime: number; lastMoveX: number; lastMoveY: number;
+  }>({
+    node: null, startX: 0, startY: 0, nodeX: 0, nodeY: 0,
+    panning: false, panStartX: 0, panStartY: 0, transformStartX: 0, transformStartY: 0,
+    lastMoveTime: 0, lastMoveX: 0, lastMoveY: 0,
+  });
 
   const [containerSize, setContainerSize] = useState({ width: 800, height: 500 });
+  const [filterTypes, setFilterTypes] = useState<Set<string>>(new Set(ENTITY_TYPES));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -150,21 +165,6 @@ export function GraphView() {
     return () => observer.disconnect();
   }, []);
 
-  const [filterTypes, setFilterTypes] = useState<Set<string>>(new Set(ENTITY_TYPES));
-  const [searchQuery, setSearchQuery] = useState('');
-  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
-
-  // Transform state for zoom/pan
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
-
-  // Drag state
-  const dragRef = useRef<{ node: GraphNode | null; startX: number; startY: number; nodeX: number; nodeY: number; panning: boolean; panStartX: number; panStartY: number; transformStartX: number; transformStartY: number }>({
-    node: null, startX: 0, startY: 0, nodeX: 0, nodeY: 0,
-    panning: false, panStartX: 0, panStartY: 0, transformStartX: 0, transformStartY: 0,
-  });
-
-  // Build nodes and edges from state
   const { nodes, edges } = useMemo(() => {
     const cx = containerSize.width / 2;
     const cy = containerSize.height / 2;
@@ -201,7 +201,6 @@ export function GraphView() {
       if (challenge.links) addLinks(challenge.id, challenge.links);
     }
 
-    // Also add reverse links from linkRegistry
     for (const [targetId, refs] of Object.entries(state.linkRegistry)) {
       for (const ref of refs) {
         const exists = edgeList.some(e => e.source === ref.targetId && e.target === targetId);
@@ -234,7 +233,6 @@ export function GraphView() {
       i++;
     }
 
-    // Compute backlink counts and sizes
     for (const node of nodeList) {
       node.backlinkCount = computeBacklinkCount(edgeList, node.id);
       node.radius = Math.max(20, Math.min(60, 20 + node.backlinkCount * 4));
@@ -257,10 +255,12 @@ export function GraphView() {
   }, [nodes, filterTypes, searchQuery]);
 
   const filteredNodeIds = useMemo(() => new Set(filteredNodes.map(n => n.id)), [filteredNodes]);
-
   const filteredEdges = useMemo(() => {
     return edges.filter(e => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
   }, [edges, filteredNodeIds]);
+
+  const edgeColor = 'hsl(var(--border))';
+  const nodeOpacity = 0.2;
 
   const toggleType = (t: string) => {
     setFilterTypes(prev => {
@@ -273,75 +273,121 @@ export function GraphView() {
 
   const handleNodeClick = useCallback((node: GraphNode) => {
     const tab = TYPE_CONFIG[node.type]?.tab;
-    if (tab) {
-      dispatch({ type: 'SET_TAB', payload: tab as AppTab });
-    }
+    if (tab) dispatch({ type: 'SET_TAB', payload: tab as AppTab });
   }, [dispatch]);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  const zoomTo = useCallback((newScale: number, centerX?: number, centerY?: number) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const cx = centerX ?? rect.width / 2;
+    const cy = centerY ?? rect.height / 2;
     setTransform(prev => ({
-      ...prev,
-      scale: Math.max(0.2, Math.min(5, prev.scale * delta)),
+      x: cx - (cx - prev.x) * (newScale / prev.scale),
+      y: cy - (cy - prev.y) * (newScale / prev.scale),
+      scale: Math.max(0.2, Math.min(5, newScale)),
     }));
   }, []);
 
-  // Mouse handlers for drag
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const resetView = useCallback(() => {
     const svg = svgRef.current;
     if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    setTransform({ x: rect.width / 2 - containerSize.width / 2, y: rect.height / 2 - containerSize.height / 2, scale: 1 });
+  }, [containerSize]);
 
+  useEffect(() => {
+    if (containerSize.width > 0 && containerSize.height > 0) {
+      resetView();
+    }
+  }, [containerSize, resetView]);
+
+  const stopInertia = () => {
+    if (inertiaRef.current.frameId !== null) {
+      cancelAnimationFrame(inertiaRef.current.frameId);
+      inertiaRef.current.frameId = null;
+    }
+    inertiaRef.current.vx = 0;
+    inertiaRef.current.vy = 0;
+  };
+
+  const startInertia = (vx: number, vy: number) => {
+    stopInertia();
+    if (Math.abs(vx) < 0.5 && Math.abs(vy) < 0.5) return;
+    const friction = 0.92;
+    const step = () => {
+      const cur = inertiaRef.current;
+      cur.vx *= friction;
+      cur.vy *= friction;
+      if (Math.abs(cur.vx) < 0.3 && Math.abs(cur.vy) < 0.3) { cur.vx = 0; cur.vy = 0; cur.frameId = null; return; }
+      setTransform(prev => ({ ...prev, x: prev.x + cur.vx, y: prev.y + cur.vy }));
+      cur.frameId = requestAnimationFrame(step);
+    };
+    inertiaRef.current.vx = vx;
+    inertiaRef.current.vy = vy;
+    inertiaRef.current.frameId = requestAnimationFrame(step);
+  };
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const svg = svgRef.current;
+    if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(0.2, Math.min(5, transform.scale * delta));
+    setTransform(prev => ({
+      x: mx - (mx - prev.x) * (newScale / prev.scale),
+      y: my - (my - prev.y) * (newScale / prev.scale),
+      scale: newScale,
+    }));
+  }, [transform]);
 
-    // Convert screen coords to svg coords
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
     const svgX = (mx - transform.x) / transform.scale;
     const svgY = (my - transform.y) / transform.scale;
 
-    // Check if we hit a node
     let hitNode: GraphNode | null = null;
     for (const node of filteredNodes) {
       const dx = svgX - node.x;
       const dy = svgY - node.y;
-      if (dx * dx + dy * dy <= node.radius * node.radius) {
+      if (dx * dx + dy * dy <= node.radius * node.radius * 1.5) {
         hitNode = node;
         break;
       }
     }
 
+    stopInertia();
+
     if (hitNode) {
       dragRef.current = {
         node: hitNode,
-        startX: e.clientX,
-        startY: e.clientY,
-        nodeX: hitNode.x,
-        nodeY: hitNode.y,
+        startX: e.clientX, startY: e.clientY,
+        nodeX: hitNode.x, nodeY: hitNode.y,
         panning: false,
-        panStartX: 0,
-        panStartY: 0,
-        transformStartX: 0,
-        transformStartY: 0,
+        panStartX: 0, panStartY: 0,
+        transformStartX: 0, transformStartY: 0,
+        lastMoveTime: 0, lastMoveX: 0, lastMoveY: 0,
       };
     } else if (e.button === 1 || (e.button === 0 && (e.shiftKey || e.altKey))) {
-      // Middle mouse or space (handled via key) + drag = pan
       dragRef.current = {
-        node: null,
-        startX: e.clientX,
-        startY: e.clientY,
-        nodeX: 0,
-        nodeY: 0,
+        node: null, startX: 0, startY: 0, nodeX: 0, nodeY: 0,
         panning: true,
-        panStartX: e.clientX,
-        panStartY: e.clientY,
-        transformStartX: transform.x,
-        transformStartY: transform.y,
+        panStartX: e.clientX, panStartY: e.clientY,
+        transformStartX: transform.x, transformStartY: transform.y,
+        lastMoveTime: Date.now(), lastMoveX: e.clientX, lastMoveY: e.clientY,
       };
     } else {
       dragRef.current = {
         node: null, startX: 0, startY: 0, nodeX: 0, nodeY: 0,
         panning: false, panStartX: 0, panStartY: 0, transformStartX: 0, transformStartY: 0,
+        lastMoveTime: 0, lastMoveX: 0, lastMoveY: 0,
       };
     }
   }, [filteredNodes, transform]);
@@ -350,7 +396,6 @@ export function GraphView() {
     const drag = dragRef.current;
     const svg = svgRef.current;
     if (!svg) return;
-
     const rect = svg.getBoundingClientRect();
 
     if (drag.node) {
@@ -361,13 +406,15 @@ export function GraphView() {
     } else if (drag.panning) {
       const dx = e.clientX - drag.panStartX;
       const dy = e.clientY - drag.panStartY;
+      drag.lastMoveX = e.clientX;
+      drag.lastMoveY = e.clientY;
+      drag.lastMoveTime = Date.now();
       setTransform(prev => ({
         ...prev,
         x: drag.transformStartX + dx,
         y: drag.transformStartY + dy,
       }));
     } else {
-      // Hover detection
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const svgX = (mx - transform.x) / transform.scale;
@@ -376,7 +423,7 @@ export function GraphView() {
       for (const node of filteredNodes) {
         const dx = svgX - node.x;
         const dy = svgY - node.y;
-        if (dx * dx + dy * dy <= node.radius * node.radius + 8) {
+        if (dx * dx + dy * dy <= node.radius * node.radius + 12) {
           found = node;
           break;
         }
@@ -384,33 +431,52 @@ export function GraphView() {
       if (found) {
         setHoveredNode(found);
         setTooltipPos({ x: e.clientX - rect.left + 12, y: e.clientY - rect.top - 10 });
+        (svg as SVGSVGElement).style.cursor = 'pointer';
       } else {
         setHoveredNode(null);
+        (svg as SVGSVGElement).style.cursor = 'grab';
       }
     }
   }, [filteredNodes, transform]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
     const drag = dragRef.current;
     if (drag.node) {
-      // Check if this was a click (no significant drag) -> navigate
       const dx = drag.node.x - drag.nodeX;
       const dy = drag.node.y - drag.nodeY;
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) {
         handleNodeClick(drag.node);
       }
+    } else if (drag.panning) {
+      const now = Date.now();
+      const dt = now - drag.lastMoveTime;
+      if (dt > 0 && dt < 100) {
+        const vx = (e.clientX - drag.lastMoveX) * 2;
+        const vy = (e.clientY - drag.lastMoveY) * 2;
+        startInertia(vx, vy);
+      }
     }
     dragRef.current = {
       node: null, startX: 0, startY: 0, nodeX: 0, nodeY: 0,
       panning: false, panStartX: 0, panStartY: 0, transformStartX: 0, transformStartY: 0,
+      lastMoveTime: 0, lastMoveX: 0, lastMoveY: 0,
     };
   }, [handleNodeClick]);
 
+  useEffect(() => {
+    return () => stopInertia();
+  }, []);
+
   const allActive = filterTypes.size === ENTITY_TYPES.length;
+
+  const gridPatternId = 'graph-grid';
+  const glowFilterId = 'node-glow';
+
+  const handleZoomIn = () => zoomTo(transform.scale * 1.3);
+  const handleZoomOut = () => zoomTo(transform.scale * 0.7);
 
   return (
     <div className="tab-section space-y-4 h-full flex flex-col" style={{ minHeight: 400 }}>
-      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap gap-1.5">
           {ENTITY_TYPES.map(t => (
@@ -447,7 +513,6 @@ export function GraphView() {
         </div>
       </div>
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground px-1">
         {ENTITY_TYPES.map(t => (
           <span key={t} className="flex items-center gap-1">
@@ -455,9 +520,9 @@ export function GraphView() {
             {TYPE_LABELS[t]}
           </span>
         ))}
+        <span className="text-xs text-muted-foreground ml-auto">{filteredNodes.length} nodes, {filteredEdges.length} edges</span>
       </div>
 
-      {/* Graph Canvas */}
       <div
         ref={containerRef}
         className="flex-1 relative overflow-hidden rounded-lg border bg-card"
@@ -467,15 +532,37 @@ export function GraphView() {
           ref={svgRef}
           width="100%"
           height="100%"
-          className="cursor-grab active:cursor-grabbing"
+          className="cursor-grab"
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          style={{ transition: 'none' }}
         >
+          <defs>
+            <pattern id={gridPatternId} width={40} height={40} patternUnits="userSpaceOnUse" patternTransform={`scale(${transform.scale})`}>
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(var(--border))" strokeWidth={0.5} strokeOpacity={0.15} />
+            </pattern>
+            <filter id={glowFilterId} x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            {ENTITY_TYPES.map(t => {
+              const c = TYPE_CONFIG[t]?.color || '#666';
+              return (
+                <radialGradient key={t} id={`grad-${t}`} cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor={c} stopOpacity="0.4" />
+                  <stop offset="70%" stopColor={c} stopOpacity="0.15" />
+                  <stop offset="100%" stopColor={c} stopOpacity="0.05" />
+                </radialGradient>
+              );
+            })}
+          </defs>
+
+          <rect width="100%" height="100%" fill={`url(#${gridPatternId})`} />
+
           <g transform={`translate(${transform.x},${transform.y}) scale(${transform.scale})`}>
-            {/* Edges */}
             {filteredEdges.map((edge, i) => {
               const source = nodes.find(n => n.id === edge.source);
               const target = nodes.find(n => n.id === edge.target);
@@ -487,54 +574,111 @@ export function GraphView() {
                     y1={source.y}
                     x2={target.x}
                     y2={target.y}
-                    stroke="hsl(var(--border))"
+                    stroke={edgeColor}
                     strokeWidth={1.5}
-                    strokeOpacity={0.6}
+                    strokeOpacity={0.4}
                   />
                   <polygon
                     points={buildArrowHead(source.x, source.y, target.x, target.y, target.radius)}
-                    fill="hsl(var(--border))"
-                    fillOpacity={0.6}
+                    fill={edgeColor}
+                    fillOpacity={0.4}
                   />
                 </g>
               );
             })}
 
-            {/* Nodes */}
-            {filteredNodes.map(node => (
-              <g key={node.id} style={{ cursor: 'pointer' }}>
-                <circle
-                  cx={node.x}
-                  cy={node.y}
-                  r={node.radius}
-                  fill={node.color}
-                  fillOpacity={0.25}
-                  stroke={node.color}
-                  strokeWidth={2}
-                />
-                <text
-                  x={node.x}
-                  y={node.y}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill="hsl(var(--foreground))"
-                  fontSize={Math.max(8, Math.min(13, node.radius * 0.35))}
-                  style={{ pointerEvents: 'none', userSelect: 'none' }}
-                >
-                  {truncate(node.label, 15)}
-                </text>
-              </g>
-            ))}
+            {filteredNodes.map(node => {
+              const config = TYPE_CONFIG[node.type];
+              return (
+                <g key={node.id} style={{ cursor: 'pointer' }}>
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r={node.radius + 4}
+                    fill={`url(#grad-${node.type})`}
+                  />
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r={node.radius}
+                    fill={node.color}
+                    fillOpacity={nodeOpacity}
+                    stroke={node.color}
+                    strokeWidth={2}
+                  />
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r={node.radius - 4}
+                    fill="none"
+                    stroke={node.color}
+                    strokeWidth={1}
+                    strokeOpacity={0.3}
+                  />
+                  <text
+                    x={node.x}
+                    y={node.y + node.radius + 12}
+                    textAnchor="middle"
+                    fill="hsl(var(--foreground))"
+                    fontSize={Math.max(9, Math.min(12, node.radius * 0.28))}
+                    style={{ pointerEvents: 'none', userSelect: 'none', opacity: 0.85 }}
+                    fontWeight={500}
+                  >
+                    {truncate(node.label, 14)}
+                  </text>
+                </g>
+              );
+            })}
           </g>
         </svg>
 
-        {/* Tooltip */}
+        {/* Zoom controls */}
+        <div className="absolute bottom-3 right-3 flex flex-col gap-1">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 shadow-md bg-background/90 backdrop-blur-sm hover:bg-background"
+            onClick={handleZoomIn}
+            title="Zoom in"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 shadow-md bg-background/90 backdrop-blur-sm hover:bg-background"
+            onClick={handleZoomOut}
+            title="Zoom out"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 shadow-md bg-background/90 backdrop-blur-sm hover:bg-background"
+            onClick={resetView}
+            title="Reset view"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </Button>
+        </div>
+
+        {/* Node count badge */}
+        <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-background/80 backdrop-blur-sm border text-[11px] text-muted-foreground">
+          {filteredNodes.length} node{filteredNodes.length !== 1 ? 's' : ''} · {transform.scale.toFixed(1)}x
+        </div>
+
         {hoveredNode && (
           <div
-            className="absolute z-50 bg-popover border border-border rounded-md shadow-md px-3 py-2 text-xs pointer-events-none"
+            className="absolute z-50 bg-popover border border-border rounded-md shadow-xl px-3 py-2 text-xs pointer-events-none backdrop-blur-sm"
             style={{ left: tooltipPos.x, top: tooltipPos.y }}
           >
-            <div className="font-semibold text-sm mb-0.5">{hoveredNode.label}</div>
+            <div
+              className="font-semibold text-sm mb-0.5"
+              style={{ color: hoveredNode.color }}
+            >
+              {hoveredNode.label}
+            </div>
             <div className="text-muted-foreground">
               <span className="inline-block w-2 h-2 rounded-full mr-1" style={{ backgroundColor: hoveredNode.color }} />
               {TYPE_LABELS[hoveredNode.type] || hoveredNode.type}

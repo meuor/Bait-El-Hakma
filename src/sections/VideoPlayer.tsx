@@ -21,6 +21,11 @@ import {
   SkipForward,
   Pin,
   PinOff,
+  Clock,
+  Timer,
+  History,
+  Trash2,
+  Film,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -133,6 +138,9 @@ export function VideoPlayer() {
   const [autoRotate, setAutoRotate] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [videoHistory, setVideoHistory] = useState<any[]>(() => {
+    try { return JSON.parse(localStorage.getItem('bait-el-hakma-video-history') || '[]'); } catch { return []; }
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const rotateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -147,8 +155,8 @@ export function VideoPlayer() {
     setCurrentVideoIndex(nextIdx);
     const video = filteredVideos[nextIdx];
     dispatch({ type: 'SET_VIDEO_SOURCE', payload: { type: 'youtube', url: video.url, title: video.title } });
-    dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url: video.url, title: video.title } });
-  }, [currentVideoIndex, filteredVideos, dispatch]);
+    addToHistory('youtube', video.url, video.title);
+  }, [currentVideoIndex, filteredVideos, dispatch, addToHistory]);
 
   useEffect(() => {
     if (autoRotate && videoSource?.type === 'youtube') {
@@ -159,18 +167,35 @@ export function VideoPlayer() {
     return () => { if (rotateTimerRef.current) clearInterval(rotateTimerRef.current); };
   }, [autoRotate, videoSource, nextVideo]);
 
-  useEffect(() => {
-    if (videoSource && videoSource.type === 'youtube') {
-      dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url: videoSource.url, title: videoSource.title || 'Focus Video' } });
-    }
-  }, [videoSource, dispatch]);
+  const addToHistory = useCallback((type: 'youtube' | 'local', url: string, title: string) => {
+    const history = JSON.parse(localStorage.getItem('bait-el-hakma-video-history') || '[]');
+    const entry = { id: Date.now().toString(), type, url, title, playedAt: new Date().toISOString() };
+    const filtered = history.filter((h: any) => h.url !== url).slice(0, 19);
+    filtered.unshift(entry);
+    localStorage.setItem('bait-el-hakma-video-history', JSON.stringify(filtered));
+    setVideoHistory(filtered);
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    localStorage.removeItem('bait-el-hakma-video-history');
+    setVideoHistory([]);
+    toast.success('History cleared');
+  }, []);
+
+  const startFocusMode = useCallback(() => {
+    if (!videoSource) { toast.error('No video loaded'); return; }
+    dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url: videoSource.url, title: videoSource.title || 'Focus Video' } });
+    dispatch({ type: 'SET_POMODORO_SETTINGS', payload: { ...state.pomodoroSettings, videoSyncEnabled: true } });
+    dispatch({ type: 'SET_TAB', payload: 'pomodoro' });
+    toast.success('Video linked to timer. Press Start to begin your focus session.');
+  }, [videoSource, dispatch, state.pomodoroSettings]);
 
   const handleYouTubeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const videoId = extractYouTubeId(youtubeUrl);
     if (!videoId) { toast.error('Invalid YouTube URL'); return; }
-    dispatch({ type: 'SET_VIDEO_SOURCE', payload: { type: 'youtube', url: youtubeUrl, title: 'YouTube Video' } });
-    dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url: youtubeUrl, title: 'YouTube Video' } });
+    dispatch({ type: 'SET_VIDEO_SOURCE', payload: { type: 'youtube', url: youtubeUrl, title: youtubeUrl } });
+    addToHistory('youtube', youtubeUrl, youtubeUrl);
     toast.success('YouTube video loaded');
   };
 
@@ -180,7 +205,7 @@ export function VideoPlayer() {
     if (!file.type.startsWith('video/')) { toast.error('Please select a video file'); return; }
     const url = URL.createObjectURL(file);
     dispatch({ type: 'SET_VIDEO_SOURCE', payload: { type: 'local', url, title: file.name } });
-    dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url, title: file.name } });
+    addToHistory('local', url, file.name);
     toast.success('Video uploaded successfully');
   };
 
@@ -273,6 +298,9 @@ export function VideoPlayer() {
                   <PictureInPicture className="w-4 h-4 mr-2" />{isPiPActive ? 'Exit PiP' : 'PiP Mode'}
                 </Button>
               )}
+              <Button variant="outline" size="sm" onClick={startFocusMode} className="gap-2 text-primary border-primary/30 hover:bg-primary/10">
+                <Timer className="w-4 h-4" />Focus Mode
+              </Button>
               <Button
                 variant={pinnedItems[videoSource.type === 'local' ? 'localVideo' : 'youtubeVideo'] ? 'default' : 'outline'}
                 size="sm"
@@ -330,13 +358,54 @@ export function VideoPlayer() {
                     setYoutubeUrl(video.url);
                     setCurrentVideoIndex(filteredVideos.indexOf(video));
                     dispatch({ type: 'SET_VIDEO_SOURCE', payload: { type: 'youtube', url: video.url, title: video.title } });
-                    dispatch({ type: 'SET_ACTIVE_VIDEO', payload: { url: video.url, title: video.title } });
+                    addToHistory('youtube', video.url, video.title);
                   }}>
                   <Youtube className="w-6 h-6 text-red-500" />
                   <div>
                     <p className="font-medium">{video.title}</p>
                     <p className="text-sm text-muted-foreground">{video.category}</p>
                   </div>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent History */}
+      {videoHistory.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <History className="w-4 h-4 text-muted-foreground" />
+                Recently Played
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={clearHistory} className="text-xs text-muted-foreground gap-1">
+                <Trash2 className="w-3 h-3" />Clear
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {videoHistory.map((entry: any) => (
+                <Button
+                  key={entry.id}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => {
+                    if (entry.type === 'youtube') {
+                      dispatch({ type: 'SET_VIDEO_SOURCE', payload: { type: 'youtube', url: entry.url, title: entry.title } });
+                    } else if (entry.type === 'local') {
+                      dispatch({ type: 'SET_VIDEO_SOURCE', payload: { type: 'local', url: entry.url, title: entry.title } });
+                    }
+                    addToHistory(entry.type, entry.url, entry.title);
+                  }}
+                >
+                  {entry.type === 'youtube' ? <Youtube className="w-3 h-3 text-red-400" /> : <Film className="w-3 h-3 text-blue-400" />}
+                  <span className="max-w-[120px] truncate">{entry.title}</span>
+                  <span className="text-muted-foreground ml-1">{new Date(entry.playedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                 </Button>
               ))}
             </div>
