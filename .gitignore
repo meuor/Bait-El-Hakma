@@ -35,3 +35,6 @@ yarn-error.log*
 
 # TypeScript
 *.tsbuildinfo
+
+# Source screenshots (use public/screenshots/ for serving)
+/screenshots/
