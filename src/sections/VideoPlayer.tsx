@@ -149,6 +149,15 @@ export function VideoPlayer() {
     ? suggestedVideos
     : suggestedVideos.filter(v => v.category.toLowerCase() === selectedCategory.toLowerCase());
 
+  const addToHistory = useCallback((type: 'youtube' | 'local', url: string, title: string) => {
+    const history = JSON.parse(localStorage.getItem('bait-el-hakma-video-history') || '[]');
+    const entry = { id: Date.now().toString(), type, url, title, playedAt: new Date().toISOString() };
+    const filtered = history.filter((h: any) => h.url !== url).slice(0, 19);
+    filtered.unshift(entry);
+    localStorage.setItem('bait-el-hakma-video-history', JSON.stringify(filtered));
+    setVideoHistory(filtered);
+  }, []);
+
   const nextVideo = useCallback(() => {
     if (filteredVideos.length === 0) return;
     const nextIdx = (currentVideoIndex + 1) % filteredVideos.length;
@@ -166,15 +175,6 @@ export function VideoPlayer() {
     }
     return () => { if (rotateTimerRef.current) clearInterval(rotateTimerRef.current); };
   }, [autoRotate, videoSource, nextVideo]);
-
-  const addToHistory = useCallback((type: 'youtube' | 'local', url: string, title: string) => {
-    const history = JSON.parse(localStorage.getItem('bait-el-hakma-video-history') || '[]');
-    const entry = { id: Date.now().toString(), type, url, title, playedAt: new Date().toISOString() };
-    const filtered = history.filter((h: any) => h.url !== url).slice(0, 19);
-    filtered.unshift(entry);
-    localStorage.setItem('bait-el-hakma-video-history', JSON.stringify(filtered));
-    setVideoHistory(filtered);
-  }, []);
 
   const clearHistory = useCallback(() => {
     localStorage.removeItem('bait-el-hakma-video-history');
