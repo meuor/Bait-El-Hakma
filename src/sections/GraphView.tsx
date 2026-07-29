@@ -163,25 +163,25 @@ export function GraphView() {
     };
 
     for (const book of state.books) {
-      nodeMap.set(book.id, { label: book.title, type: 'book', tags: book.tags.map(t => t.name) });
-      addLinks(book.id, book.links);
+      nodeMap.set(book.id, { label: book.title, type: 'book', tags: (book.tags || []).map(t => t.name) });
+      if (book.links) addLinks(book.id, book.links);
     }
     for (const todo of state.todos) {
-      nodeMap.set(todo.id, { label: todo.content, type: 'todo', tags: todo.tags.map(t => t.name) });
-      addLinks(todo.id, todo.links);
+      nodeMap.set(todo.id, { label: todo.content, type: 'todo', tags: (todo.tags || []).map(t => t.name) });
+      if (todo.links) addLinks(todo.id, todo.links);
     }
     for (const card of state.kanbanCards) {
-      nodeMap.set(card.id, { label: card.title, type: 'kanban-card', tags: card.tags.map(t => t.name) });
-      addLinks(card.id, card.links);
+      nodeMap.set(card.id, { label: card.title, type: 'kanban-card', tags: (card.tags || []).map(t => t.name) });
+      if (card.links) addLinks(card.id, card.links);
     }
     for (const session of state.pomodoroHistory) {
       const label = session.customName || `${session.type} ${new Date(session.startTime).toLocaleDateString()}`;
-      nodeMap.set(session.id, { label, type: 'pomodoro-session', tags: session.tags.map(t => t.name) });
-      addLinks(session.id, session.links);
+      nodeMap.set(session.id, { label, type: 'pomodoro-session', tags: (session.tags || []).map(t => t.name) });
+      if (session.links) addLinks(session.id, session.links);
     }
     for (const challenge of state.challenges) {
-      nodeMap.set(challenge.id, { label: challenge.name, type: 'challenge', tags: challenge.tags.map(t => t.name) });
-      addLinks(challenge.id, challenge.links);
+      nodeMap.set(challenge.id, { label: challenge.name, type: 'challenge', tags: (challenge.tags || []).map(t => t.name) });
+      if (challenge.links) addLinks(challenge.id, challenge.links);
     }
 
     // Also add reverse links from linkRegistry

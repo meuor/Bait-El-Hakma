@@ -595,10 +595,10 @@ function HourglassSVG({ progress, running, color, size = 'large' }: { progress: 
     <svg className="timer-ring" width={dim} height={dim * 1.5} viewBox={`0 0 ${vbW} ${vbH}`}>
       <defs>
         <clipPath id="hgTopBulb">
-          <path d="M15,15 L85,15 Q68,40 62,68 L62,${neckY} L38,${neckY} L38,68 Q32,40 15,15 Z" />
+          <path d={`M15,15 L85,15 Q68,40 62,68 L62,${neckY} L38,${neckY} L38,68 Q32,40 15,15 Z`} />
         </clipPath>
         <clipPath id="hgBotBulb">
-          <path d="M38,${neckY} L62,${neckY} L62,75 Q68,105 85,145 L15,145 Q32,105 38,75 Z" />
+          <path d={`M38,${neckY} L62,${neckY} L62,75 Q68,105 85,145 L15,145 Q32,105 38,75 Z`} />
         </clipPath>
         <linearGradient id="hgSand" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#f0d080" />
@@ -626,7 +626,7 @@ function HourglassSVG({ progress, running, color, size = 'large' }: { progress: 
         fill="rgba(255,255,255,0.03)" stroke={color} strokeWidth="2" strokeLinejoin="round" opacity="0.65" />
 
       {/* Glass left reflection */}
-      <path d="M17,20 L24,20 Q38,44 38,68 L38,${neckY} L24,${neckY} Q24,44 17,20 Z" fill="url(#hgGlass)" />
+      <path d={`M17,20 L24,20 Q38,44 38,68 L38,${neckY} L24,${neckY} Q24,44 17,20 Z`} fill="url(#hgGlass)" />
 
       {/* Top sand */}
       <g clipPath="url(#hgTopBulb)">

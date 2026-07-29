@@ -188,6 +188,12 @@ const initialState: State = {
   propertySchemas: {} as Record<EntityType, PropertySchema[]>,
 };
 
+const normalizeEntities = (entities: any[], fields: string[]) =>
+  entities.map(e => {
+    for (const f of fields) { if (!(f in e) || e[f] == null) e[f] = []; }
+    return e;
+  });
+
 function rebuildLinkRegistry(state: State): Record<string, LinkRef[]> {
   const registry: Record<string, LinkRef[]> = {};
   const scan = (entityType: EntityType, id: string, links: LinkRef[]) => {
@@ -403,8 +409,22 @@ function appReducer(state: State, action: Action): State {
         default: return state;
       }
     }
-    case 'LOAD_STATE':
-      return { ...state, ...action.payload, linkRegistry: rebuildLinkRegistry({ ...state, ...action.payload }) };
+    case 'LOAD_STATE': {
+      const { pomodoroHistory, kanbanCards, books, todos, challenges, ...rest } = action.payload;
+      return {
+        ...state,
+        ...rest,
+        pomodoroHistory: normalizeEntities(pomodoroHistory || state.pomodoroHistory, ['tags', 'links']),
+        kanbanCards: normalizeEntities(kanbanCards || state.kanbanCards, ['tags', 'links']),
+        books: normalizeEntities(books || state.books, ['tags', 'links']),
+        todos: normalizeEntities(todos || state.todos, ['tags', 'links']),
+        challenges: normalizeEntities(challenges || state.challenges, ['tags', 'links']),
+        linkRegistry: rebuildLinkRegistry({
+          ...state,
+          ...action.payload,
+        }),
+      };
+    }
     default:
       return state;
   }
