@@ -14,10 +14,16 @@ import {
   Flag,
   Moon,
   Sun,
+  Tags,
+  Link2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import type { Todo } from '@/types';
+import { TagEditor } from '@/components/TagEditor';
+import { LinkPicker } from '@/components/LinkPicker';
+import { BacklinksPanel } from '@/components/BacklinksPanel';
+import type { UniversalTag, LinkRef, AppTab, EntityType } from '@/types';
 
 // Simple Hijri date calculation (approximate)
 function getHijriDate(gregorianDate: Date): { day: number; month: string; year: number } {
@@ -59,12 +65,14 @@ const priorityIcons = {
 
 export function DailyTodo() {
   const { state, dispatch } = useApp();
-  const { todos } = state;
+  const { todos, linkRegistry } = state;
   
   const [newTodoContent, setNewTodoContent] = useState('');
   const [newTodoPriority, setNewTodoPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
+  const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
   
   // Get today's todos
   const today = new Date().toDateString();
@@ -104,6 +112,8 @@ export function DailyTodo() {
       completed: false,
       createdAt: new Date(),
       priority: newTodoPriority,
+      tags: [],
+      links: [],
     };
 
     dispatch({ type: 'ADD_TODO', payload: newTodo });
@@ -123,6 +133,8 @@ export function DailyTodo() {
 
   const handleDeleteTodo = (todoId: string) => {
     dispatch({ type: 'DELETE_TODO', payload: todoId });
+    if (editingTodoId === todoId) setEditingTodoId(null);
+    if (selectedTodoId === todoId) setSelectedTodoId(null);
     toast.success('Task deleted');
   };
 
@@ -130,6 +142,22 @@ export function DailyTodo() {
     if (e.key === 'Enter') {
       handleAddTodo();
     }
+  };
+
+  const handleTagsChange = (todoId: string, tags: UniversalTag[]) => {
+    dispatch({ type: 'SET_TAGS', payload: { entityType: 'todo', entityId: todoId, tags } });
+  };
+
+  const handleLinkAdd = (todoId: string, link: LinkRef) => {
+    dispatch({ type: 'ADD_LINK', payload: { entityType: 'todo', entityId: todoId, link } });
+  };
+
+  const handleLinkRemove = (todoId: string, targetId: string) => {
+    dispatch({ type: 'REMOVE_LINK', payload: { entityType: 'todo', entityId: todoId, targetId } });
+  };
+
+  const handleNavigate = (tab: AppTab, _id: string) => {
+    dispatch({ type: 'SET_TAB', payload: tab });
   };
 
   // Update date every minute
@@ -279,41 +307,118 @@ export function DailyTodo() {
               ) : (
                 filteredTodos.map((todo) => {
                   const PriorityIcon = priorityIcons[todo.priority];
+                  const isEditing = editingTodoId === todo.id;
+                  const isSelected = selectedTodoId === todo.id;
                   return (
-                    <div
-                      key={todo.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                        todo.completed ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-muted/30'
-                      }`}
-                    >
-                      <Checkbox
-                        checked={todo.completed}
-                        onCheckedChange={() => handleToggleTodo(todo)}
-                        className="h-5 w-5"
-                      />
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className={`truncate ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
-                          {todo.content}
-                        </p>
+                    <div key={todo.id}>
+                      <div
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                          todo.completed ? 'bg-muted/50 opacity-60' : isSelected ? 'bg-accent' : 'bg-card hover:bg-muted/30'
+                        }`}
+                        onClick={() => setSelectedTodoId(isSelected ? null : todo.id)}
+                      >
+                        <Checkbox
+                          checked={todo.completed}
+                          onCheckedChange={() => handleToggleTodo(todo)}
+                          className="h-5 w-5"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className={`truncate ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
+                            {todo.content}
+                          </p>
+                          {(todo.tags?.length ?? 0) > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {todo.tags!.slice(0, 3).map(tag => (
+                                <Badge
+                                  key={tag.name}
+                                  variant="secondary"
+                                  className="text-[10px] px-1.5 py-0 leading-4"
+                                  style={{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color + '40' }}
+                                >
+                                  {tag.name}
+                                </Badge>
+                              ))}
+                              {todo.tags!.length > 3 && (
+                                <span className="text-[10px] text-muted-foreground self-center">
+                                  +{todo.tags!.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${priorityColors[todo.priority]}`}
+                        >
+                          <PriorityIcon className="w-3 h-3 mr-1" />
+                          {todo.priority}
+                        </Badge>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-7 w-7 ${isEditing ? 'text-primary' : 'text-muted-foreground'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTodoId(isEditing ? null : todo.id);
+                            setSelectedTodoId(todo.id);
+                          }}
+                        >
+                          <Tags className="w-3.5 h-3.5" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTodo(todo.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                      
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${priorityColors[todo.priority]}`}
-                      >
-                        <PriorityIcon className="w-3 h-3 mr-1" />
-                        {todo.priority}
-                      </Badge>
-                      
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDeleteTodo(todo.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+
+                      {/* Expanded tag/link editor */}
+                      {isEditing && (
+                        <div className="ml-8 mr-12 p-3 border rounded-lg bg-muted/30 space-y-3">
+                          <div>
+                            <div className="flex items-center gap-1 mb-1 text-xs font-medium text-muted-foreground">
+                              <Tags className="h-3 w-3" />
+                              Tags
+                            </div>
+                            <TagEditor
+                              tags={todo.tags || []}
+                              onChange={(tags) => handleTagsChange(todo.id, tags)}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Link2 className="h-3 w-3 text-muted-foreground" />
+                            <LinkPicker
+                              currentEntityType={'todo' as EntityType}
+                              currentEntityId={todo.id}
+                              existingLinks={todo.links || []}
+                              onLinkAdd={(link) => handleLinkAdd(todo.id, link)}
+                              onLinkRemove={(targetId) => handleLinkRemove(todo.id, targetId)}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Backlinks for selected todo */}
+                      {isSelected && !isEditing && (linkRegistry[todo.id]?.length ?? 0) > 0 && (
+                        <div className="ml-8 mr-12 mt-1">
+                          <BacklinksPanel
+                            targetId={todo.id}
+                            incomingLinks={linkRegistry[todo.id] || []}
+                            onNavigate={handleNavigate}
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -322,6 +427,16 @@ export function DailyTodo() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {/* Backlinks Panel for selected todo */}
+      {selectedTodoId && (linkRegistry[selectedTodoId]?.length ?? 0) > 0 && (
+        <BacklinksPanel
+          targetId={selectedTodoId}
+          incomingLinks={linkRegistry[selectedTodoId] || []}
+          onNavigate={handleNavigate}
+          onClose={() => setSelectedTodoId(null)}
+        />
+      )}
 
       {/* Motivational Quote */}
       <Card className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">

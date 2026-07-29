@@ -14,7 +14,14 @@ import type {
   ActivityData,
   AppTab,
   PinnedItems,
-  PinnedPositions
+  PinnedPositions,
+  LinkRef,
+  UniversalTag,
+  EntityType,
+  DailyNote,
+  AutomationRule,
+  PropertySchema,
+  PropertyValue
 } from '@/types';
 import { 
   pomodoroAPI, 
@@ -63,6 +70,10 @@ interface State {
   pinnedItems: PinnedItems;
   pinnedPositions: PinnedPositions;
   isMinimized: boolean;
+  linkRegistry: Record<string, LinkRef[]>;
+  dailyNotes: DailyNote[];
+  automationRules: AutomationRule[];
+  propertySchemas: Record<EntityType, PropertySchema[]>;
 }
 
 // Action Types
@@ -104,6 +115,15 @@ type Action =
   | { type: 'SET_PIN_POSITION'; payload: { key: keyof PinnedPositions; position: { x: number; y: number } } }
   | { type: 'TOGGLE_MINIMIZE' }
   | { type: 'CLEAR_POMODORO_SESSIONS' }
+  | { type: 'SET_TAGS'; payload: { entityType: EntityType; entityId: string; tags: UniversalTag[] } }
+  | { type: 'ADD_LINK'; payload: { entityType: EntityType; entityId: string; link: LinkRef } }
+  | { type: 'REMOVE_LINK'; payload: { entityType: EntityType; entityId: string; targetId: string } }
+  | { type: 'REBUILD_LINK_REGISTRY' }
+  | { type: 'SET_DAILY_NOTE'; payload: DailyNote }
+  | { type: 'UPDATE_DAILY_NOTE'; payload: { id: string; content: ContentBlock[] } }
+  | { type: 'SET_AUTOMATION_RULES'; payload: AutomationRule[] }
+  | { type: 'SET_PROPERTY_SCHEMAS'; payload: Record<EntityType, PropertySchema[]> }
+  | { type: 'SET_PROPERTY_VALUES'; payload: { entityType: EntityType; entityId: string; properties: PropertyValue[] } }
   | { type: 'LOAD_STATE'; payload: Partial<State> };
 
 // Default Pomodoro Settings
@@ -162,7 +182,27 @@ const initialState: State = {
   pinnedItems: { timer: false, localVideo: false, youtubeVideo: false },
   pinnedPositions: { timer: { x: 0, y: 0 }, localVideo: { x: 0, y: 0 }, youtubeVideo: { x: 0, y: 0 } },
   isMinimized: false,
+  linkRegistry: {},
+  dailyNotes: [],
+  automationRules: [],
+  propertySchemas: {} as Record<EntityType, PropertySchema[]>,
 };
+
+function rebuildLinkRegistry(state: State): Record<string, LinkRef[]> {
+  const registry: Record<string, LinkRef[]> = {};
+  const scan = (entityType: EntityType, id: string, links: LinkRef[]) => {
+    for (const link of links) {
+      if (!registry[link.targetId]) registry[link.targetId] = [];
+      registry[link.targetId].push({ ...link, targetType: entityType, targetId: id });
+    }
+  };
+  state.pomodoroHistory.forEach(s => scan('pomodoro-session', s.id, (s as any).links || []));
+  state.kanbanCards.forEach(c => scan('kanban-card', c.id, (c as any).links || []));
+  state.todos.forEach(t => scan('todo', t.id, (t as any).links || []));
+  state.books.forEach(b => scan('book', b.id, (b as any).links || []));
+  state.challenges.forEach(c => scan('challenge', c.id, (c as any).links || []));
+  return registry;
+}
 
 // Reducer
 function appReducer(state: State, action: Action): State {
@@ -291,8 +331,80 @@ function appReducer(state: State, action: Action): State {
       return { ...state, isMinimized: !state.isMinimized };
     case 'CLEAR_POMODORO_SESSIONS':
       return { ...state, pomodoroHistory: [] };
+    case 'SET_TAGS': {
+      const { entityType, entityId, tags } = action.payload;
+      const updater = (e: any) => e.id === entityId ? { ...e, tags } : e;
+      switch (entityType) {
+        case 'pomodoro-session': return { ...state, pomodoroHistory: state.pomodoroHistory.map(updater) };
+        case 'kanban-card': return { ...state, kanbanCards: state.kanbanCards.map(updater) };
+        case 'todo': return { ...state, todos: state.todos.map(updater) };
+        case 'book': return { ...state, books: state.books.map(updater) };
+        case 'challenge': return { ...state, challenges: state.challenges.map(updater) };
+        default: return state;
+      }
+    }
+    case 'ADD_LINK': {
+      const { entityType, entityId, link } = action.payload;
+      const linkAdder = (e: any) => e.id === entityId ? { ...e, links: [...(e.links || []), link] } : e;
+      let newState: State;
+      switch (entityType) {
+        case 'pomodoro-session': newState = { ...state, pomodoroHistory: state.pomodoroHistory.map(linkAdder) }; break;
+        case 'kanban-card': newState = { ...state, kanbanCards: state.kanbanCards.map(linkAdder) }; break;
+        case 'todo': newState = { ...state, todos: state.todos.map(linkAdder) }; break;
+        case 'book': newState = { ...state, books: state.books.map(linkAdder) }; break;
+        case 'challenge': newState = { ...state, challenges: state.challenges.map(linkAdder) }; break;
+        default: return state;
+      }
+      return { ...newState, linkRegistry: rebuildLinkRegistry(newState) };
+    }
+    case 'REMOVE_LINK': {
+      const { entityType, entityId, targetId } = action.payload;
+      const linkRemover = (e: any) => e.id === entityId ? { ...e, links: (e.links || []).filter((l: LinkRef) => l.targetId !== targetId) } : e;
+      let newState: State;
+      switch (entityType) {
+        case 'pomodoro-session': newState = { ...state, pomodoroHistory: state.pomodoroHistory.map(linkRemover) }; break;
+        case 'kanban-card': newState = { ...state, kanbanCards: state.kanbanCards.map(linkRemover) }; break;
+        case 'todo': newState = { ...state, todos: state.todos.map(linkRemover) }; break;
+        case 'book': newState = { ...state, books: state.books.map(linkRemover) }; break;
+        case 'challenge': newState = { ...state, challenges: state.challenges.map(linkRemover) }; break;
+        default: return state;
+      }
+      return { ...newState, linkRegistry: rebuildLinkRegistry(newState) };
+    }
+    case 'REBUILD_LINK_REGISTRY':
+      return { ...state, linkRegistry: rebuildLinkRegistry(state) };
+    case 'SET_DAILY_NOTE':
+      return {
+        ...state,
+        dailyNotes: state.dailyNotes.some(d => d.id === action.payload.id)
+          ? state.dailyNotes.map(d => d.id === action.payload.id ? action.payload : d)
+          : [...state.dailyNotes, action.payload],
+      };
+    case 'UPDATE_DAILY_NOTE':
+      return {
+        ...state,
+        dailyNotes: state.dailyNotes.map(d =>
+          d.id === action.payload.id ? { ...d, content: action.payload.content, updatedAt: new Date() } : d
+        ),
+      };
+    case 'SET_AUTOMATION_RULES':
+      return { ...state, automationRules: action.payload };
+    case 'SET_PROPERTY_SCHEMAS':
+      return { ...state, propertySchemas: action.payload };
+    case 'SET_PROPERTY_VALUES': {
+      const { entityType, entityId, properties } = action.payload;
+      const propAdder = (e: any) => e.id === entityId ? { ...e, properties } : e;
+      switch (entityType) {
+        case 'pomodoro-session': return { ...state, pomodoroHistory: state.pomodoroHistory.map(propAdder) };
+        case 'kanban-card': return { ...state, kanbanCards: state.kanbanCards.map(propAdder) };
+        case 'todo': return { ...state, todos: state.todos.map(propAdder) };
+        case 'book': return { ...state, books: state.books.map(propAdder) };
+        case 'challenge': return { ...state, challenges: state.challenges.map(propAdder) };
+        default: return state;
+      }
+    }
     case 'LOAD_STATE':
-      return { ...state, ...action.payload };
+      return { ...state, ...action.payload, linkRegistry: rebuildLinkRegistry({ ...state, ...action.payload }) };
     default:
       return state;
   }
@@ -670,6 +782,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       challenges: state.challenges,
       activityData: state.activityData,
       pinnedItems: state.pinnedItems,
+      dailyNotes: state.dailyNotes,
+      automationRules: state.automationRules,
+      propertySchemas: state.propertySchemas,
     };
     localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(dataToSave));
   }, [
@@ -683,6 +798,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.challenges,
     state.activityData,
     state.pinnedItems,
+    state.dailyNotes,
+    state.automationRules,
+    state.propertySchemas,
   ]);
 
   // Sync a single action to the API

@@ -37,6 +37,7 @@ const themeColors: Record<PomodoroTheme, string> = {
   midnight: '#6366f1',
   amber: '#f59e0b',
   hourglass: '#d4a853',
+  astrolabe: '#c5943b',
 };
 
 const themeBgGradients: Record<PomodoroTheme, string> = {
@@ -49,6 +50,7 @@ const themeBgGradients: Record<PomodoroTheme, string> = {
   midnight: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(99,102,241,0.03))',
   amber: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.03))',
   hourglass: 'linear-gradient(135deg, rgba(212,168,83,0.08), rgba(212,168,83,0.03))',
+  astrolabe: 'linear-gradient(135deg, rgba(197,148,59,0.08), rgba(197,148,59,0.03))',
 };
 
 const activityOptions: { id: ActivityMode | ''; icon: React.ComponentType<any>; label: string; color: string }[] = [
@@ -77,6 +79,7 @@ const themeSwatches: { id: PomodoroTheme; color: string; label: string }[] = [
   { id: 'midnight', color: '#6366f1', label: 'Midnight' },
   { id: 'amber', color: '#f59e0b', label: 'Amber' },
   { id: 'hourglass', color: '#d4a853', label: 'Hourglass' },
+  { id: 'astrolabe', color: '#c5943b', label: 'Astrolabe' },
 ];
 
 const createBeep = (frequency: number, duration: number, type: OscillatorType = 'sine') => {
@@ -399,6 +402,8 @@ export function PomodoroTimer() {
           <div className="relative flex items-center justify-center">
             {currentTheme === 'hourglass' ? (
               <HourglassSVG progress={progress} running={timerState === 'running'} color={themeStroke} size="large" />
+            ) : currentTheme === 'astrolabe' ? (
+              <AstrolabeSVG progress={progress} running={timerState === 'running'} color={themeStroke} size="large" />
             ) : (
               <svg className="timer-ring w-56 h-56 sm:w-72 sm:h-72" viewBox="0 0 288 288">
                 <circle cx="144" cy="144" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={strokeWidth} />
@@ -568,66 +573,209 @@ export function PomodoroTimer() {
   );
 }
 
-// Hourglass SVG component with animated sand
+// Improved Hourglass SVG component with elegant glass frame, wooden caps, reflections, curved sand, and particle stream
 function HourglassSVG({ progress, running, color, size = 'large' }: { progress: number; running: boolean; color: string; size?: 'large' | 'small' }) {
   const dim = size === 'large' ? 256 : 128;
-  const viewBox = '0 0 120 180';
-  const sandTopY = 20 + (1 - progress / 100) * 48;
-  const sandBottomY = 132 - (progress / 100) * 57;
+  const vbW = 100, vbH = 160;
+  const cx = vbW / 2;
+  const neckY = 72;
+  const topH = neckY - 15;
+  const botH = 145 - neckY;
+  const sandTopY = 15 + (progress / 100) * topH;
+  const sandBotFill = (progress / 100) * botH;
+
+  const particles = Array.from({ length: 7 }, (_, i) => ({
+    ox: (i - 3) * 1.2,
+    r: 0.5 + (i % 3) * 0.35,
+    dur: 0.45 + (i % 5) * 0.07,
+    delay: i * 0.12,
+  }));
 
   return (
-    <svg className="timer-ring" width={dim} height={dim * 1.5} viewBox={viewBox}>
+    <svg className="timer-ring" width={dim} height={dim * 1.5} viewBox={`0 0 ${vbW} ${vbH}`}>
       <defs>
-        <clipPath id="topBulb">
-          <path d="M30,20 L90,20 Q65,45 62,68 L58,68 Q55,45 30,20 Z" />
+        <clipPath id="hgTopBulb">
+          <path d="M15,15 L85,15 Q68,40 62,68 L62,${neckY} L38,${neckY} L38,68 Q32,40 15,15 Z" />
         </clipPath>
-        <clipPath id="bottomBulb">
-          <path d="M30,132 L90,132 Q90,102 62,75 L58,75 Q30,102 30,132 Z" />
+        <clipPath id="hgBotBulb">
+          <path d="M38,${neckY} L62,${neckY} L62,75 Q68,105 85,145 L15,145 Q32,105 38,75 Z" />
         </clipPath>
-        <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e8c56a" />
-          <stop offset="100%" stopColor="#d4a853" />
+        <linearGradient id="hgSand" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#f0d080" />
+          <stop offset="40%" stopColor="#e8c56a" />
+          <stop offset="100%" stopColor="#c4943a" />
         </linearGradient>
+        <linearGradient id="hgGlass" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+          <stop offset="22%" stopColor="rgba(255,255,255,0.12)" />
+          <stop offset="28%" stopColor="rgba(255,255,255,0)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </linearGradient>
+        <filter id="hgGlow">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
       </defs>
 
-      {/* Glass frame */}
-      <path d="M30,20 L90,20 Q65,45 62,68 L62,75 Q90,102 90,132 L30,132 Q30,102 58,75 L58,68 Q55,45 30,20 Z"
-        fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" opacity="0.6" />
+      {/* Wooden top cap */}
+      <rect x="12" y="11" width="76" height="7" rx="2" fill="#5c3a1e" />
+      <rect x="12" y="11" width="76" height="3" rx="1" fill="#7a4e2a" />
 
-      {/* Frame top and bottom bars */}
-      <line x1="28" y1="20" x2="92" y2="20" stroke={color} strokeWidth="3" strokeLinecap="round" />
-      <line x1="28" y1="132" x2="92" y2="132" stroke={color} strokeWidth="3" strokeLinecap="round" />
+      {/* Glass contour */}
+      <path d="M15,18 L85,18 Q68,42 62,68 L62,75 Q68,105 85,145 L15,145 Q32,105 38,75 L38,68 Q32,42 15,18 Z"
+        fill="rgba(255,255,255,0.03)" stroke={color} strokeWidth="2" strokeLinejoin="round" opacity="0.65" />
 
-      {/* Top sand — decreases as progress increases */}
-      <rect x="28" y={sandTopY} width="64" height={68 - sandTopY} fill="url(#sandGrad)" clipPath="url(#topBulb)" />
+      {/* Glass left reflection */}
+      <path d="M17,20 L24,20 Q38,44 38,68 L38,${neckY} L24,${neckY} Q24,44 17,20 Z" fill="url(#hgGlass)" />
 
-      {/* Bottom sand — increases as progress increases */}
-      <rect x="28" y={sandBottomY} width="64" height={132 - sandBottomY} fill="url(#sandGrad)" clipPath="url(#bottomBulb)" />
+      {/* Top sand */}
+      <g clipPath="url(#hgTopBulb)">
+        <rect x="15" y={sandTopY} width="70" height={neckY - sandTopY} fill="url(#hgSand)" />
+        {progress < 100 && <ellipse cx={cx} cy={sandTopY} rx="24" ry="3.5" fill="#f5df9a" opacity="0.8" />}
+      </g>
 
-      {/* Falling sand particles through the neck */}
+      {/* Bottom sand */}
+      <g clipPath="url(#hgBotBulb)">
+        <rect x="15" y={neckY} width="70" height={sandBotFill} fill="url(#hgSand)" />
+        {progress > 0 && (
+          <ellipse cx={cx} cy={neckY + sandBotFill} rx={8 + (progress / 100) * 18} ry="3.5" fill="#f0d080" opacity="0.9" />
+        )}
+      </g>
+
+      {/* Sand stream through neck */}
       {running && (
-        <>
-          <circle cx="60" cy={68 + (progress / 100) * 8} r="1.2" fill="#e8c56a" opacity="0.8">
-            <animate attributeName="cy" values={`${68 + (progress / 100) * 8};${75 - (progress / 100) * 8}`}
-              dur="0.8s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="60" cy={68 + (progress / 100) * 8} r="0.8" fill="#d4a853" opacity="0.6">
-            <animate attributeName="cy" values={`${68 + (progress / 100) * 8};${75 - (progress / 100) * 8}`}
-              dur="0.6s" repeatCount="indefinite" begin="0.3s" />
-          </circle>
-          <circle cx="60" cy={68 + (progress / 100) * 8} r="1" fill="#f0d080" opacity="0.7">
-            <animate attributeName="cy" values={`${68 + (progress / 100) * 8};${75 - (progress / 100) * 8}`}
-              dur="0.7s" repeatCount="indefinite" begin="0.5s" />
-          </circle>
-        </>
+        <g filter="url(#hgGlow)">
+          {particles.map((p, i) => (
+            <circle key={i} cx={cx + p.ox} cy={68} r={p.r} fill="#f0d080" opacity="0.85">
+              <animate attributeName="cy" values="68;75" dur={`${p.dur}s`} repeatCount="indefinite" begin={`${p.delay}s`} />
+              <animate attributeName="opacity" values="0.9;0.35;0.9" dur={`${p.dur + 0.2}s`} repeatCount="indefinite" begin={`${p.delay}s`} />
+            </circle>
+          ))}
+        </g>
       )}
 
-      {/* Sand pile glow at bottom */}
+      {/* Drop glow */}
       {running && (
-        <ellipse cx="60" cy={sandBottomY} rx="15" ry="2" fill="#e8c56a" opacity="0.3">
-          <animate attributeName="opacity" values="0.3;0.1;0.3" dur="1.5s" repeatCount="indefinite" />
+        <ellipse cx={cx} cy={75} rx="5" ry="1.5" fill="#f5df9a" opacity="0.35">
+          <animate attributeName="opacity" values="0.35;0.1;0.35" dur="1.2s" repeatCount="indefinite" />
         </ellipse>
       )}
+
+      {/* Wooden bottom cap */}
+      <rect x="12" y="145" width="76" height="7" rx="2" fill="#5c3a1e" />
+      <rect x="12" y="146" width="76" height="3" rx="1" fill="#7a4e2a" />
+    </svg>
+  );
+}
+
+// Astrolabe SVG component — planispheric astrolabe design with rotating alidade
+function AstrolabeSVG({ progress, color, size = 'large' }: { progress: number; running: boolean; color: string; size?: 'large' | 'small' }) {
+  const dim = size === 'large' ? 256 : 128;
+  const vb = 200, cx = 100, cy = 100;
+  const outR = 92;
+  const angle = (progress / 100) * 360;
+  const rad = (angle * Math.PI) / 180;
+
+  const degTicks: React.ReactNode[] = [];
+  for (let i = 0; i < 360; i += 5) {
+    const a = (i * Math.PI) / 180;
+    const innerR = i % 10 === 0 ? outR - 8 : outR - 4;
+    const outerR2 = outR - 2;
+    degTicks.push(
+      <line key={`dt${i}`} x1={cx + innerR * Math.cos(a)} y1={cy + innerR * Math.sin(a)}
+        x2={cx + outerR2 * Math.cos(a)} y2={cy + outerR2 * Math.sin(a)}
+        stroke={color} strokeWidth={i % 30 === 0 ? 1.5 : 0.5} opacity="0.5" />
+    );
+  }
+
+  const innerCircles = [35, 50, 66, 78];
+  const starAngles = [28, 82, 145, 195, 265, 320, 355];
+  const eclipOff = 16;
+
+  return (
+    <svg className="timer-ring" width={dim} height={dim} viewBox={`0 0 ${vb} ${vb}`}>
+      <defs>
+        <radialGradient id="astBrass" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f5d080" />
+          <stop offset="55%" stopColor="#c5943b" />
+          <stop offset="100%" stopColor="#8b6914" />
+        </radialGradient>
+        <filter id="astGlow">
+          <feGaussianBlur stdDeviation="1.2" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+
+      {/* Outer limb ring */}
+      <circle cx={cx} cy={cy} r={outR} fill="rgba(0,0,0,0.25)" stroke="url(#astBrass)" strokeWidth="3" />
+      <circle cx={cx} cy={cy} r={outR - 10} fill="none" stroke={color} strokeWidth="0.75" opacity="0.3" />
+
+      {degTicks}
+
+      {/* Celestial circles */}
+      {innerCircles.map((r, i) => (
+        <circle key={`cc${i}`} cx={cx} cy={cy} r={r} fill="none" stroke={color}
+          strokeWidth="0.6" opacity="0.28" strokeDasharray={i === 1 ? '3,2' : 'none'} />
+      ))}
+
+      {/* Ecliptic ring (offset zodiac circle) */}
+      <circle cx={cx} cy={cy - eclipOff} r={48} fill="none" stroke={color} strokeWidth="1.5" opacity="0.45" />
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = (i * 30 * Math.PI) / 180;
+        return (
+          <line key={`ec${i}`}
+            x1={cx + 48 * Math.sin(a)} y1={cy - eclipOff + 48 * Math.cos(a)}
+            x2={cx + 52 * Math.sin(a)} y2={cy - eclipOff + 52 * Math.cos(a)}
+            stroke={color} strokeWidth="0.8" opacity="0.5" />
+        );
+      })}
+
+      {/* Rete star pointers */}
+      {starAngles.map((deg, i) => {
+        const a = (deg * Math.PI) / 180;
+        const tipR = 72;
+        const tx = cx + tipR * Math.cos(a);
+        const ty = cy + tipR * Math.sin(a);
+        return (
+          <g key={`sp${i}`}>
+            <line x1={cx + 28 * Math.cos(a)} y1={cy + 28 * Math.sin(a)}
+              x2={tx} y2={ty} stroke={color} strokeWidth="1.2" opacity="0.5" />
+            <path d={`M${tx},${ty} L${cx + (tipR - 5) * Math.cos(a + 0.18)},${cy + (tipR - 5) * Math.sin(a + 0.18)} L${cx + (tipR - 5) * Math.cos(a - 0.18)},${cy + (tipR - 5) * Math.sin(a - 0.18)} Z`}
+              fill={color} opacity="0.55" />
+            <circle cx={tx} cy={ty} r="1.5" fill={color} opacity="0.7" />
+          </g>
+        );
+      })}
+
+      {/* Arabic decorative dots on inner circle */}
+      {Array.from({ length: 16 }, (_, i) => {
+        const a = (i * 22.5 * Math.PI) / 180;
+        return <circle key={`ad${i}`} cx={cx + 66 * Math.cos(a)} cy={cy + 66 * Math.sin(a)} r="1.2" fill={color} opacity="0.3" />;
+      })}
+
+      {/* Geometric star pattern */}
+      {Array.from({ length: 6 }, (_, i) => {
+        const a = (i * 60 * Math.PI) / 180;
+        return (
+          <line key={`gp${i}`} x1={cx + 30 * Math.cos(a)} y1={cy + 30 * Math.sin(a)}
+            x2={cx + 30 * Math.cos(a + Math.PI)} y2={cy + 30 * Math.sin(a + Math.PI)}
+            stroke={color} strokeWidth="0.5" opacity="0.15" />
+        );
+      })}
+
+      {/* Alidade — rotating pointer */}
+      <g filter="url(#astGlow)">
+        <line x1={cx - 82 * Math.cos(rad)} y1={cy - 82 * Math.sin(rad)}
+          x2={cx + 82 * Math.cos(rad)} y2={cy + 82 * Math.sin(rad)}
+          stroke={color} strokeWidth="2.5" strokeLinecap="round" opacity="0.75" />
+        {/* Center boss */}
+        <circle cx={cx} cy={cy} r="5" fill="url(#astBrass)" opacity="0.9" />
+        <circle cx={cx} cy={cy} r="2.5" fill="#1a1a2e" />
+      </g>
+
+      {/* Throne — scalloped decorative top mount */}
+      <path d="M86,6 Q100,0 114,6 L114,14 Q100,8 86,14 Z" fill={color} opacity="0.4" />
+      <circle cx={100} cy={5} r="3.5" fill="none" stroke={color} strokeWidth="1.2" opacity="0.5" />
     </svg>
   );
 }

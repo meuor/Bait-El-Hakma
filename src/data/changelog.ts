@@ -47,6 +47,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       { type: 'improved', text: 'Ready to Focus panel sits beside the timer on desktop', textAr: 'لوحة جاهز للتركيز بجانب المؤقت على سطح المكتب' },
       { type: 'fixed', text: 'Video no longer disappears on timer pause — shows paused state instead', textAr: 'لم يعد الفيديو يختفي عند إيقاف المؤقت — يظهر حالة التوقف' },
       { type: 'fixed', text: 'CSS @import order issue causing Vercel build failure', textAr: 'إصلاح مشكلة ترتيب CSS @import التي تسبب فشل البناء' },
+      { type: 'new', text: 'Astrolabe timer theme — planispheric astrolabe SVG with rotating alidade pointer', textAr: 'ثيم الأسطرلاب — أسطرلاب SVG مع مؤشر دوار' },
+      { type: 'improved', text: 'Hourglass theme — elegant glass frame, wooden caps, glass reflection, curved sand surfaces, more particles', textAr: 'تحسين ثيم الساعة الرملية — إطار زجاجي أنيق، أغطية خشبية، انعكاس زجاجي، أسطح رملية منحنية، جسيمات أكثر' },
+      { type: 'improved', text: 'Landing page screenshots — replaced static PNGs with inline SVG feature previews that match actual app UI', textAr: 'تحسين لقطات شاشة الصفحة الرئيسية — استبدال صور PNG الثابتة بمعاينات SVG مضمنة تطابق واجهة التطبيق الفعلية' },
+      { type: 'fixed', text: 'YouTube links — verified all 12 focus videos, replaced 6 broken links with working alternatives', textAr: 'إصلاح روابط يوتيوب — التحقق من جميع فيديوهات التركيز الـ12، استبدال 6 روابط معطلة ببدائل عاملة' },
     ],
   },
   {

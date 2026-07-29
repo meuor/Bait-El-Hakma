@@ -45,7 +45,8 @@ export const activityModes: ActivityModeConfig[] = [
 
 export type PomodoroTheme =
   | 'classic' | 'ocean' | 'forest' | 'sunset'
-  | 'lavender' | 'rose' | 'midnight' | 'amber' | 'hourglass';
+  | 'lavender' | 'rose' | 'midnight' | 'amber'
+  | 'hourglass' | 'astrolabe';
 
 export interface PomodoroThemeConfig {
   id: PomodoroTheme;
@@ -64,6 +65,7 @@ export const pomodoroThemes: PomodoroThemeConfig[] = [
   { id: 'rose', label: 'Rose', ringColor: '#ec4899', bgFrom: 'from-pink-500/10', bgTo: 'to-rose-500/10' },
   { id: 'midnight', label: 'Midnight', ringColor: '#6366f1', bgFrom: 'from-indigo-500/10', bgTo: 'to-blue-500/10' },
   { id: 'hourglass', label: 'Hourglass', ringColor: '#d4a853', bgFrom: 'from-amber-500/10', bgTo: 'to-yellow-500/10' },
+  { id: 'astrolabe', label: 'Astrolabe', ringColor: '#c5943b', bgFrom: 'from-amber-700/10', bgTo: 'to-yellow-600/10' },
   { id: 'amber', label: 'Amber', ringColor: '#f59e0b', bgFrom: 'from-amber-500/10', bgTo: 'to-yellow-500/10' },
 ];
 
@@ -89,6 +91,8 @@ export interface PomodoroSession {
   activityMode?: ActivityMode;
   customName?: string;
   linkedTaskId?: string;
+  tags: UniversalTag[];
+  links: LinkRef[];
 }
 
 export type TimerState = 'idle' | 'running' | 'paused' | 'break' | 'focusEnded';
@@ -116,6 +120,8 @@ export interface KanbanCard {
   priority: 'low' | 'medium' | 'high';
   createdAt: Date;
   dueDate?: Date;
+  tags: UniversalTag[];
+  links: LinkRef[];
 }
 
 export interface Label {
@@ -131,10 +137,10 @@ export interface Book {
   author: string;
   coverUrl: string;
   description: string;
-  tags: BookTag[];
+  tags: UniversalTag[];
   notes: BookNote[];
   content: ContentBlock[];
-  links: string[];
+  links: LinkRef[];
   status: 'reading' | 'completed' | 'want-to-read' | 'on-hold';
   progress: number; // 0-100
   addedAt: Date;
@@ -163,6 +169,8 @@ export interface Todo {
   createdAt: Date;
   dueDate?: Date;
   priority: 'low' | 'medium' | 'high';
+  tags: UniversalTag[];
+  links: LinkRef[];
 }
 
 // Activity Statistics Types
@@ -222,6 +230,8 @@ export interface Challenge {
   startDate: Date;
   color: string;
   icon: string;
+  tags: UniversalTag[];
+  links: LinkRef[];
 }
 
 export interface ChallengeProgress {
@@ -230,6 +240,60 @@ export interface ChallengeProgress {
   percentage: number;
   currentStreak: number;
   longestStreak: number;
+}
+
+// Universal Linking & Tagging
+export type EntityType = 'pomodoro-session' | 'kanban-card' | 'todo' | 'book' | 'challenge' | 'book-note' | 'daily-note';
+
+export interface LinkRef {
+  targetType: EntityType;
+  targetId: string;
+  label?: string;
+}
+
+export interface UniversalTag {
+  name: string;
+  color?: string;
+}
+
+export interface TaggedEntity {
+  tags: UniversalTag[];
+  links: LinkRef[];
+}
+
+export interface PropertySchema {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'select' | 'date' | 'relation' | 'rollup';
+  options?: string[];
+  relationType?: EntityType;
+}
+
+export interface PropertyValue {
+  key: string;
+  value: string | number | null;
+}
+
+export interface DailyNote {
+  id: string;
+  date: string; // YYYY-MM-DD
+  content: ContentBlock[];
+  tags: UniversalTag[];
+  links: LinkRef[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AutomationRule {
+  id: string;
+  name: string;
+  trigger: 'timerComplete' | 'cardMoved' | 'todoChecked' | 'dateReached' | 'sessionComplete';
+  conditions: Record<string, string>;
+  actions: {
+    type: 'createItem' | 'updateItem' | 'addLink' | 'addTag' | 'notify';
+    params: Record<string, string>;
+  }[];
+  enabled: boolean;
 }
 
 // App State
@@ -245,6 +309,10 @@ export interface AppState {
   todos: Todo[];
   challenges: Challenge[];
   activityData: ActivityData;
+  linkRegistry: Record<string, LinkRef[]>;
+  dailyNotes: DailyNote[];
+  automationRules: AutomationRule[];
+  propertySchemas: Record<EntityType, PropertySchema[]>;
 }
 
 // Pin Types
@@ -281,7 +349,9 @@ export type AppTab =
   | 'stats' 
   | 'motivation' 
   | 'challenges'
-  | 'profile';
+  | 'profile'
+  | 'graph'
+  | 'daily';
 
 export interface TabConfig {
   id: AppTab;

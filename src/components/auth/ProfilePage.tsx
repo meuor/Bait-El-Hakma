@@ -7,6 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { AutomationRuleEditor } from '@/components/AutomationRuleEditor';
+import { TemplateManager } from '@/components/TemplateManager';
+import { DatabaseView } from '@/components/DatabaseView';
 import {
   User,
   Mail,
@@ -16,6 +19,7 @@ import {
   CheckCircle2,
   Target,
   Flame,
+  Zap,
   Save,
   Loader2,
   LogOut,
@@ -24,6 +28,7 @@ import {
   X,
   Link,
   CheckCircle,
+  Database,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -383,6 +388,48 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
               <LogOut className="h-4 w-4 mr-2" />Sign Out
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Automations */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Automations
+          </CardTitle>
+          <CardDescription>Configure if-this-then-that rules</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AutomationRuleEditor />
+        </CardContent>
+      </Card>
+
+      {/* Templates */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Save className="h-5 w-5" />
+            Templates
+          </CardTitle>
+          <CardDescription>Save and reuse item templates</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TemplateManager />
+        </CardContent>
+      </Card>
+
+      {/* Database View */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Database
+          </CardTitle>
+          <CardDescription>Manage property schemas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DatabaseView />
         </CardContent>
       </Card>
     </motion.div>

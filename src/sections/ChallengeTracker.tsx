@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Plus,
@@ -25,10 +26,14 @@ import {
   Globe,
   Heart,
   Zap,
+  Hash,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import type { Challenge } from '@/types';
+import type { Challenge, UniversalTag, LinkRef } from '@/types';
+import { TagEditor } from '@/components/TagEditor';
+import { LinkPicker } from '@/components/LinkPicker';
+import { BacklinksPanel } from '@/components/BacklinksPanel';
 
 const challengeIcons = {
   code: Code,
@@ -77,6 +82,9 @@ export function ChallengeTracker() {
   const [newChallengeDays, setNewChallengeDays] = useState(100);
   const [newChallengeIcon, setNewChallengeIcon] = useState<keyof typeof challengeIcons>('trophy');
   const [newChallengeColor, setNewChallengeColor] = useState(challengeColors[0]);
+  const [newChallengeTags, setNewChallengeTags] = useState<UniversalTag[]>([]);
+  const [newChallengeLinks, setNewChallengeLinks] = useState<LinkRef[]>([]);
+  const [pendingChallengeId, setPendingChallengeId] = useState('');
 
   const handleAddChallenge = () => {
     if (!newChallengeName.trim()) {
@@ -85,7 +93,7 @@ export function ChallengeTracker() {
     }
 
     const newChallenge: Challenge = {
-      id: Date.now().toString(),
+      id: pendingChallengeId,
       name: newChallengeName,
       description: newChallengeDescription,
       totalDays: newChallengeDays,
@@ -93,6 +101,8 @@ export function ChallengeTracker() {
       startDate: new Date(),
       color: newChallengeColor,
       icon: newChallengeIcon,
+      tags: newChallengeTags,
+      links: newChallengeLinks,
     };
 
     dispatch({ type: 'ADD_CHALLENGE', payload: newChallenge });
@@ -103,6 +113,9 @@ export function ChallengeTracker() {
     setNewChallengeDays(100);
     setNewChallengeIcon('trophy');
     setNewChallengeColor(challengeColors[0]);
+    setNewChallengeTags([]);
+    setNewChallengeLinks([]);
+    setPendingChallengeId('');
     setShowAddChallenge(false);
     
     toast.success('Challenge created!');
@@ -180,7 +193,7 @@ export function ChallengeTracker() {
           <h2 className="text-2xl font-bold">Challenge Tracker</h2>
           <p className="text-muted-foreground">Build habits, one day at a time</p>
         </div>
-        <Button onClick={() => setShowAddChallenge(true)} className="gap-2">
+        <Button onClick={() => { setPendingChallengeId(Date.now().toString()); setShowAddChallenge(true); }} className="gap-2">
           <Plus className="w-4 h-4" />
           New Challenge
         </Button>
@@ -194,7 +207,7 @@ export function ChallengeTracker() {
           <p className="text-muted-foreground mb-4">
             Start your first challenge and track your progress daily
           </p>
-          <Button onClick={() => setShowAddChallenge(true)}>Create Challenge</Button>
+          <Button onClick={() => { setPendingChallengeId(Date.now().toString()); setShowAddChallenge(true); }}>Create Challenge</Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -331,6 +344,32 @@ export function ChallengeTracker() {
                       </Button>
                     )}
                   </div>
+
+                  {/* Tags */}
+                  {challenge.tags && challenge.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {challenge.tags.map(tag => (
+                        <Badge
+                          key={tag.name}
+                          variant="secondary"
+                          className="text-xs"
+                          style={{ backgroundColor: tag.color ? `${tag.color}20` : undefined, color: tag.color, borderColor: tag.color ? `${tag.color}40` : undefined }}
+                        >
+                          <Hash className="h-3 w-3 mr-1" />
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Backlinks */}
+                  {state.linkRegistry[challenge.id] && state.linkRegistry[challenge.id].length > 0 && (
+                    <BacklinksPanel
+                      targetId={challenge.id}
+                      incomingLinks={state.linkRegistry[challenge.id]}
+                      onNavigate={(tab) => dispatch({ type: 'SET_TAB', payload: tab })}
+                    />
+                  )}
                 </CardContent>
               </Card>
             );
@@ -426,6 +465,22 @@ export function ChallengeTracker() {
               </div>
             </div>
             
+            <div className="space-y-3">
+              <Label>Tags</Label>
+              <TagEditor tags={newChallengeTags} onChange={setNewChallengeTags} />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Links</Label>
+              <LinkPicker
+                currentEntityType="challenge"
+                currentEntityId={pendingChallengeId}
+                existingLinks={newChallengeLinks}
+                onLinkAdd={(link) => setNewChallengeLinks(prev => [...prev, link])}
+                onLinkRemove={(targetId) => setNewChallengeLinks(prev => prev.filter(l => l.targetId !== targetId))}
+              />
+            </div>
+
             <Button className="w-full" onClick={handleAddChallenge}>
               Create Challenge
             </Button>
@@ -454,6 +509,25 @@ export function ChallengeTracker() {
                 <Textarea
                   value={editingChallenge.description}
                   onChange={(e) => setEditingChallenge({ ...editingChallenge, description: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>Tags</Label>
+                <TagEditor
+                  tags={editingChallenge.tags || []}
+                  onChange={(tags) => setEditingChallenge({ ...editingChallenge, tags })}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>Links</Label>
+                <LinkPicker
+                  currentEntityType="challenge"
+                  currentEntityId={editingChallenge.id}
+                  existingLinks={editingChallenge.links || []}
+                  onLinkAdd={(link) => setEditingChallenge({ ...editingChallenge, links: [...(editingChallenge.links || []), link] })}
+                  onLinkRemove={(targetId) => setEditingChallenge({ ...editingChallenge, links: (editingChallenge.links || []).filter(l => l.targetId !== targetId) })}
                 />
               </div>
               

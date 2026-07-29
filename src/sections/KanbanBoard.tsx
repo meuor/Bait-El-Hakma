@@ -20,7 +20,10 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import type { KanbanCard, Label as LabelType } from '@/types';
+import type { KanbanCard, Label as LabelType, UniversalTag, LinkRef } from '@/types';
+import { TagEditor } from '@/components/TagEditor';
+import { LinkPicker } from '@/components/LinkPicker';
+import { BacklinksPanel } from '@/components/BacklinksPanel';
 
 // Predefined labels
 const defaultLabels: LabelType[] = [
@@ -58,6 +61,7 @@ export function KanbanBoard() {
   const [newCardDescription, setNewCardDescription] = useState('');
   const [newCardPriority, setNewCardPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [newCardLabels, setNewCardLabels] = useState<string[]>([]);
+  const [newCardTags, setNewCardTags] = useState<UniversalTag[]>([]);
 
   const handleDragStart = (card: KanbanCard) => {
     setDraggedCard(card);
@@ -97,6 +101,8 @@ export function KanbanBoard() {
       description: newCardDescription,
       priority: newCardPriority,
       labels: defaultLabels.filter(l => newCardLabels.includes(l.id)),
+      tags: newCardTags,
+      links: [],
       createdAt: new Date(),
     };
 
@@ -107,6 +113,7 @@ export function KanbanBoard() {
     setNewCardDescription('');
     setNewCardPriority('medium');
     setNewCardLabels([]);
+    setNewCardTags([]);
     setShowAddCard(null);
     
     toast.success('Card added');
@@ -258,6 +265,21 @@ export function KanbanBoard() {
                               {label.name}
                             </span>
                           ))}
+                          {card.tags?.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag.name}
+                              className="text-[10px] px-1.5 py-0.5 rounded-full"
+                              style={{
+                                backgroundColor: `${tag.color}20`,
+                                color: tag.color,
+                              }}
+                            >
+                              #{tag.name}
+                            </span>
+                          ))}
+                          {(card.tags?.length ?? 0) > 2 && (
+                            <span className="text-[10px] text-muted-foreground">+{card.tags.length - 2}</span>
+                          )}
                         </div>
                         <Badge
                           variant="secondary"
@@ -347,6 +369,15 @@ export function KanbanBoard() {
                       </div>
                     </div>
                     
+                    <div className="space-y-2">
+                      <Label>Tags</Label>
+                      <TagEditor
+                        tags={newCardTags}
+                        onChange={setNewCardTags}
+                        placeholder="Add tag..."
+                      />
+                    </div>
+
                     <Button
                       className="w-full"
                       onClick={() => handleAddCard(column.id)}
@@ -363,7 +394,7 @@ export function KanbanBoard() {
 
       {/* Edit Card Dialog */}
       <Dialog open={!!editingCard} onOpenChange={() => setEditingCard(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Card</DialogTitle>
           </DialogHeader>
@@ -384,7 +415,38 @@ export function KanbanBoard() {
                   onChange={(e) => setEditingCard({ ...editingCard, description: e.target.value })}
                 />
               </div>
-              
+
+              <div className="space-y-2">
+                <Label>Tags</Label>
+                <TagEditor
+                  tags={editingCard.tags}
+                  onChange={(tags) =>
+                    dispatch({ type: 'SET_TAGS', payload: { entityType: 'kanban-card', entityId: editingCard.id, tags } })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Links</Label>
+                <LinkPicker
+                  currentEntityType="kanban-card"
+                  currentEntityId={editingCard.id}
+                  existingLinks={editingCard.links}
+                  onLinkAdd={(link) =>
+                    dispatch({ type: 'ADD_LINK', payload: { entityType: 'kanban-card', entityId: editingCard.id, link } })
+                  }
+                  onLinkRemove={(targetId) =>
+                    dispatch({ type: 'REMOVE_LINK', payload: { entityType: 'kanban-card', entityId: editingCard.id, targetId } })
+                  }
+                />
+              </div>
+
+              <BacklinksPanel
+                targetId={editingCard.id}
+                incomingLinks={state.linkRegistry?.[editingCard.id] || []}
+                onNavigate={(tab) => { dispatch({ type: 'SET_TAB', payload: tab }); setEditingCard(null); }}
+              />
+
               <div className="space-y-2">
                 <Label>Priority</Label>
                 <Select

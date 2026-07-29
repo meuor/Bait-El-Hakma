@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Timer, LayoutGrid, Library,
-  Cloud, Sparkles, ArrowRight, ChevronRight, X, ZoomIn,
+  Cloud, Sparkles, ArrowRight, ChevronRight, X,
   Star, Headphones, Brain, Heart,
 } from 'lucide-react';
 import './LandingPage.css';
@@ -71,16 +71,323 @@ const features = [
   },
 ];
 
+// Inline feature preview SVGs — accurate visual representations of each tab
+function QuranPreview() {
+  const lines = ['بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ', 'ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', 'مَـٰلِكِ يَوْمِ ٱلدِّينِ', 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ', 'ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ', 'صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ', 'غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ'];
+  return (
+    <svg viewBox="0 0 200 400" className="w-full h-full">
+      <defs><linearGradient id="qbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1a1a2e"/><stop offset="100%" stopColor="#0f0f1a"/></linearGradient>
+      <linearGradient id="qgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#d4a853"/><stop offset="100%" stopColor="#8b6914"/></linearGradient></defs>
+      <rect width="200" height="400" fill="url(#qbg)" rx="8" />
+      <rect x="30" y="20" width="140" height="1.5" fill="url(#qgold)" opacity="0.5" />
+      <text x="100" y="42" textAnchor="middle" fill="#d4a853" fontSize="10" fontFamily="serif" fontWeight="bold">سورة الفاتحة</text>
+      <circle cx="100" cy="56" r="8" fill="none" stroke="#d4a853" strokeWidth="0.5" opacity="0.4" />
+      <text x="100" y="59" textAnchor="middle" fill="#d4a853" fontSize="4" opacity="0.6">١</text>
+      <rect x="30" y="65" width="140" height="0.5" fill="url(#qgold)" opacity="0.3" />
+      {lines.map((t, i) => (
+        <text key={i} x="100" y={90 + i * 32} textAnchor="middle" fill="#c8c4d8" fontSize="7.5" fontFamily="serif">{t}</text>
+      ))}
+      {[2,3,4,5,6,7].map((_, i) => (
+        <circle key={`vm${i}`} cx={30 + (i%2)*140} cy={90 + i*32 - 10} r="5" fill="none" stroke="#d4a853" strokeWidth="0.4" opacity="0.35" />
+      ))}
+      <rect x="50" y="370" width="100" height="0.5" fill="url(#qgold)" opacity="0.3" />
+      <text x="100" y="384" textAnchor="middle" fill="#d4a853" fontSize="5" opacity="0.4">۞</text>
+      {/* Audio indicator */}
+      <rect x="80" y="360" width="40" height="6" rx="3" fill="#d4a853" opacity="0.2" />
+      <text x="100" y="365" textAnchor="middle" fill="#d4a853" fontSize="3.5" opacity="0.6">▶ Audio</text>
+    </svg>
+  );
+}
+
+function BookLibraryPreview() {
+  const books = [
+    { w: 36, h: 50, c: '#8b5cf6' }, { w: 32, h: 42, c: '#0ea5e9' }, { w: 38, h: 55, c: '#22c55e' },
+    { w: 30, h: 38, c: '#f97316' }, { w: 34, h: 48, c: '#ec4899' }, { w: 28, h: 35, c: '#f59e0b' },
+    { w: 36, h: 52, c: '#6366f1' }, { w: 32, h: 40, c: '#14b8a6' }, { w: 30, h: 45, c: '#e11d48' },
+  ];
+  return (
+    <svg viewBox="0 0 200 200" className="w-full h-full">
+      <rect width="200" height="200" fill="#0a0518" rx="8" />
+      <text x="16" y="22" fill="#c8c4d8" fontSize="10" fontWeight="bold">My Library</text>
+      <text x="16" y="34" fill="#8a82a0" fontSize="7">9 books · 45% complete</text>
+      {/* Bookshelf */}
+      {books.map((b, i) => (
+        <g key={i}>
+          <rect x={14 + i * 20} y={100 - b.h} width={b.w - 2} height={b.h} rx="3" fill={b.c} opacity="0.7" />
+          <rect x={14 + i * 20} y={100 - b.h + 4} width={b.w - 2} height={b.h - 8} rx="2" fill={b.c} opacity="0.15" />
+          {/* Progress bar on spine */}
+          <rect x={14 + i * 20 + 2} y={100 - 8} width={b.w - 6} height="3" rx="1" fill="rgba(255,255,255,0.2)" />
+          <rect x={14 + i * 20 + 2} y={100 - 8} width={(b.w - 6) * 0.6} height="3" rx="1" fill="rgba(255,255,255,0.5)" />
+        </g>
+      ))}
+      <rect x="10" y="102" width="180" height="2" rx="1" fill="#2a1f4a" />
+      {/* Reading notes */}
+      <rect x="14" y="112" width="82" height="28" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" strokeWidth="0.5" />
+      <text x="20" y="124" fill="#c8c4d8" fontSize="6">Current: Atomic Habits</text>
+      <text x="20" y="134" fill="#8a82a0" fontSize="5">Page 124 · Chapter 8</text>
+      <rect x="104" y="112" width="82" height="28" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.15)" strokeWidth="0.5" />
+      <text x="110" y="124" fill="#c8c4d8" fontSize="6">Current: Deep Work</text>
+      <text x="110" y="134" fill="#8a82a0" fontSize="5">Page 67 · Chapter 4</text>
+      {/* Tags */}
+      <rect x="14" y="148" width="28" height="6" rx="3" fill="#8b5cf6" opacity="0.3" /><text x="28" y="153" textAnchor="middle" fill="#a78bfa" fontSize="3.5">Fiction</text>
+      <rect x="46" y="148" width="32" height="6" rx="3" fill="#0ea5e9" opacity="0.3" /><text x="62" y="153" textAnchor="middle" fill="#7dd3fc" fontSize="3.5">Science</text>
+      <rect x="82" y="148" width="28" height="6" rx="3" fill="#22c55e" opacity="0.3" /><text x="96" y="153" textAnchor="middle" fill="#86efac" fontSize="3.5">History</text>
+    </svg>
+  );
+}
+
+function KanbanPreview() {
+  const cols = [
+    { label: 'To Do', cards: ['Design landing', 'Write API docs', 'Setup CI/CD'], color: '#8b5cf6' },
+    { label: 'In Progress', cards: ['Fix auth bug', 'Build chart'], color: '#f59e0b' },
+    { label: 'Done', cards: ['Init project', 'Setup DB', 'Create logo', 'Add tests'], color: '#22c55e' },
+  ];
+  return (
+    <svg viewBox="0 0 380 200" className="w-full h-full">
+      <rect width="380" height="200" fill="#0a0518" rx="8" />
+      <text x="16" y="22" fill="#c8c4d8" fontSize="10" fontWeight="bold">Kanban Board</text>
+      {cols.map((col, ci) => (
+        <g key={ci}>
+          <rect x={8 + ci * 126} y="32" width="118" height="158" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(139,92,246,0.08)" strokeWidth="0.5" />
+          <circle cx={20 + ci * 126} cy={48} r="4" fill={col.color} opacity="0.7" />
+          <text x={30 + ci * 126} y={51} fill="#c8c4d8" fontSize="8" fontWeight="bold">{col.label}</text>
+          <text x={130 + ci * 126} y={51} textAnchor="end" fill="#8a82a0" fontSize="7">{col.cards.length}</text>
+          {col.cards.map((card, i) => (
+            <g key={i}>
+              <rect x={14 + ci * 126} y={60 + i * 32} width="106" height="26" rx="4" fill="rgba(255,255,255,0.05)" stroke="rgba(139,92,246,0.06)" strokeWidth="0.5" />
+              <rect x={14 + ci * 126} y={60 + i * 32} width="3" height="26" rx="1.5" fill={col.color} opacity="0.5" />
+              <text x={22 + ci * 126} y={74 + i * 32} fill="#c8c4d8" fontSize="6">{card}</text>
+            </g>
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function DailyTasksPreview() {
+  const tasks = [
+    { t: 'Read Quran', done: true }, { t: 'Study React', done: true }, { t: 'Write report', done: false },
+    { t: 'Exercise', done: false }, { t: 'Review PRs', done: false },
+  ];
+  return (
+    <svg viewBox="0 0 200 200" className="w-full h-full">
+      <rect width="200" height="200" fill="#0a0518" rx="8" />
+      {/* Dual calendar */}
+      <rect x="10" y="10" width="180" height="40" rx="6" fill="rgba(139,92,246,0.08)" />
+      <text x="100" y="26" textAnchor="middle" fill="#c8c4d8" fontSize="9" fontWeight="bold">17 Rajab 1447</text>
+      <text x="100" y="40" textAnchor="middle" fill="#8a82a0" fontSize="7">Wednesday · July 29, 2026</text>
+      {/* Task list */}
+      <text x="14" y="66" fill="#c8c4d8" fontSize="8" fontWeight="bold">Today's Tasks</text>
+      {tasks.map((t, i) => (
+        <g key={i}>
+          <rect x="14" y={74 + i * 22} width="12" height="12" rx="6" fill={t.done ? '#22c55e' : 'none'} stroke={t.done ? 'none' : 'rgba(200,196,216,0.25)'} strokeWidth="1" />
+          {t.done && <text x="20" y="83" textAnchor="middle" fill="white" fontSize="7">✓</text>}
+          <text x="32" y={84 + i * 22} fill={t.done ? '#5a5270' : '#c8c4d8'} fontSize="6.5" textDecoration={t.done ? 'line-through' : 'none'}>{t.t}</text>
+          <rect x={170} y={76 + i * 22} width="20" height="8" rx="2" fill="rgba(245,158,11,0.15)" />
+          <text x={180} y={82 + i * 22} textAnchor="middle" fill="#f59e0b" fontSize="3.5">Medium</text>
+        </g>
+      ))}
+      {/* Add task */}
+      <rect x="14" y="184" width="172" height="12" rx="4" fill="none" stroke="rgba(139,92,246,0.15)" strokeWidth="0.5" strokeDasharray="2,2" />
+      <text x="24" y="193" fill="#5a5270" fontSize="5">+ Add new task</text>
+    </svg>
+  );
+}
+
+function ChallengeTrackerPreview() {
+  const cells = Array.from({ length: 49 }, (_, i) => ({
+    filled: i % 3 === 0 || i % 7 === 0,
+    intense: i % 5 === 0,
+  }));
+  return (
+    <svg viewBox="0 0 200 400" className="w-full h-full">
+      <rect width="200" height="400" fill="#0a0518" rx="8" />
+      <text x="16" y="24" fill="#c8c4d8" fontSize="10" fontWeight="bold">Challenge: Read Daily</text>
+      <text x="16" y="36" fill="#8a82a0" fontSize="7">Week 3 · Day 19 of 30</text>
+      {/* Stats row */}
+      <rect x="14" y="44" width="54" height="24" rx="4" fill="rgba(34,197,94,0.08)" />
+      <text x="41" y="55" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">14</text>
+      <text x="41" y="64" textAnchor="middle" fill="#86efac" fontSize="4">days streak</text>
+      <rect x="73" y="44" width="54" height="24" rx="4" fill="rgba(139,92,246,0.08)" />
+      <text x="100" y="55" textAnchor="middle" fill="#8b5cf6" fontSize="10" fontWeight="bold">19</text>
+      <text x="100" y="64" textAnchor="middle" fill="#a78bfa" fontSize="4">of 30 done</text>
+      <rect x="132" y="44" width="54" height="24" rx="4" fill="rgba(245,158,11,0.08)" />
+      <text x="159" y="55" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">63%</text>
+      <text x="159" y="64" textAnchor="middle" fill="#fcd34d" fontSize="4">complete</text>
+      {/* Grid header — weekdays */}
+      {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i) => (
+        <text key={i} x={16 + i * 25} y={84} fill="#5a5270" fontSize="4.5" textAnchor="middle">{d}</text>
+      ))}
+      {/* Grid cells — 7 weeks x 7 days */}
+      {cells.map((c, i) => {
+        const x = 14 + (i % 7) * 25;
+        const y = 91 + Math.floor(i / 7) * 22;
+        return (
+          <g key={i}>
+            <rect x={x} y={y} width="20" height="18" rx="3" fill={
+              c.intense ? '#22c55e' : c.filled ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.04)'
+            } stroke="rgba(139,92,246,0.06)" strokeWidth="0.3" />
+            {c.intense && <text x={x + 10} y={y + 12} textAnchor="middle" fill="white" fontSize="6" fontWeight="bold">✓</text>}
+          </g>
+        );
+      })}
+      {/* Legend */}
+      <text x="16" y={280} fill="#8a82a0" fontSize="5">Today: Day 19</text>
+      <rect x="16" y="286" width="8" height="6" rx="1" fill="#22c55e" opacity="0.4" />
+      <text x="28" y="292" fill="#5a5270" fontSize="4">Done</text>
+      <rect x="48" y="286" width="8" height="6" rx="1" fill="#22c55e" />
+      <text x="60" y="292" fill="#5a5270" fontSize="4">Streak</text>
+      <rect x="88" y="286" width="8" height="6" rx="1" fill="rgba(255,255,255,0.04)" stroke="rgba(139,92,246,0.06)" strokeWidth="0.3" />
+      <text x="100" y="292" fill="#5a5270" fontSize="4">Missed</text>
+      {/* Bottom stats */}
+      <rect x="14" y="310" width="172" height="40" rx="6" fill="rgba(139,92,246,0.06)" />
+      <text x="30" y="328" fill="#c8c4d8" fontSize="6">Best streak: 21 days</text>
+      <text x="30" y="342" fill="#8a82a0" fontSize="5">Consistency: 73%</text>
+    </svg>
+  );
+}
+
+function ActivityStatsPreview() {
+  return (
+    <svg viewBox="0 0 200 200" className="w-full h-full">
+      <rect width="200" height="200" fill="#0a0518" rx="8" />
+      <text x="14" y="22" fill="#c8c4d8" fontSize="10" fontWeight="bold">Activity</text>
+      {/* Pie chart */}
+      <circle cx="60" cy="80" r="36" fill="none" stroke="rgba(139,92,246,0.1)" strokeWidth="10" />
+      <circle cx="60" cy="80" r="36" fill="none" stroke="#8b5cf6" strokeWidth="10" strokeDasharray="80 226" strokeDashoffset="20" transform="rotate(-90 60 80)" />
+      <circle cx="60" cy="80" r="36" fill="none" stroke="#22c55e" strokeWidth="10" strokeDasharray="60 226" strokeDashoffset="140" transform="rotate(-90 60 80)" />
+      <circle cx="60" cy="80" r="36" fill="none" stroke="#f59e0b" strokeWidth="10" strokeDasharray="40 226" strokeDashoffset="220" transform="rotate(-90 60 80)" />
+      <circle cx="60" cy="80" r="36" fill="none" stroke="#0ea5e9" strokeWidth="10" strokeDasharray="46 226" strokeDashoffset="290" transform="rotate(-90 60 80)" />
+      {/* Center text */}
+      <text x="60" y="78" textAnchor="middle" fill="#c8c4d8" fontSize="12" fontWeight="bold">12h</text>
+      <text x="60" y="88" textAnchor="middle" fill="#8a82a0" fontSize="5">focus</text>
+      {/* Legend */}
+      {[
+        { label: 'Reading', color: '#8b5cf6', v: '4.2h' },
+        { label: 'Coding', color: '#22c55e', v: '3.1h' },
+        { label: 'Studying', color: '#f59e0b', v: '2.0h' },
+        { label: 'Other', color: '#0ea5e9', v: '2.7h' },
+      ].map((item, i) => (
+        <g key={i}>
+          <circle cx={120} cy={46 + i * 18} r="4" fill={item.color} opacity="0.8" />
+          <text x={130} y={50 + i * 18} fill="#c8c4d8" fontSize="6">{item.label}</text>
+          <text x={185} y={50 + i * 18} textAnchor="end" fill="#8a82a0" fontSize="6">{item.v}</text>
+        </g>
+      ))}
+      {/* Sessions today */}
+      <rect x="14" y="130" width="172" height="28" rx="6" fill="rgba(139,92,246,0.06)" />
+      <text x="22" y="144" fill="#c8c4d8" fontSize="7">Sessions today: 6</text>
+      <text x="22" y="154" fill="#8a82a0" fontSize="5">Avg session: 25 min</text>
+      {/* Bar mini chart */}
+      <rect x="14" y="166" width="20" height="12" rx="2" fill="#8b5cf6" opacity="0.5" />
+      <rect x="38" y="160" width="20" height="18" rx="2" fill="#22c55e" opacity="0.5" />
+      <rect x="62" y="155" width="20" height="23" rx="2" fill="#f59e0b" opacity="0.5" />
+      <rect x="86" y="162" width="20" height="16" rx="2" fill="#0ea5e9" opacity="0.5" />
+      <rect x="110" y="168" width="20" height="10" rx="2" fill="#ec4899" opacity="0.5" />
+    </svg>
+  );
+}
+
+function DashboardPreview() {
+  return (
+    <svg viewBox="0 0 380 200" className="w-full h-full">
+      <rect width="380" height="200" fill="#0a0518" rx="8" />
+      <text x="16" y="22" fill="#c8c4d8" fontSize="10" fontWeight="bold">Dashboard</text>
+      {/* Stat cards */}
+      {[
+        { label: 'Quran Today', v: '2 pages', c: '#d4a853', x: 0 },
+        { label: 'Focus Today', v: '1h 25m', c: '#8b5cf6', x: 1 },
+        { label: 'Tasks Done', v: '4 of 7', c: '#22c55e', x: 2 },
+        { label: 'Books Read', v: '3 this week', c: '#0ea5e9', x: 3 },
+      ].map((s, i) => (
+        <g key={i}>
+          <rect x={12 + i * 91} y="32" width="84" height="40" rx="6" fill="rgba(255,255,255,0.03)" stroke={`${s.c}22`} strokeWidth="0.5" />
+          <circle cx={24 + i * 91} cy={44} r="3" fill={s.c} opacity="0.6" />
+          <text x={22 + i * 91} y={56} fill="#c8c4d8" fontSize="12" fontWeight="bold">{s.v}</text>
+          <text x={22 + i * 91} y={67} fill="#8a82a0" fontSize="5">{s.label}</text>
+        </g>
+      ))}
+      {/* Quick links row */}
+      <text x="16" y="90" fill="#c8c4d8" fontSize="8" fontWeight="bold">Quick Access</text>
+      {[
+        { label: 'Quran', c: '#d4a853', icon: '۞' },
+        { label: 'Timer', c: '#8b5cf6', icon: '⏱' },
+        { label: 'Tasks', c: '#22c55e', icon: '☐' },
+        { label: 'Library', c: '#0ea5e9', icon: '📚' },
+        { label: 'Kanban', c: '#f59e0b', icon: '≡' },
+      ].map((q, i) => (
+        <g key={i}>
+          <rect x={14 + i * 72} y={98} width="64" height="20" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(139,92,246,0.08)" strokeWidth="0.5" />
+          <text x={22 + i * 72} y={112} fill={q.c} fontSize="8">{q.icon}</text>
+          <text x={34 + i * 72} y={112} fill="#c8c4d8" fontSize="6">{q.label}</text>
+        </g>
+      ))}
+      {/* Activity feed */}
+      <text x="16" y="140" fill="#c8c4d8" fontSize="8" fontWeight="bold">Recent Activity</text>
+      {[
+        { t: 'Completed Focus Session', time: '2 min ago', c: '#8b5cf6' },
+        { t: 'Read Al-Fatiha', time: '15 min ago', c: '#d4a853' },
+        { t: 'Added task "Review PRs"', time: '1h ago', c: '#22c55e' },
+      ].map((a, i) => (
+        <g key={i}>
+          <circle cx={20} cy={156 + i * 16} r="3" fill={a.c} opacity="0.5" />
+          <text x={30} y={160 + i * 16} fill="#c8c4d8" fontSize="6">{a.t}</text>
+          <text x={370} y={160 + i * 16} textAnchor="end" fill="#5a5270" fontSize="5">{a.time}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function ProfilePreview() {
+  return (
+    <svg viewBox="0 0 200 200" className="w-full h-full">
+      <rect width="200" height="200" fill="#0a0518" rx="8" />
+      {/* Cover bg */}
+      <rect x="0" y="0" width="200" height="60" fill="url(#qbg)" opacity="0.5" rx="8" />
+      <rect x="0" y="30" width="200" height="30" fill="url(#qbg)" opacity="0.3" />
+      {/* Avatar */}
+      <circle cx="100" cy="50" r="28" fill="#2a1f4a" stroke="rgba(139,92,246,0.2)" strokeWidth="2" />
+      <circle cx="100" cy="42" r="10" fill="#8b5cf6" opacity="0.6" />
+      <ellipse cx="100" cy="58" rx="14" ry="8" fill="#8b5cf6" opacity="0.3" />
+      {/* Username */}
+      <text x="100" y="90" textAnchor="middle" fill="#c8c4d8" fontSize="12" fontWeight="bold">testuser2026</text>
+      <text x="100" y="104" textAnchor="middle" fill="#8a82a0" fontSize="7">testuser2026 · Joined 2026</text>
+      {/* Stats row */}
+      {[
+        { label: 'Sessions', v: '47' },
+        { label: 'Tasks', v: '128' },
+        { label: 'Books', v: '12' },
+        { label: 'Streak', v: '14d' },
+      ].map((s, i) => (
+        <g key={i}>
+          <text x={30 + i * 44} y={130} textAnchor="middle" fill="#c8c4d8" fontSize="11" fontWeight="bold">{s.v}</text>
+          <text x={30 + i * 44} y={140} textAnchor="middle" fill="#8a82a0" fontSize="5">{s.label}</text>
+          {i < 3 && <line x1={55 + i * 44} y1={120} x2={55 + i * 44} y2={142} stroke="rgba(139,92,246,0.1)" strokeWidth="0.5" />}
+        </g>
+      ))}
+      {/* Bio */}
+      <rect x="14" y="152" width="172" height="24" rx="4" fill="rgba(139,92,246,0.04)" stroke="rgba(139,92,246,0.06)" strokeWidth="0.5" />
+      <text x="100" y="164" textAnchor="middle" fill="#c8c4d8" fontSize="5">"Building in public · Learning daily"</text>
+      <text x="100" y="172" textAnchor="middle" fill="#5a5270" fontSize="4">Frontend Developer · Open Source</text>
+      {/* Edit button */}
+      <rect x="70" y="184" width="60" height="12" rx="6" fill="rgba(139,92,246,0.15)" />
+      <text x="100" y="193" textAnchor="middle" fill="#8b5cf6" fontSize="5">Edit Profile</text>
+    </svg>
+  );
+}
+
 const screenshots = [
-  { img: '/screenshots/quran-reader.png', title: 'Quran Reader', desc: 'Full Mushaf with audio & memorization', size: 'tall' },
-  { img: '/screenshots/pomodoro-timer.png', title: 'Focus Timer', desc: 'Pomodoro with floating mini-player', size: 'wide' },
-  { img: '/screenshots/book-library.png', title: 'Book Library', desc: 'Track books with notes & progress', size: 'square' },
-  { img: '/screenshots/kanban-board.png', title: 'Kanban Board', desc: 'Visual drag-and-drop task management', size: 'wide' },
-  { img: '/screenshots/daily-todo.png', title: 'Daily Tasks', desc: 'Plan your day with dual calendar', size: 'square' },
-  { img: '/screenshots/challenge-tracker.png', title: 'Challenges', desc: 'Build habits with streaks & grids', size: 'tall' },
-  { img: '/screenshots/activity-stats.png', title: 'Activity Stats', desc: 'Track productivity with analytics', size: 'square' },
-  { img: '/screenshots/dashboard.png', title: 'Dashboard', desc: 'Central hub for all features', size: 'wide' },
-  { img: '/screenshots/profile.png', title: 'Profile', desc: 'Public profile with stats & username', size: 'square' },
+  { preview: <QuranPreview />, title: 'Quran Reader', desc: 'Full Mushaf with audio & memorization', size: 'tall' },
+  { preview: <LiveTimerPreview />, title: 'Focus Timer', desc: 'Pomodoro with floating mini-player', size: 'wide' },
+  { preview: <BookLibraryPreview />, title: 'Book Library', desc: 'Track books with notes & progress', size: 'square' },
+  { preview: <KanbanPreview />, title: 'Kanban Board', desc: 'Visual drag-and-drop task management', size: 'wide' },
+  { preview: <DailyTasksPreview />, title: 'Daily Tasks', desc: 'Plan your day with dual calendar', size: 'square' },
+  { preview: <ChallengeTrackerPreview />, title: 'Challenges', desc: 'Build habits with streaks & grids', size: 'tall' },
+  { preview: <ActivityStatsPreview />, title: 'Activity Stats', desc: 'Track productivity with analytics', size: 'square' },
+  { preview: <DashboardPreview />, title: 'Dashboard', desc: 'Central hub for all features', size: 'wide' },
+  { preview: <ProfilePreview />, title: 'Profile', desc: 'Public profile with stats & username', size: 'square' },
 ];
 
 // Live animating timer for the landing page
@@ -351,36 +658,24 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </FadeInSection>
 
         <div className="landing-showcase-grid">
-          {screenshots.map((s, i) => {
-            const isTimer = s.title === 'Focus Timer';
-            return (
-              <motion.div
-                key={i}
-                className={`landing-showcase-item landing-showcase-${s.size}`}
-                onClick={() => { if (!isTimer) { setLightboxImg(s.img); setLightboxTitle(s.title); } }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ scale: isTimer ? 1 : 1.03, zIndex: 10 }}
-              >
-                {isTimer ? (
-                  <LiveTimerPreview />
-                ) : (
-                  <>
-                    <img src={s.img} alt={s.title} loading="lazy" />
-                    <div className="landing-showcase-zoom">
-                      <ZoomIn className="w-6 h-6" />
-                    </div>
-                  </>
-                )}
-                <div className="landing-showcase-overlay">
-                  <h4>{s.title}</h4>
-                  <p>{s.desc}</p>
-                </div>
-              </motion.div>
-            );
-          })}
+          {screenshots.map((s, i) => (
+            <motion.div
+              key={i}
+              className={`landing-showcase-item landing-showcase-${s.size}`}
+              onClick={() => { if (s.title !== 'Focus Timer') { setLightboxImg('#'); setLightboxTitle(s.title); } }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              whileHover={{ scale: 1.03, zIndex: 10 }}
+            >
+              {s.preview}
+              <div className="landing-showcase-overlay">
+                <h4>{s.title}</h4>
+                <p>{s.desc}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
