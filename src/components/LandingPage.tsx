@@ -476,9 +476,28 @@ function Counter({ end, suffix = '', duration = 2 }: { end: number; suffix?: str
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+const wallpapers = [
+  'https://w.wallhaven.cc/full/rq/wallhaven-rq215j.png',
+  'https://w.wallhaven.cc/full/5g/wallhaven-5gqpx8.png',
+  'https://w.wallhaven.cc/full/nz/wallhaven-nzy5rw.jpg',
+  'https://w.wallhaven.cc/full/73/wallhaven-73rppe.jpg',
+  'https://w.wallhaven.cc/full/l8/wallhaven-l8og6p.png',
+  'https://w.wallhaven.cc/full/1q/wallhaven-1q13w3.png',
+  'https://w.wallhaven.cc/full/je/wallhaven-je15pp.png',
+  'https://w.wallhaven.cc/full/nz/wallhaven-nzee1o.jpg',
+];
+
 export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [lightboxTitle, setLightboxTitle] = useState('');
+  const [wallpaperIndex, setWallpaperIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setWallpaperIndex(prev => (prev + 1) % wallpapers.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="landing">
@@ -516,6 +535,16 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
       {/* Hero */}
       <section className="landing-hero">
+        <div className="landing-wallpaper">
+          {wallpapers.map((url, i) => (
+            <div
+              key={url}
+              className={`landing-wallpaper-slide${i === wallpaperIndex ? ' active' : ''}`}
+              style={{ backgroundImage: `url(${url})` }}
+            />
+          ))}
+          <div className="landing-wallpaper-overlay" />
+        </div>
         <div className="landing-hero-glow" />
         <motion.div
           className="landing-hero-badge"

@@ -166,6 +166,40 @@
   border-color: rgba(139, 92, 246, 0.4);
 }
 
+/* ---------- Wallpaper Background ---------- */
+.landing-wallpaper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.landing-wallpaper-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.landing-wallpaper-slide.active {
+  opacity: 1;
+}
+
+.landing-wallpaper-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 3, 18, 0.85) 0%,
+    rgba(7, 3, 18, 0.5) 30%,
+    rgba(7, 3, 18, 0.4) 60%,
+    rgba(7, 3, 18, 0.85) 100%
+  );
+  z-index: 1;
+}
+
 /* ---------- Hero ---------- */
 .landing-hero {
   min-height: 100vh;
