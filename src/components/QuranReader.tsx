@@ -156,6 +156,8 @@ export function QuranReader() {
   const ayahRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioStateRef = useRef({ surahData: null as SurahData | null, playingAyah: null as number | null, audioMuted: false, repeatMode: 'none' as 'none' | 'ayah' | 'ayah3x', reciter: 'ar.alafasy' });
+  const cloudLoaded = useRef(false);
+  const hasSynced = useRef(false);
 
   audioStateRef.current = { surahData, playingAyah, audioMuted, repeatMode, reciter };
 
@@ -170,6 +172,8 @@ export function QuranReader() {
   }, [theme]);
 
   useEffect(() => {
+    if (!cloudLoaded.current) return;
+    hasSynced.current = true;
     const token = localStorage.getItem('bait-el-hakma-token');
     if (!token) return;
     syncManager.enqueue('quran', () => quranAPI.save({
@@ -182,9 +186,7 @@ export function QuranReader() {
     }));
   }, [bookmarks, progress.completedSurahs, dailyCompleted, dailyPages, theme]);
 
-  useEffect(() => {
-    const token = localStorage.getItem('bait-el-hakma-token');
-    if (!token) return;
+  const pullFromCloud = useCallback(() => {
     quranAPI.get().then((data) => {
       if (data.bookmarks && Object.keys(data.bookmarks).length > 0) {
         setBookmarks(data.bookmarks);
@@ -212,8 +214,25 @@ export function QuranReader() {
       }
     }).catch((err) => {
       console.warn('Quran cloud pull failed:', err);
+    }).finally(() => {
+      cloudLoaded.current = true;
     });
   }, []);
+
+  useEffect(() => {
+    if (cloudLoaded.current) return;
+    const token = localStorage.getItem('bait-el-hakma-token');
+    if (!token) {
+      const retry = setInterval(() => {
+        if (localStorage.getItem('bait-el-hakma-token')) {
+          clearInterval(retry);
+          pullFromCloud();
+        }
+      }, 1000);
+      return () => clearInterval(retry);
+    }
+    pullFromCloud();
+  }, [pullFromCloud]);
 
   useEffect(() => {
     const el = containerRef.current?.closest('.overflow-auto') || window;
