@@ -44,6 +44,27 @@ const TYPE_LABELS: Record<string, string> = {
 
 const ENTITY_TYPES: EntityType[] = ['book', 'todo', 'kanban-card', 'pomodoro-session', 'challenge'];
 
+type GraphThemeId = 'default' | 'constellation' | 'neon' | 'warm';
+
+interface GraphThemeConfig {
+  id: GraphThemeId;
+  label: string;
+  icon: string;
+  edgeColor: string;
+  edgeWidth: number;
+  nodeOpacity: number;
+  labelOpacity: number;
+  gridOpacity: number;
+  glowIntensity: number;
+}
+
+const GRAPH_THEMES: GraphThemeConfig[] = [
+  { id: 'default', label: 'Default', icon: '🎨', edgeColor: 'hsl(var(--border))', edgeWidth: 1.2, nodeOpacity: 0.2, labelOpacity: 0.85, gridOpacity: 0.12, glowIntensity: 5 },
+  { id: 'constellation', label: 'Constellation', icon: '✨', edgeColor: '#4a7aff', edgeWidth: 0.8, nodeOpacity: 0.55, labelOpacity: 0.9, gridOpacity: 0.05, glowIntensity: 8 },
+  { id: 'neon', label: 'Neon', icon: '💫', edgeColor: '#ff44ff', edgeWidth: 2.5, nodeOpacity: 0.35, labelOpacity: 1, gridOpacity: 0.06, glowIntensity: 12 },
+  { id: 'warm', label: 'Warm', icon: '🌅', edgeColor: '#d4a853', edgeWidth: 1.5, nodeOpacity: 0.25, labelOpacity: 0.85, gridOpacity: 0.1, glowIntensity: 6 },
+];
+
 function truncate(s: string, n: number): string {
   return s.length > n ? s.slice(0, n) + '...' : s;
 }
@@ -153,6 +174,9 @@ export function GraphView() {
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+  const [graphTheme, setGraphTheme] = useState<GraphThemeId>('default');
+
+  const themeConfig = GRAPH_THEMES.find(t => t.id === graphTheme)!;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -262,8 +286,6 @@ export function GraphView() {
   const filteredEdges = useMemo(() => {
     return edges.filter(e => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
   }, [edges, filteredNodeIds]);
-
-  const edgeColor = 'hsl(var(--border))';
 
   const toggleType = (t: string) => {
     setFilterTypes(prev => {
@@ -482,7 +504,7 @@ export function GraphView() {
   }, [filteredNodes]);
 
   return (
-    <div className="tab-section space-y-4 h-full flex flex-col" style={{ minHeight: 400 }}>
+    <div className="tab-section space-y-4 h-full flex flex-col" style={{ minHeight: 500 }}>
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -526,6 +548,15 @@ export function GraphView() {
           >
             {showAllLabel}
           </Button>
+          <span className="w-px h-5 bg-border mx-0.5" />
+          {GRAPH_THEMES.map(t => (
+            <button key={t.id} onClick={() => setGraphTheme(t.id)}
+              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] transition-all ${graphTheme === t.id ? 'border-primary shadow-sm shadow-primary/30 scale-110' : 'border-border hover:border-muted-foreground'}`}
+              title={t.label}
+            >
+              {t.icon}
+            </button>
+          ))}
         </div>
       </motion.div>
 
@@ -566,10 +597,10 @@ export function GraphView() {
         >
           <defs>
             <pattern id={gridPatternId} width={40} height={40} patternUnits="userSpaceOnUse" patternTransform={`scale(${transform.scale})`}>
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(var(--border))" strokeWidth={0.5} strokeOpacity={0.12} />
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(var(--border))" strokeWidth={0.5} strokeOpacity={themeConfig.gridOpacity} />
             </pattern>
             <filter id={glowFilterId} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feGaussianBlur stdDeviation={themeConfig.glowIntensity} result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
             {ENTITY_TYPES.map(t => {
@@ -605,8 +636,8 @@ export function GraphView() {
                   <path
                     d={buildCurvedEdgePath(source.x, source.y, target.x, target.y, target.radius)}
                     fill="none"
-                    stroke={isHovered ? target.color : edgeColor}
-                    strokeWidth={isHovered ? 2 : 1.2}
+                    stroke={isHovered ? target.color : themeConfig.edgeColor}
+                    strokeWidth={isHovered ? 2 : themeConfig.edgeWidth}
                     strokeOpacity={isHovered ? 0.7 : 0.3}
                     className="transition-all duration-200"
                   />
@@ -614,7 +645,7 @@ export function GraphView() {
                     cx={target.x - (target.x - source.x) * 0.08}
                     cy={target.y - (target.y - source.y) * 0.08}
                     r={2.5}
-                    fill={isHovered ? target.color : edgeColor}
+                    fill={isHovered ? target.color : themeConfig.edgeColor}
                     fillOpacity={isHovered ? 0.8 : 0.4}
                   />
                 </g>
@@ -642,7 +673,7 @@ export function GraphView() {
                     cy={node.y}
                     r={node.radius}
                     fill={node.color}
-                    fillOpacity={isHovered ? 0.35 : 0.2}
+                    fillOpacity={isHovered ? Math.min(themeConfig.nodeOpacity + 0.25, 0.7) : themeConfig.nodeOpacity}
                     stroke={isHovered ? node.color : `${node.color}80`}
                     strokeWidth={isHovered ? 2.5 : 1.5}
                     className="transition-all duration-200"
@@ -674,7 +705,7 @@ export function GraphView() {
                     textAnchor="middle"
                     fill={isHovered ? node.color : 'hsl(var(--foreground))'}
                     fontSize={Math.max(9, Math.min(12, node.radius * 0.28))}
-                    style={{ pointerEvents: 'none', userSelect: 'none', opacity: 0.85, transition: 'color 0.2s' }}
+                    style={{ pointerEvents: 'none', userSelect: 'none', opacity: themeConfig.labelOpacity, transition: 'color 0.2s' }}
                     fontWeight={500}
                   >
                     {truncate(node.label, 14)}

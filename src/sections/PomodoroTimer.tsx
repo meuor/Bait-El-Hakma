@@ -43,12 +43,12 @@ const soundOptions: SoundOption[] = [
   { id: 'rain', label: 'Rain', icon: '🌧', type: 'youtube', youtubeId: 'mPZkdNFkNps', color: '#0ea5e9' },
   { id: 'cafe', label: 'Cafe', icon: '☕', type: 'youtube', youtubeId: 'VMAPTo7RVCo', color: '#f59e0b' },
   { id: 'fire', label: 'Fire Woods', icon: '🔥', type: 'youtube', youtubeId: 'NoE31RWe3oA', color: '#ef4444' },
-  { id: 'forest', label: 'Forest', icon: '🌲', type: 'youtube', youtubeId: '2nMhH0Q0N_k', color: '#22c55e' },
+  { id: 'forest', label: 'Forest Walk', icon: '🚶', type: 'youtube', youtubeId: 'BR7k5ZvIF4I', color: '#22c55e' },
   { id: 'whitenoise', label: 'White Noise', icon: '📡', type: 'generated', color: '#a78bfa' },
   { id: 'brownnoise', label: 'Brown Noise', icon: '〰️', type: 'generated', color: '#8b5cf6' },
   { id: 'night', label: 'Night Sounds', icon: '🌙', type: 'youtube', youtubeId: 'DbQGhJ1flgA', color: '#6366f1' },
-  { id: 'focustime', label: 'Focus Time', icon: '🧠', type: 'youtube', youtubeId: '5jPnFXnA8x8', color: '#a855f7' },
-  { id: 'reading', label: 'Reading', icon: '📖', type: 'youtube', youtubeId: 'etNtZiI5Bbs', color: '#f97316' },
+  { id: 'focustime', label: '432Hz Focus', icon: '🧘', type: 'youtube', youtubeId: 'iYP9BzDiSm0', color: '#a855f7' },
+  { id: 'reading', label: 'Library', icon: '📚', type: 'youtube', youtubeId: 'nB3zRZ-U4n0', color: '#f97316' },
 ];
 
 const themeColors: Record<PomodoroTheme, string> = {
@@ -469,8 +469,8 @@ export function PomodoroTimer() {
         </Badge>
       </div>
 
-      <div className="lg:flex lg:gap-6 lg:items-start justify-center">
-        <div className="w-full lg:w-72 xl:w-80 shrink-0 order-2 lg:order-1">
+      <div className="lg:flex lg:gap-4 lg:items-start justify-center">
+        <div className="w-full lg:flex-1 min-w-0">
           <Card style={{ background: themeBg }}>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2"><Headphones className="w-5 h-5" /> Sounds</CardTitle>
@@ -501,8 +501,8 @@ export function PomodoroTimer() {
           </Card>
         </div>
 
-        <div className="flex-1 min-w-0 space-y-6 order-1 lg:order-2">
         {timerState === 'idle' && sessionType === 'focus' && (
+        <div className="w-full lg:flex-1 min-w-0">
           <Card className="w-full" style={{ background: themeBg }}>
             <CardHeader className="text-center pb-2">
               <CardTitle className="text-lg">Ready to Focus</CardTitle>
@@ -546,9 +546,11 @@ export function PomodoroTimer() {
               )}
             </CardContent>
           </Card>
+        </div>
         )}
 
-      <Card className={`w-full max-w-md mx-auto ${timerState === 'focusEnded' ? 'border-primary/50 ring-1 ring-primary/20' : ''} ${timerState === 'idle' && sessionType === 'focus' ? 'lg:mx-0' : 'lg:mx-auto'}`} style={{ background: themeBg }}>
+        <div className="w-full lg:flex-1 min-w-0">
+      <Card className={`w-full ${timerState === 'focusEnded' ? 'border-primary/50 ring-1 ring-primary/20' : ''}`} style={{ background: themeBg }}>
         <CardHeader className="text-center pb-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             {timerState === 'running' && currentActivity && currentActivity.id ? (
