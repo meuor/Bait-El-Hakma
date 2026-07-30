@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import type { 
   Theme, 
   User, 
@@ -480,6 +480,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'bait-el-hakma-theme';
 const DATA_STORAGE_KEY = 'bait-el-hakma-data';
+const UI_STORAGE_KEY = 'bait-el-hakma-ui';
 const TOKEN_KEY = 'bait-el-hakma-token';
 
 function getToken(): string | null {
@@ -532,6 +533,7 @@ function getSyncKey(action: Action): string | null {
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const isFirstMount = useRef(true);
 
   // Start the periodic sync timer on mount
   useEffect(() => {
@@ -751,12 +753,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // Read local-only state from localStorage so cloud sync doesn't overwrite tab profiles
+      // Read local-only UI state from its own storage key (never overwritten by cloud sync)
       let localTabProfiles = state.tabProfiles;
       let localTabActiveProfile = state.tabActiveProfile;
       let localTabOrder = state.tabOrder;
       try {
-        const stored = localStorage.getItem(DATA_STORAGE_KEY);
+        const stored = localStorage.getItem(UI_STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed.tabProfiles) localTabProfiles = parsed.tabProfiles;
@@ -780,13 +782,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           challenges: loadedState.challenges,
           activityData: state.activityData,
           pinnedItems: state.pinnedItems,
-          tabProfiles: localTabProfiles,
-          tabActiveProfile: localTabActiveProfile,
-          tabOrder: localTabOrder,
         };
         localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(dataToSave));
+        localStorage.setItem(UI_STORAGE_KEY, JSON.stringify({ tabProfiles: localTabProfiles, tabActiveProfile: localTabActiveProfile, tabOrder: localTabOrder }));
       } catch { /* ignore storage errors */ }
-    };
+    }
 
     const loadFromLocalStorage = () => {
       const stored = localStorage.getItem(DATA_STORAGE_KEY);
@@ -836,6 +836,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           console.error('Error loading state from localStorage:', error);
         }
       }
+      // Also load UI preferences (tab order & profiles) from their own storage key
+      try {
+        const stored = localStorage.getItem(UI_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.tabProfiles || parsed.tabActiveProfile || parsed.tabOrder) {
+            dispatch({ type: 'LOAD_STATE', payload: { tabProfiles: parsed.tabProfiles, tabActiveProfile: parsed.tabActiveProfile, tabOrder: parsed.tabOrder } });
+          }
+        }
+      } catch { /* ignore */ }
     };
 
     loadState();
@@ -859,9 +869,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       challenges: state.challenges,
       activityData: state.activityData,
       pinnedItems: state.pinnedItems,
-      tabOrder: state.tabOrder,
-      tabProfiles: state.tabProfiles,
-      tabActiveProfile: state.tabActiveProfile,
       dailyNotes: state.dailyNotes,
       automationRules: state.automationRules,
       propertySchemas: state.propertySchemas,
@@ -878,13 +885,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.challenges,
     state.activityData,
     state.pinnedItems,
-    state.tabOrder,
-    state.tabProfiles,
-    state.tabActiveProfile,
     state.dailyNotes,
     state.automationRules,
     state.propertySchemas,
   ]);
+
+  // Save UI preferences (tab order & profiles) to their own key — never overwritten by cloud data sync
+  // Skip the first mount to avoid overwriting saved profiles with initialState defaults
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    localStorage.setItem(UI_STORAGE_KEY, JSON.stringify({
+      tabOrder: state.tabOrder,
+      tabProfiles: state.tabProfiles,
+      tabActiveProfile: state.tabActiveProfile,
+    }));
+  }, [state.tabOrder, state.tabProfiles, state.tabActiveProfile]);
 
   // Sync a single action to the API
   const syncActionToAPI = useCallback(async (action: Action) => {
