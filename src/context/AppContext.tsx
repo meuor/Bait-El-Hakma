@@ -51,6 +51,7 @@ interface State {
   user: User | null;
   isAuthenticated: boolean;
   currentTab: AppTab;
+  tabOrder: string[];
   pomodoroSettings: PomodoroSettings;
   pomodoroHistory: PomodoroSession[];
   videoSource: VideoSource | null;
@@ -83,6 +84,7 @@ type Action =
   | { type: 'SET_USER'; payload: User | null }
   | { type: 'SET_AUTH'; payload: boolean }
   | { type: 'SET_TAB'; payload: AppTab }
+  | { type: 'SET_TAB_ORDER'; payload: string[] }
   | { type: 'SET_POMODORO_SETTINGS'; payload: PomodoroSettings }
   | { type: 'ADD_POMODORO_SESSION'; payload: PomodoroSession }
   | { type: 'SET_VIDEO_SOURCE'; payload: VideoSource | null }
@@ -166,6 +168,7 @@ const initialState: State = {
   user: null,
   isAuthenticated: false,
   currentTab: 'pomodoro',
+  tabOrder: ['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'daily'],
   pomodoroSettings: defaultPomodoroSettings,
   pomodoroHistory: [],
   videoSource: null,
@@ -225,6 +228,8 @@ function appReducer(state: State, action: Action): State {
       return { ...state, isAuthenticated: action.payload };
     case 'SET_TAB':
       return { ...state, currentTab: action.payload };
+    case 'SET_TAB_ORDER':
+      return { ...state, tabOrder: action.payload };
     case 'SET_POMODORO_SETTINGS':
       return { ...state, pomodoroSettings: action.payload };
     case 'ADD_POMODORO_SESSION':
@@ -808,6 +813,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       challenges: state.challenges,
       activityData: state.activityData,
       pinnedItems: state.pinnedItems,
+      tabOrder: state.tabOrder,
       dailyNotes: state.dailyNotes,
       automationRules: state.automationRules,
       propertySchemas: state.propertySchemas,
