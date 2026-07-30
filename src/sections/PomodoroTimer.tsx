@@ -147,6 +147,7 @@ export function PomodoroTimer() {
 
   const [localAudioUrl, setLocalAudioUrl] = useState<string | null>(null);
   const [localFileName, setLocalFileName] = useState<string>('');
+  const [localAudioPlaying, setLocalAudioPlaying] = useState(false);
   const localAudioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -366,6 +367,7 @@ export function PomodoroTimer() {
       localAudioRef.current.pause();
       localAudioRef.current.src = '';
       localAudioRef.current = null;
+      setLocalAudioPlaying(false);
     }
 
     if (!option || sound === 'none') return;
@@ -379,6 +381,7 @@ export function PomodoroTimer() {
       audio.loop = true;
       audio.play().catch(() => {});
       localAudioRef.current = audio;
+      setLocalAudioPlaying(true);
     }
   }, [pomodoroSettings.selectedSound, localAudioUrl, stopYouTubeSound, stopCurrentSound, startGeneratedNoise, startYouTubeSound]);
 
@@ -452,12 +455,24 @@ export function PomodoroTimer() {
   const incompleteTasks = state.kanbanCards.filter(c => c.columnId !== 'done');
   const currentActivity = activityOptions.find(a => a.id === activityMode);
 
+  const toggleLocalAudio = useCallback(() => {
+    if (!localAudioRef.current) return;
+    if (localAudioRef.current.paused) {
+      localAudioRef.current.play().catch(() => {});
+      setLocalAudioPlaying(true);
+    } else {
+      localAudioRef.current.pause();
+      setLocalAudioPlaying(false);
+    }
+  }, []);
+
   const handleLocalFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setLocalFileName(file.name);
     const url = URL.createObjectURL(file);
     setLocalAudioUrl(url);
+    setLocalAudioPlaying(true);
     dispatch({ type: 'SET_POMODORO_SETTINGS', payload: { ...pomodoroSettings, selectedSound: 'local' } });
   };
 
@@ -504,7 +519,12 @@ export function PomodoroTimer() {
                   <Upload className="w-4 h-4" /> Upload Local Audio
                 </Button>
                 {localAudioUrl && localFileName && (
-                  <div className="mt-2 text-xs text-muted-foreground truncate">Playing: {localFileName}</div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Button variant="ghost" size="icon-sm" onClick={toggleLocalAudio} className="h-6 w-6 shrink-0">
+                      {localAudioPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    </Button>
+                    <span className="text-xs text-muted-foreground truncate">{localFileName}</span>
+                  </div>
                 )}
               </div>
             </CardContent>
