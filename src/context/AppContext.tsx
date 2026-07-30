@@ -830,6 +830,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.challenges,
     state.activityData,
     state.pinnedItems,
+    state.tabOrder,
     state.dailyNotes,
     state.automationRules,
     state.propertySchemas,
