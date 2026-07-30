@@ -60,7 +60,7 @@ export function Header({ user, onLogout }: HeaderProps) {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <img src="/img/Logo3New.png" alt="Bait El-Hakma" className="w-10 h-10 rounded-xl object-cover" />
+          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-10 h-10 rounded-xl object-cover" />
           <div>
             <h1 className="text-xl font-bold tracking-tight">Bait El-Hakma</h1>
             <p className="text-xs text-muted-foreground">House of Wisdom</p>

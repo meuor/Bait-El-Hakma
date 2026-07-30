@@ -67,7 +67,7 @@ export function PublicProfile({ username, onBack }: PublicProfileProps) {
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
         <div className="text-center">
-          <img src="/img/Logo2New.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
+          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
           <p className="text-muted-foreground mb-4">
             The user <span className="font-mono">@{username}</span> doesn't exist.

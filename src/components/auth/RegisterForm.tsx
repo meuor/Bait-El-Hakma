@@ -97,7 +97,7 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
       <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '28rem' }}>
         <Card className="tab-card w-full" style={{ background: 'rgba(7, 3, 18, 0.65)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(139, 92, 246, 0.12)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}>
         <CardHeader className="text-center">
-          <img src="/img/Logo2New.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
+          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <CardTitle className="text-2xl" style={{ color: '#f0ecf8' }}>
             {registered ? 'Account Created!' : 'Create Account'}
           </CardTitle>
