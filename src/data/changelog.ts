@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.6.0';
+export const APP_VERSION = '2.7.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -28,6 +28,18 @@ export const SYNCED_DATA_LABELS: { key: string; label: string; labelAr: string }
 ];
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.7.0',
+    date: 'August 2026',
+    title: 'Tab Order Profiles — Save, Switch, Rename & Delete',
+    titleAr: 'ملفات ترتيب التبويبات — حفظ، تبديل، إعادة تسمية وحذف',
+    changes: [
+      { type: 'new', text: 'Tab order profiles — create named profiles to save different tab layouts and switch between them instantly', textAr: 'ملفات ترتيب التبويبات — أنشئ ملفات مسماة لحفظ تخطيطات تبويبات مختلفة وبدّل بينها فوراً' },
+      { type: 'new', text: 'Profile management — add new profiles, rename existing ones, delete custom profiles', textAr: 'إدارة الملفات — أضف ملفات جديدة، أعد تسمية الموجودة، احذف الملفات المخصصة' },
+      { type: 'improved', text: '"Default" profile is always pinned and cannot be deleted — safe fallback for all users', textAr: 'ملف "Default" مثبت دائماً ولا يمكن حذفه — مرجع آمن لجميع المستخدمين' },
+      { type: 'improved', text: 'Saving tab order automatically updates the active profile', textAr: 'حفظ ترتيب التبويبات يحدّث تلقائياً ملف الترتيب النشط' },
+    ],
+  },
   {
     version: '2.6.0',
     date: 'August 2026',

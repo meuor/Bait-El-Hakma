@@ -52,6 +52,8 @@ interface State {
   isAuthenticated: boolean;
   currentTab: AppTab;
   tabOrder: string[];
+  tabProfiles: { name: string; order: string[] }[];
+  tabActiveProfile: string;
   pomodoroSettings: PomodoroSettings;
   pomodoroHistory: PomodoroSession[];
   videoSource: VideoSource | null;
@@ -85,6 +87,11 @@ type Action =
   | { type: 'SET_AUTH'; payload: boolean }
   | { type: 'SET_TAB'; payload: AppTab }
   | { type: 'SET_TAB_ORDER'; payload: string[] }
+  | { type: 'SET_TAB_PROFILES'; payload: { name: string; order: string[] }[] }
+  | { type: 'SET_ACTIVE_TAB_PROFILE'; payload: string }
+  | { type: 'ADD_TAB_PROFILE'; payload: { name: string; order: string[] } }
+  | { type: 'RENAME_TAB_PROFILE'; payload: { oldName: string; newName: string } }
+  | { type: 'REMOVE_TAB_PROFILE'; payload: string }
   | { type: 'SET_POMODORO_SETTINGS'; payload: PomodoroSettings }
   | { type: 'ADD_POMODORO_SESSION'; payload: PomodoroSession }
   | { type: 'SET_VIDEO_SOURCE'; payload: VideoSource | null }
@@ -169,6 +176,8 @@ const initialState: State = {
   isAuthenticated: false,
   currentTab: 'pomodoro',
   tabOrder: ['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'daily'],
+  tabProfiles: [{ name: 'Default', order: ['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'daily'] }],
+  tabActiveProfile: 'Default',
   pomodoroSettings: defaultPomodoroSettings,
   pomodoroHistory: [],
   videoSource: null,
@@ -230,6 +239,26 @@ function appReducer(state: State, action: Action): State {
       return { ...state, currentTab: action.payload };
     case 'SET_TAB_ORDER':
       return { ...state, tabOrder: action.payload };
+    case 'SET_TAB_PROFILES':
+      return { ...state, tabProfiles: action.payload };
+    case 'SET_ACTIVE_TAB_PROFILE':
+      return { ...state, tabActiveProfile: action.payload };
+    case 'ADD_TAB_PROFILE':
+      return { ...state, tabProfiles: [...state.tabProfiles, action.payload] };
+    case 'RENAME_TAB_PROFILE':
+      return {
+        ...state,
+        tabProfiles: state.tabProfiles.map(p =>
+          p.name === action.payload.oldName ? { ...p, name: action.payload.newName } : p
+        ),
+        tabActiveProfile: state.tabActiveProfile === action.payload.oldName ? action.payload.newName : state.tabActiveProfile,
+      };
+    case 'REMOVE_TAB_PROFILE':
+      return {
+        ...state,
+        tabProfiles: state.tabProfiles.filter(p => p.name !== action.payload),
+        tabActiveProfile: state.tabActiveProfile === action.payload ? 'Default' : state.tabActiveProfile,
+      };
     case 'SET_POMODORO_SETTINGS':
       return { ...state, pomodoroSettings: action.payload };
     case 'ADD_POMODORO_SESSION':
@@ -814,6 +843,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       activityData: state.activityData,
       pinnedItems: state.pinnedItems,
       tabOrder: state.tabOrder,
+      tabProfiles: state.tabProfiles,
+      tabActiveProfile: state.tabActiveProfile,
       dailyNotes: state.dailyNotes,
       automationRules: state.automationRules,
       propertySchemas: state.propertySchemas,
@@ -831,6 +862,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.activityData,
     state.pinnedItems,
     state.tabOrder,
+    state.tabProfiles,
+    state.tabActiveProfile,
     state.dailyNotes,
     state.automationRules,
     state.propertySchemas,
