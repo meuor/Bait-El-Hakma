@@ -20,7 +20,7 @@ import {
   Coffee, Brain, Bed, CheckCircle2, Pin, PinOff, Tv, Youtube,
   BookOpen, Code, Film, Briefcase, GraduationCap, Gamepad2,
   PenLine, Dumbbell, Heart, Lightbulb, Palette, MoreHorizontal,
-  Type, ListChecks, Trash2, Headphones, Upload,
+  Type, ListChecks, Trash2, Headphones,
 } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -149,7 +149,6 @@ export function PomodoroTimer() {
   const [localFileName, setLocalFileName] = useState<string>('');
   const [localAudioPlaying, setLocalAudioPlaying] = useState(false);
   const localAudioRef = useRef<HTMLAudioElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const noiseNodeRef = useRef<AudioScheduledSourceNode | null>(null);
@@ -513,18 +512,23 @@ export function PomodoroTimer() {
                   );
                 })}
               </div>
-              <div className="border-t border-border/50 pt-3">
-                <input ref={fileInputRef} type="file" accept="audio/*" hidden onChange={handleLocalFile} />
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="w-full gap-2 text-xs">
-                  <Upload className="w-4 h-4" /> Upload Local Audio
-                </Button>
-                {localAudioUrl && localFileName && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button variant="ghost" size="icon-sm" onClick={toggleLocalAudio} className="h-6 w-6 shrink-0">
-                      {localAudioPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                    </Button>
-                    <span className="text-xs text-muted-foreground truncate">{localFileName}</span>
-                  </div>
+              <div className="border-t border-border/50 pt-3 space-y-2">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleLocalFile}
+                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-foreground text-muted-foreground shadow-xs hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
+                />
+                {localAudioUrl && (
+                  <audio
+                    controls
+                    src={localAudioUrl}
+                    className="w-full h-8"
+                    onPlay={() => setLocalAudioPlaying(true)}
+                    onPause={() => setLocalAudioPlaying(false)}
+                  >
+                    Your browser does not support the audio element.
+                  </audio>
                 )}
               </div>
             </CardContent>
