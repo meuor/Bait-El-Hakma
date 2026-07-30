@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/logo.png" alt="Bait El-Hakma Logo" width="150" />
+  <img src="public/img/logo.svg" alt="Bait El-Hakma Logo" width="300" />
 </p>
 
 <h1 align="center">Bait El-Hakma</h1>
@@ -40,39 +40,71 @@ Create an account to sync your data across devices. Your data is securely stored
 ## Screenshots
 
 <p align="center">
-  <img src="screenshots/dashboard.png" alt="Dashboard" width="80%" />
+  <img src="public/screenshots/dashboard.png" alt="Dashboard" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/quran-reader.png" alt="Quran Reader" width="80%" />
+  <img src="public/screenshots/quran-reader.png" alt="Quran Reader" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/book-library.png" alt="Book Library" width="80%" />
+  <img src="public/screenshots/book-library.png" alt="Book Library" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/kanban-board.png" alt="Kanban Board" width="80%" />
+  <img src="public/screenshots/kanban-board.png" alt="Kanban Board" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/daily-todo.png" alt="Daily Todo" width="80%" />
+  <img src="public/screenshots/daily-todo.png" alt="Daily Todo" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/pomodoro-timer.png" alt="Pomodoro Timer" width="80%" />
+  <img src="public/screenshots/pomodoro-timer.png" alt="Pomodoro Timer" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/challenge-tracker.png" alt="Challenge Tracker" width="80%" />
+  <img src="public/screenshots/challenge-tracker.png" alt="Challenge Tracker" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/profile.png" alt="Profile" width="80%" />
+  <img src="public/screenshots/profile.png" alt="Profile" width="80%" />
 </p>
 
 <p align="center">
-  <img src="screenshots/activity-stats.png" alt="Activity Statistics" width="80%" />
+  <img src="public/screenshots/activity-stats.png" alt="Activity Statistics" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/pomodoro.png" alt="Pomodoro" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/stats.png" alt="Stats" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/kanban.png" alt="Kanban" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/tasks.png" alt="Tasks" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/focus-video.png" alt="Focus Video" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/inspire.png" alt="Inspire" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/challenges.png" alt="Challenges" width="80%" />
+</p>
+
+<p align="center">
+  <img src="public/screenshots/library.png" alt="Library" width="80%" />
 </p>
 
 ---

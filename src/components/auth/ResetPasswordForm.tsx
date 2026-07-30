@@ -114,7 +114,7 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
       <Card className="tab-card w-full max-w-md">
         <CardHeader className="text-center">
-          <img src="/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
+          <img src="/img/logo-icon.svg" alt="Bait El-Hakma" className="w-16 h-16 mx-auto mb-4" />
           <CardTitle className="text-2xl">
             {codeVerified ? 'New Password' : 'Enter Reset Code'}
           </CardTitle>

@@ -117,7 +117,7 @@ function AppContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
         <div className="text-center">
-          <img src="/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
+          <img src="/img/logo-icon.svg" alt="Bait El-Hakma" className="w-16 h-16 mx-auto mb-4" />
           <Loader2 className="h-8 w-8 animate-spin text-violet-600 mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
