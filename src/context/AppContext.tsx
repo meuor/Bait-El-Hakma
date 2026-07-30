@@ -751,7 +751,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      dispatch({ type: 'LOAD_STATE', payload: { ...loadedState, tabProfiles: state.tabProfiles, tabActiveProfile: state.tabActiveProfile, tabOrder: state.tabOrder } });
+      // Read local-only state from localStorage so cloud sync doesn't overwrite tab profiles
+      let localTabProfiles = state.tabProfiles;
+      let localTabActiveProfile = state.tabActiveProfile;
+      let localTabOrder = state.tabOrder;
+      try {
+        const stored = localStorage.getItem(DATA_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.tabProfiles) localTabProfiles = parsed.tabProfiles;
+          if (parsed.tabActiveProfile) localTabActiveProfile = parsed.tabActiveProfile;
+          if (parsed.tabOrder) localTabOrder = parsed.tabOrder;
+        }
+      } catch { /* ignore */ }
+
+      dispatch({ type: 'LOAD_STATE', payload: { ...loadedState, tabProfiles: localTabProfiles, tabActiveProfile: localTabActiveProfile, tabOrder: localTabOrder } });
 
       // Persist cloud data to localStorage so account switching properly overwrites stale cache
       try {
@@ -766,9 +780,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           challenges: loadedState.challenges,
           activityData: state.activityData,
           pinnedItems: state.pinnedItems,
-          tabProfiles: state.tabProfiles,
-          tabActiveProfile: state.tabActiveProfile,
-          tabOrder: state.tabOrder,
+          tabProfiles: localTabProfiles,
+          tabActiveProfile: localTabActiveProfile,
+          tabOrder: localTabOrder,
         };
         localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(dataToSave));
       } catch { /* ignore storage errors */ }
