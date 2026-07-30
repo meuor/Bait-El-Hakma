@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/img/logo.svg" alt="Bait El-Hakma Logo" width="300" />
+  <img src="public/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma Logo" width="300" />
 </p>
 
 <h1 align="center">Bait El-Hakma</h1>
