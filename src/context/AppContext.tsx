@@ -751,7 +751,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      dispatch({ type: 'LOAD_STATE', payload: loadedState });
+      dispatch({ type: 'LOAD_STATE', payload: { ...loadedState, tabProfiles: state.tabProfiles, tabActiveProfile: state.tabActiveProfile, tabOrder: state.tabOrder } });
 
       // Persist cloud data to localStorage so account switching properly overwrites stale cache
       try {
@@ -766,6 +766,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           challenges: loadedState.challenges,
           activityData: state.activityData,
           pinnedItems: state.pinnedItems,
+          tabProfiles: state.tabProfiles,
+          tabActiveProfile: state.tabActiveProfile,
+          tabOrder: state.tabOrder,
         };
         localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(dataToSave));
       } catch { /* ignore storage errors */ }
