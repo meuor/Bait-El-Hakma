@@ -868,11 +868,12 @@ export function QuranReader() {
           <Button
             variant="outline"
             size="icon"
-            className="fixed bottom-24 right-6 z-40 shadow-lg"
+            className="fixed bottom-24 right-6 z-40 shadow-lg hover:bg-primary/20 hover:border-primary/40 transition-all"
             onClick={() => {
               const container = containerRef.current?.closest('.overflow-auto');
               container?.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            title="Back to top"
           >
             <ChevronUp className="w-4 h-4" />
           </Button>
