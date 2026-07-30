@@ -3,7 +3,7 @@ import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Timer, LayoutGrid, Library,
   Cloud, Sparkles, ArrowRight, ChevronRight, X,
-  Star, Headphones, Brain, Heart, Quote,
+  Star, Headphones, Brain, Heart,
 } from 'lucide-react';
 import { WallpaperBackground } from './WallpaperBackground';
 import './LandingPage.css';
@@ -200,16 +200,16 @@ function DailyPreview() {
 }
 
 const screenshots = [
-  { preview: <img src="/screenshots/pomodoro.png" alt="Pomodoro" className="w-full h-full object-cover" />, title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player', size: 'tall' },
-  { preview: <img src="/screenshots/focus-video.png" alt="Focus Video" className="w-full h-full object-cover" />, title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate', size: 'wide' },
-  { preview: <img src="/screenshots/kanban.png" alt="Kanban" className="w-full h-full object-cover" />, title: 'Kanban', desc: 'Drag-and-drop task management board', size: 'square' },
-  { preview: <img src="/screenshots/library.png" alt="Library" className="w-full h-full object-cover" />, title: 'Library', desc: 'Track books with progress & notes', size: 'square' },
-  { preview: <img src="/screenshots/tasks.png" alt="Tasks" className="w-full h-full object-cover" />, title: 'Tasks', desc: 'Daily todos with priority & categories', size: 'tall' },
-  { preview: <img src="/screenshots/stats.png" alt="Stats" className="w-full h-full object-cover" />, title: 'Stats', desc: 'Activity analytics & focus breakdown', size: 'square' },
-  { preview: <img src="/screenshots/inspire.png" alt="Inspire" className="w-full h-full object-cover" />, title: 'Inspire', desc: 'Quran, hadith & daily quotes', size: 'square' },
-  { preview: <img src="/screenshots/challenges.png" alt="Challenges" className="w-full h-full object-cover" />, title: 'Challenges', desc: 'Build habits with streaks & achievements', size: 'wide' },
-  { preview: <GraphPreview />, title: 'Graph', desc: 'Visual entity relationship network', size: 'square' },
-  { preview: <DailyPreview />, title: 'Daily', desc: 'Daily notes with Hijri calendar', size: 'tall' },
+  { preview: <img src="/screenshots/pomodoro.png" alt="Pomodoro" className="w-full h-full object-cover" />, src: '/screenshots/pomodoro.png', title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player', size: 'tall' },
+  { preview: <img src="/screenshots/focus-video.png" alt="Focus Video" className="w-full h-full object-cover" />, src: '/screenshots/focus-video.png', title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate', size: 'wide' },
+  { preview: <img src="/screenshots/kanban.png" alt="Kanban" className="w-full h-full object-cover" />, src: '/screenshots/kanban.png', title: 'Kanban', desc: 'Drag-and-drop task management board', size: 'square' },
+  { preview: <img src="/screenshots/library.png" alt="Library" className="w-full h-full object-cover" />, src: '/screenshots/library.png', title: 'Library', desc: 'Track books with progress & notes', size: 'square' },
+  { preview: <img src="/screenshots/tasks.png" alt="Tasks" className="w-full h-full object-cover" />, src: '/screenshots/tasks.png', title: 'Tasks', desc: 'Daily todos with priority & categories', size: 'tall' },
+  { preview: <img src="/screenshots/stats.png" alt="Stats" className="w-full h-full object-cover" />, src: '/screenshots/stats.png', title: 'Stats', desc: 'Activity analytics & focus breakdown', size: 'square' },
+  { preview: <img src="/screenshots/inspire.png" alt="Inspire" className="w-full h-full object-cover" />, src: '/screenshots/inspire.png', title: 'Inspire', desc: 'Quran, hadith & daily quotes', size: 'square' },
+  { preview: <img src="/screenshots/challenges.png" alt="Challenges" className="w-full h-full object-cover" />, src: '/screenshots/challenges.png', title: 'Challenges', desc: 'Build habits with streaks & achievements', size: 'wide' },
+  { preview: <GraphPreview />, src: null, title: 'Graph', desc: 'Visual entity relationship network', size: 'square' },
+  { preview: <DailyPreview />, src: null, title: 'Daily', desc: 'Daily notes with Hijri calendar', size: 'tall' },
 ];
 
 // Live animating timer for the landing page
@@ -417,6 +417,49 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </div>
       </section>
 
+      {/* Arabic Introduction */}
+      <section className="arabic-intro">
+        <FadeInSection>
+          <div className="arabic-intro-ornament" />
+          <motion.div
+            className="arabic-intro-content"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="arabic-intro-decoration">
+              <span className="arabic-intro-deco-line" />
+              <span className="arabic-intro-deco-diamond">◆</span>
+              <span className="arabic-intro-deco-line" />
+            </div>
+            <p className="arabic-intro-arabic">
+              بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+            </p>
+            <p className="arabic-intro-translation">
+              In the Name of Allah, the Most Gracious, the Most Merciful
+            </p>
+            <div className="arabic-intro-divider" />
+            <h3 className="arabic-into-title-ar">
+              بيت الحكمة
+            </h3>
+            <p className="arabic-intro-sub-ar">
+              — حَيْثُ يَلْتَقِي الْعِلْمُ بِالْإِيمَانِ —
+            </p>
+            <p className="arabic-intro-english">
+              A digital sanctuary where knowledge meets faith. Read, learn, track your progress,
+              and build lasting habits — all in one beautifully crafted space, free forever.
+            </p>
+            <div className="arabic-intro-decoration">
+              <span className="arabic-intro-deco-line" />
+              <span className="arabic-intro-deco-diamond">◆</span>
+              <span className="arabic-intro-deco-line" />
+            </div>
+          </motion.div>
+          <div className="arabic-intro-ornament arabic-intro-ornament-bottom" />
+        </FadeInSection>
+      </section>
+
       {/* Features */}
       <section className="landing-features" id="features">
         <FadeInSection>
@@ -493,7 +536,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <motion.div
               key={i}
               className={`landing-showcase-item landing-showcase-${s.size}`}
-              onClick={() => { if (s.title !== 'Focus Timer') { setLightboxImg('#'); setLightboxTitle(s.title); } }}
+              onClick={() => { if (s.src) { setLightboxImg(s.src); setLightboxTitle(s.title); } }}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: '-50px' }}

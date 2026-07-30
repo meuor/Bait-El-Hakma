@@ -358,6 +358,112 @@
   letter-spacing: 0.05em;
 }
 
+/* ---------- Arabic Introduction ---------- */
+.arabic-intro {
+  padding: 5rem 2rem;
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.arabic-intro-ornament {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
+  margin: 0 auto 1rem;
+}
+
+.arabic-intro-ornament-bottom {
+  margin: 1rem auto 0;
+}
+
+.arabic-intro-content {
+  padding: 3rem 2rem;
+  background: rgba(18, 8, 42, 0.3);
+  border: 1px solid rgba(139, 92, 246, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.arabic-intro-decoration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.arabic-intro-decoration:last-child {
+  margin-bottom: 0;
+  margin-top: 2rem;
+}
+
+.arabic-intro-deco-line {
+  display: block;
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.4), transparent);
+}
+
+.arabic-intro-deco-diamond {
+  color: rgba(212, 168, 83, 0.5);
+  font-size: 0.6rem;
+}
+
+.arabic-intro-arabic {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.6;
+  color: #d4a853;
+  direction: rtl;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.arabic-intro-translation {
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  color: #8a82a0;
+  font-style: italic;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+.arabic-intro-divider {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.2), transparent);
+  margin: 0 auto 1.5rem;
+}
+
+.arabic-into-title-ar {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  color: #c4a8fa;
+  direction: rtl;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
+
+.arabic-intro-sub-ar {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+  color: #a78bfa;
+  direction: rtl;
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+.arabic-intro-english {
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  color: #9a92b0;
+  line-height: 1.8;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
 /* ---------- Section Headers ---------- */
 .landing-section-header {
   text-align: center;
