@@ -2,6 +2,9 @@ import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ZoomIn, ZoomOut, RotateCcw, Search, Network } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { LinkRef, EntityType, AppTab } from '@/types';
 
 interface GraphNode {
@@ -109,19 +112,20 @@ function runForceSimulation(nodes: GraphNode[], edges: GraphEdge[], cx: number, 
   }
 }
 
-function buildArrowHead(x1: number, y1: number, x2: number, y2: number, r2: number): string {
+function buildCurvedEdgePath(x1: number, y1: number, x2: number, y2: number, r2: number): string {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const dist = Math.sqrt(dx * dx + dy * dy) || 1;
   const ux = dx / dist;
   const uy = dy / dist;
-  const tipX = x2 - ux * (r2 + 6);
-  const tipY = y2 - uy * (r2 + 6);
-  const bx = tipX - ux * 10;
-  const by = tipY - uy * 10;
-  const px = -uy * 5;
-  const py = ux * 5;
-  return `${tipX},${tipY} ${bx + px},${by + py} ${bx - px},${by - py}`;
+  const tipX = x2 - ux * (r2 + 2);
+  const tipY = y2 - uy * (r2 + 2);
+  const midX = (x1 + tipX) / 2;
+  const midY = (y1 + tipY) / 2;
+  const offset = Math.min(dist * 0.15, 40);
+  const nx = -uy * offset;
+  const ny = ux * offset;
+  return `M ${x1} ${y1} Q ${midX + nx} ${midY + ny} ${tipX} ${tipY}`;
 }
 
 export function GraphView() {
@@ -260,7 +264,6 @@ export function GraphView() {
   }, [edges, filteredNodeIds]);
 
   const edgeColor = 'hsl(var(--border))';
-  const nodeOpacity = 0.2;
 
   const toggleType = (t: string) => {
     setFilterTypes(prev => {
@@ -375,19 +378,13 @@ export function GraphView() {
         transformStartX: 0, transformStartY: 0,
         lastMoveTime: 0, lastMoveX: 0, lastMoveY: 0,
       };
-    } else if (e.button === 1 || (e.button === 0 && (e.shiftKey || e.altKey))) {
+    } else {
       dragRef.current = {
         node: null, startX: 0, startY: 0, nodeX: 0, nodeY: 0,
         panning: true,
         panStartX: e.clientX, panStartY: e.clientY,
         transformStartX: transform.x, transformStartY: transform.y,
         lastMoveTime: Date.now(), lastMoveX: e.clientX, lastMoveY: e.clientY,
-      };
-    } else {
-      dragRef.current = {
-        node: null, startX: 0, startY: 0, nodeX: 0, nodeY: 0,
-        panning: false, panStartX: 0, panStartY: 0, transformStartX: 0, transformStartY: 0,
-        lastMoveTime: 0, lastMoveX: 0, lastMoveY: 0,
       };
     }
   }, [filteredNodes, transform]);
@@ -468,6 +465,7 @@ export function GraphView() {
   }, []);
 
   const allActive = filterTypes.size === ENTITY_TYPES.length;
+  const showAllLabel = allActive ? 'Hide All' : 'Show All';
 
   const gridPatternId = 'graph-grid';
   const glowFilterId = 'node-glow';
@@ -475,16 +473,42 @@ export function GraphView() {
   const handleZoomIn = () => zoomTo(transform.scale * 1.3);
   const handleZoomOut = () => zoomTo(transform.scale * 0.7);
 
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const n of filteredNodes) {
+      counts[n.type] = (counts[n.type] || 0) + 1;
+    }
+    return counts;
+  }, [filteredNodes]);
+
   return (
     <div className="tab-section space-y-4 h-full flex flex-col" style={{ minHeight: 400 }}>
-      <div className="flex flex-wrap items-center gap-2">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Network className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Knowledge Graph</h2>
+          </div>
+          <div className="relative flex-1 min-w-[160px] max-w-[260px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search nodes..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }} className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap gap-1.5">
           {ENTITY_TYPES.map(t => (
             <Button
               key={t}
               variant={filterTypes.has(t) ? 'default' : 'outline'}
               size="sm"
-              className="text-xs h-7"
+              className="text-xs h-7 px-2.5"
               style={filterTypes.has(t) ? { backgroundColor: TYPE_CONFIG[t]?.color } : { borderColor: TYPE_CONFIG[t]?.color, color: TYPE_CONFIG[t]?.color }}
               onClick={() => toggleType(t)}
             >
@@ -494,38 +518,38 @@ export function GraphView() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs h-7"
+            className="text-xs h-7 px-2"
             onClick={() => {
               if (allActive) setFilterTypes(new Set());
               else setFilterTypes(new Set(ENTITY_TYPES));
             }}
           >
-            {allActive ? 'Hide All' : 'Show All'}
+            {showAllLabel}
           </Button>
         </div>
-        <div className="flex-1 min-w-[140px] max-w-[260px]">
-          <Input
-            placeholder="Search nodes..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="h-7 text-xs"
-          />
-        </div>
-      </div>
+      </motion.div>
 
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground px-1">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }} className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         {ENTITY_TYPES.map(t => (
-          <span key={t} className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: TYPE_CONFIG[t]?.color }} />
-            {TYPE_LABELS[t]}
+          <span key={t} className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_CONFIG[t]?.color }} />
+            <span>{TYPE_LABELS[t]}</span>
+            {typeCounts[t] !== undefined && (
+              <span className="text-[10px] opacity-60">({typeCounts[t]})</span>
+            )}
           </span>
         ))}
-        <span className="text-xs text-muted-foreground ml-auto">{filteredNodes.length} nodes, {filteredEdges.length} edges</span>
-      </div>
+        <span className="ml-auto text-[11px] font-medium text-foreground/70">
+          {filteredNodes.length} node{filteredNodes.length !== 1 ? 's' : ''} &middot; {filteredEdges.length} edge{filteredEdges.length !== 1 ? 's' : ''}
+        </span>
+      </motion.div>
 
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.35, delay: 0.1 }}
         ref={containerRef}
-        className="flex-1 relative overflow-hidden rounded-lg border bg-card"
+        className="flex-1 relative overflow-hidden rounded-xl border bg-card/40 backdrop-blur-[2px]"
         style={{ minHeight: 400 }}
       >
         <svg
@@ -542,22 +566,30 @@ export function GraphView() {
         >
           <defs>
             <pattern id={gridPatternId} width={40} height={40} patternUnits="userSpaceOnUse" patternTransform={`scale(${transform.scale})`}>
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(var(--border))" strokeWidth={0.5} strokeOpacity={0.15} />
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(var(--border))" strokeWidth={0.5} strokeOpacity={0.12} />
             </pattern>
             <filter id={glowFilterId} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feGaussianBlur stdDeviation="5" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
             {ENTITY_TYPES.map(t => {
               const c = TYPE_CONFIG[t]?.color || '#666';
               return (
-                <radialGradient key={t} id={`grad-${t}`} cx="35%" cy="35%" r="65%">
-                  <stop offset="0%" stopColor={c} stopOpacity="0.4" />
-                  <stop offset="70%" stopColor={c} stopOpacity="0.15" />
-                  <stop offset="100%" stopColor={c} stopOpacity="0.05" />
+                <radialGradient key={t} id={`grad-${t}`} cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor={c} stopOpacity="0.5" />
+                  <stop offset="60%" stopColor={c} stopOpacity="0.15" />
+                  <stop offset="100%" stopColor={c} stopOpacity="0" />
                 </radialGradient>
               );
             })}
+            <filter id="node-inner-shadow">
+              <feOffset dx="0" dy="1" />
+              <feGaussianBlur stdDeviation="1.5" result="offset-blur" />
+              <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+              <feFlood floodColor="black" floodOpacity="0.3" result="color" />
+              <feComposite operator="in" in="color" in2="inverse" result="shadow" />
+              <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+            </filter>
           </defs>
 
           <rect width="100%" height="100%" fill={`url(#${gridPatternId})`} />
@@ -567,34 +599,42 @@ export function GraphView() {
               const source = nodes.find(n => n.id === edge.source);
               const target = nodes.find(n => n.id === edge.target);
               if (!source || !target) return null;
+              const isHovered = hoveredNode && (hoveredNode.id === edge.source || hoveredNode.id === edge.target);
               return (
                 <g key={`edge-${i}`}>
-                  <line
-                    x1={source.x}
-                    y1={source.y}
-                    x2={target.x}
-                    y2={target.y}
-                    stroke={edgeColor}
-                    strokeWidth={1.5}
-                    strokeOpacity={0.4}
+                  <path
+                    d={buildCurvedEdgePath(source.x, source.y, target.x, target.y, target.radius)}
+                    fill="none"
+                    stroke={isHovered ? target.color : edgeColor}
+                    strokeWidth={isHovered ? 2 : 1.2}
+                    strokeOpacity={isHovered ? 0.7 : 0.3}
+                    className="transition-all duration-200"
                   />
-                  <polygon
-                    points={buildArrowHead(source.x, source.y, target.x, target.y, target.radius)}
-                    fill={edgeColor}
-                    fillOpacity={0.4}
+                  <circle
+                    cx={target.x - (target.x - source.x) * 0.08}
+                    cy={target.y - (target.y - source.y) * 0.08}
+                    r={2.5}
+                    fill={isHovered ? target.color : edgeColor}
+                    fillOpacity={isHovered ? 0.8 : 0.4}
                   />
                 </g>
               );
             })}
 
-            {filteredNodes.map(node => {
-              const config = TYPE_CONFIG[node.type];
+            {filteredNodes.map((node, idx) => {
+              const isHovered = hoveredNode?.id === node.id;
               return (
-                <g key={node.id} style={{ cursor: 'pointer' }}>
+                <motion.g
+                  key={node.id}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: idx * 0.008 }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r={node.radius + 4}
+                    r={node.radius + 8}
                     fill={`url(#grad-${node.type})`}
                   />
                   <circle
@@ -602,31 +642,44 @@ export function GraphView() {
                     cy={node.y}
                     r={node.radius}
                     fill={node.color}
-                    fillOpacity={nodeOpacity}
-                    stroke={node.color}
-                    strokeWidth={2}
+                    fillOpacity={isHovered ? 0.35 : 0.2}
+                    stroke={isHovered ? node.color : `${node.color}80`}
+                    strokeWidth={isHovered ? 2.5 : 1.5}
+                    className="transition-all duration-200"
+                    filter={isHovered ? `url(#${glowFilterId})` : undefined}
                   />
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r={node.radius - 4}
+                    r={node.radius - 5}
                     fill="none"
                     stroke={node.color}
                     strokeWidth={1}
-                    strokeOpacity={0.3}
+                    strokeOpacity={0.2}
                   />
+                  {node.backlinkCount > 0 && (
+                    <circle
+                      cx={node.x + node.radius * 0.5}
+                      cy={node.y - node.radius * 0.5}
+                      r={6}
+                      fill="hsl(var(--background))"
+                      stroke={node.color}
+                      strokeWidth={1}
+                      strokeOpacity={0.5}
+                    />
+                  )}
                   <text
                     x={node.x}
-                    y={node.y + node.radius + 12}
+                    y={node.y + node.radius + 14}
                     textAnchor="middle"
-                    fill="hsl(var(--foreground))"
+                    fill={isHovered ? node.color : 'hsl(var(--foreground))'}
                     fontSize={Math.max(9, Math.min(12, node.radius * 0.28))}
-                    style={{ pointerEvents: 'none', userSelect: 'none', opacity: 0.85 }}
+                    style={{ pointerEvents: 'none', userSelect: 'none', opacity: 0.85, transition: 'color 0.2s' }}
                     fontWeight={500}
                   >
                     {truncate(node.label, 14)}
                   </text>
-                </g>
+                </motion.g>
               );
             })}
           </g>
@@ -637,63 +690,71 @@ export function GraphView() {
           <Button
             variant="secondary"
             size="icon"
-            className="h-8 w-8 shadow-md bg-background/90 backdrop-blur-sm hover:bg-background"
+            className="h-8 w-8 shadow-md bg-background/80 backdrop-blur-sm hover:bg-background"
             onClick={handleZoomIn}
             title="Zoom in"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <ZoomIn className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="secondary"
             size="icon"
-            className="h-8 w-8 shadow-md bg-background/90 backdrop-blur-sm hover:bg-background"
+            className="h-8 w-8 shadow-md bg-background/80 backdrop-blur-sm hover:bg-background"
             onClick={handleZoomOut}
             title="Zoom out"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <ZoomOut className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="secondary"
             size="icon"
-            className="h-8 w-8 shadow-md bg-background/90 backdrop-blur-sm hover:bg-background"
+            className="h-8 w-8 shadow-md bg-background/80 backdrop-blur-sm hover:bg-background"
             onClick={resetView}
             title="Reset view"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <RotateCcw className="w-3.5 h-3.5" />
           </Button>
         </div>
 
         {/* Node count badge */}
-        <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-background/80 backdrop-blur-sm border text-[11px] text-muted-foreground">
-          {filteredNodes.length} node{filteredNodes.length !== 1 ? 's' : ''} · {transform.scale.toFixed(1)}x
+        <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md bg-background/70 backdrop-blur-sm border text-[11px] text-muted-foreground flex items-center gap-2">
+          <span>{filteredNodes.length} node{filteredNodes.length !== 1 ? 's' : ''}</span>
+          <span className="w-px h-3 bg-border" />
+          <span>{transform.scale.toFixed(1)}x</span>
         </div>
 
-        {hoveredNode && (
-          <div
-            className="absolute z-50 bg-popover border border-border rounded-md shadow-xl px-3 py-2 text-xs pointer-events-none backdrop-blur-sm"
-            style={{ left: tooltipPos.x, top: tooltipPos.y }}
-          >
-            <div
-              className="font-semibold text-sm mb-0.5"
-              style={{ color: hoveredNode.color }}
-            >
-              {hoveredNode.label}
-            </div>
-            <div className="text-muted-foreground">
-              <span className="inline-block w-2 h-2 rounded-full mr-1" style={{ backgroundColor: hoveredNode.color }} />
-              {TYPE_LABELS[hoveredNode.type] || hoveredNode.type}
-            </div>
-            {hoveredNode.tags.length > 0 && (
-              <div className="text-muted-foreground mt-0.5">
-                Tags: {hoveredNode.tags.join(', ')}
-              </div>
-            )}
-            <div className="text-muted-foreground">
-              Links: {hoveredNode.backlinkCount}
+        {/* Empty state */}
+        {filteredNodes.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center text-muted-foreground">
+              <Network className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No nodes match your filters</p>
+              {searchQuery && (
+                <p className="text-xs mt-1 opacity-60">Try a different search term</p>
+              )}
             </div>
           </div>
         )}
-      </div>
+
+        {hoveredNode && (
+          <div
+            className="absolute z-50 bg-popover/95 border border-border/60 rounded-lg shadow-xl px-3 py-2.5 text-xs pointer-events-none backdrop-blur-md"
+            style={{ left: tooltipPos.x, top: tooltipPos.y }}
+          >
+            <div className="font-semibold text-sm mb-1 flex items-center gap-1.5" style={{ color: hoveredNode.color }}>
+              <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ backgroundColor: hoveredNode.color }} />
+              {hoveredNode.label}
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground">
+              <span>Type: {TYPE_LABELS[hoveredNode.type] || hoveredNode.type}</span>
+              <span>Links: {hoveredNode.backlinkCount}</span>
+              {hoveredNode.tags.length > 0 && (
+                <span className="col-span-2 truncate max-w-[200px]">Tags: {hoveredNode.tags.join(', ')}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.3.0';
+export const APP_VERSION = '2.4.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -28,6 +28,19 @@ export const SYNCED_DATA_LABELS: { key: string; label: string; labelAr: string }
 ];
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.4.0',
+    date: 'July 2026',
+    title: 'Knowledge Graph Redesign & Pomodoro Sounds Panel',
+    titleAr: 'إعادة تصميم الرسم البياني للمعرفة ولوحة أصوات بومودورو',
+    changes: [
+      { type: 'improved', text: 'Knowledge Graph redesigned — curved edges, animated node entrance, left-click pan, glass-morphism toolbar', textAr: 'إعادة تصميم الرسم البياني — حواف منحنية، دخول متحرك للعقد، تحريك بالضغط الأيسر، شريط أدوات زجاجي' },
+      { type: 'new', text: 'Dedicated background sounds panel in Pomodoro — always-visible side panel replaces popover picker', textAr: 'لوحة أصوات خلفية مخصصة في بومودورو — لوحة جانبية مرئية دائمًا بدلاً من المنتقي المنبثق' },
+      { type: 'new', text: 'Local audio upload — choose audio files from your PC as background sounds in Pomodoro', textAr: 'رفع صوت محلي — اختر ملفات صوتية من جهازك كأصوات خلفية في بومودورو' },
+      { type: 'new', text: 'Focus Time and Reading ambient sound options added to Pomodoro', textAr: 'إضافة خيارات أصوات محيطة للتركيز والقراءة في بومودورو' },
+      { type: 'fixed', text: 'Fixed Forest and Night Sounds YouTube links in Pomodoro', textAr: 'إصلاح روابط يوتيوب للغابة وأصوات الليل في بومودورو' },
+    ],
+  },
   {
     version: '2.3.0',
     date: 'July 2026',
