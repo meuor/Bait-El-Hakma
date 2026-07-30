@@ -17,6 +17,7 @@ import { BookLibrary } from '@/sections/BookLibrary';
 import { DailyTodo } from '@/sections/DailyTodo';
 import { ActivityStats } from '@/sections/ActivityStats';
 import { Motivation } from '@/sections/Motivation';
+import { HelpGuide } from '@/sections/HelpGuide';
 import { ChallengeTracker } from '@/sections/ChallengeTracker';
 import { Toaster } from '@/components/ui/sonner';
 import { SyncStatus } from '@/components/SyncStatus';
@@ -184,7 +185,7 @@ function AppContent() {
       {!state.isMinimized && (
         <main className="flex-1 container mx-auto px-4 py-6 overflow-auto">
           <AnimatePresenceWrapper currentTab={currentTab}>
-            {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'daily', 'profile'] as const).map((tab) => (
+            {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'daily', 'profile', 'help'] as const).map((tab) => (
               <TabPanel key={tab} tab={tab} currentTab={currentTab}>
                 {tab === 'pomodoro' && <PomodoroTimer />}
                 {tab === 'video' && <VideoPlayer />}
@@ -202,6 +203,7 @@ function AppContent() {
                     onLogout={handleLogout}
                   />
                 )}
+                {tab === 'help' && <HelpGuide />}
               </TabPanel>
             ))}
           </AnimatePresenceWrapper>

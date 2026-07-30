@@ -353,7 +353,8 @@ export type AppTab =
   | 'motivation' 
   | 'challenges'
   | 'profile'
-  | 'daily';
+  | 'daily'
+  | 'help';
 
 export interface TabConfig {
   id: AppTab;

@@ -155,15 +155,15 @@ export function MiniPlayer() {
                 size="icon"
                 className="h-7 w-7"
                 onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  dispatch({ type: 'SET_TIMER_DISPLAY', payload: { ...timerDisplay!, isRunning: !timerDisplay!.isRunning } });
-                }}
-              >
-                {timerDisplay!.isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              </Button>
-            )}
-          </div>
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dispatch({ type: 'TOGGLE_TIMER' });
+                  }}
+                >
+                  {timerDisplay!.isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                </Button>
+              )}
+            </div>
         </div>
       </Card>
     );
@@ -229,7 +229,7 @@ export function MiniPlayer() {
                       onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
-                        dispatch({ type: 'SET_TIMER_DISPLAY', payload: { ...timerDisplay!, isRunning: !timerDisplay!.isRunning } });
+                        dispatch({ type: 'TOGGLE_TIMER' });
                       }}
                     >
                       {timerDisplay!.isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}

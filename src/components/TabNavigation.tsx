@@ -14,8 +14,8 @@ import {
   Sparkles,
   Trophy,
   UserCircle,
-
   Calendar,
+  HelpCircle,
 } from 'lucide-react';
 
 interface Tab {
@@ -85,6 +85,12 @@ const tabs: Tab[] = [
     label: 'Profile',
     icon: <UserCircle className="w-5 h-5" />,
     description: 'Your account and settings',
+  },
+  {
+    id: 'help',
+    label: 'Help',
+    icon: <HelpCircle className="w-5 h-5" />,
+    description: 'User guide and documentation',
   },
 ];
 

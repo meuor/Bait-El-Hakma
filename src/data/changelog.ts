@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.4.0';
+export const APP_VERSION = '2.5.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -28,6 +28,19 @@ export const SYNCED_DATA_LABELS: { key: string; label: string; labelAr: string }
 ];
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.5.0',
+    date: 'July 2026',
+    title: 'Pinned Timer Fix, Help Guide & UI Improvements',
+    titleAr: 'إصلاح الموقت المثبت، دليل المساعدة وتحسينات الواجهة',
+    changes: [
+      { type: 'fixed', text: 'Pinned timer pause/resume now works — global TOGGLE_TIMER action MiniPlayer can dispatch', textAr: 'إصلاح إيقاف/استئناف الموقت المثبت — إجراء TOGGLE_TIMER عالمي يمكن لـ MiniPlayer إرساله' },
+      { type: 'fixed', text: 'YouTube sound links verified — 432Hz Focus, Library, Forest Walk now use reliable URLs', textAr: 'التحقق من روابط يوتيوب — 432Hz Focus و Library و Forest Walk تستخدم روابط موثوقة الآن' },
+      { type: 'fixed', text: 'Link to Task dropdown shows Kanban tasks grouped by category instead of random todos', textAr: 'قائمة ربط المهمة تعرض مهام كانبان مجمعة حسب الفئة بدلاً من المهام العشوائية' },
+      { type: 'new', text: 'Close (X) button on Quick Capture FAB expanded card', textAr: 'إضافة زر إغلاق (X) على بطاقة الالتقاط السريع الموسعة' },
+      { type: 'new', text: 'In-app Help Guide — comprehensive manual covering all app features with keyboard shortcuts', textAr: 'دليل مساعدة مدمج — دليل شامل يغطي جميع ميزات التطبيق مع اختصارات لوحة المفاتيح' },
+    ],
+  },
   {
     version: '2.4.0',
     date: 'July 2026',

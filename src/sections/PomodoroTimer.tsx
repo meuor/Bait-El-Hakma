@@ -43,12 +43,12 @@ const soundOptions: SoundOption[] = [
   { id: 'rain', label: 'Rain', icon: '🌧', type: 'youtube', youtubeId: 'mPZkdNFkNps', color: '#0ea5e9' },
   { id: 'cafe', label: 'Cafe', icon: '☕', type: 'youtube', youtubeId: 'VMAPTo7RVCo', color: '#f59e0b' },
   { id: 'fire', label: 'Fire Woods', icon: '🔥', type: 'youtube', youtubeId: 'NoE31RWe3oA', color: '#ef4444' },
-  { id: 'forest', label: 'Forest Walk', icon: '🚶', type: 'youtube', youtubeId: 'BR7k5ZvIF4I', color: '#22c55e' },
+  { id: 'forest', label: 'Forest Walk', icon: '🚶', type: 'youtube', youtubeId: 'EaR9TVPMEeY', color: '#22c55e' },
   { id: 'whitenoise', label: 'White Noise', icon: '📡', type: 'generated', color: '#a78bfa' },
   { id: 'brownnoise', label: 'Brown Noise', icon: '〰️', type: 'generated', color: '#8b5cf6' },
   { id: 'night', label: 'Night Sounds', icon: '🌙', type: 'youtube', youtubeId: 'DbQGhJ1flgA', color: '#6366f1' },
-  { id: 'focustime', label: '432Hz Focus', icon: '🧘', type: 'youtube', youtubeId: 'iYP9BzDiSm0', color: '#a855f7' },
-  { id: 'reading', label: 'Library', icon: '📚', type: 'youtube', youtubeId: 'nB3zRZ-U4n0', color: '#f97316' },
+  { id: 'focustime', label: '432Hz Focus', icon: '🧘', type: 'youtube', youtubeId: '2CWLYLUowaQ', color: '#a855f7' },
+  { id: 'reading', label: 'Library', icon: '📚', type: 'youtube', youtubeId: 'lhEITbnKzU4', color: '#f97316' },
 ];
 
 const themeColors: Record<PomodoroTheme, string> = {
@@ -186,6 +186,15 @@ export function PomodoroTimer() {
       dispatch({ type: 'SET_TIMER_DISPLAY', payload: null });
     }
   }, [timerState, timeLeft, totalTime, sessionType, dispatch]);
+
+  useEffect(() => {
+    if (state.timerToggle === 0) return;
+    if (timerState === 'running') {
+      setTimerState('paused');
+    } else if (timerState === 'paused') {
+      setTimerState('running');
+    }
+  }, [state.timerToggle, timerState]);
 
   const videoUrlRef = useRef<string | null>(null);
   useEffect(() => {
@@ -440,6 +449,7 @@ export function PomodoroTimer() {
   const todaySessions = pomodoroHistory.filter(s => new Date(s.startTime).toDateString() === today && s.type === 'focus');
   const todayFocusMinutes = todaySessions.reduce((acc, s) => acc + s.duration, 0);
   const incompleteTodos = todos.filter(t => !t.completed);
+  const incompleteTasks = state.kanbanCards.filter(c => c.columnId !== 'done');
   const currentActivity = activityOptions.find(a => a.id === activityMode);
 
   const handleLocalFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -531,19 +541,26 @@ export function PomodoroTimer() {
                   <Input id="session-name" placeholder="What are you working on?" value={customName} onChange={(e) => setCustomName(e.target.value)} className="pl-9" />
                 </div>
               </div>
-              {incompleteTodos.length > 0 && (
-                <div>
-                  <Label htmlFor="link-task" className="text-xs text-muted-foreground mb-1.5 block">Link to Task</Label>
-                  <div className="relative">
-                    <ListChecks className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-                    <select id="link-task" value={linkedTaskId} onChange={(e) => setLinkedTaskId(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                      <option value="">No task</option>
-                      {incompleteTodos.map(t => <option key={t.id} value={t.id}>{t.content}</option>)}
-                    </select>
-                  </div>
+              <div>
+                <Label htmlFor="link-task" className="text-xs text-muted-foreground mb-1.5 block">Link to Task</Label>
+                <div className="relative">
+                  <ListChecks className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+                  <select id="link-task" value={linkedTaskId} onChange={(e) => setLinkedTaskId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    <option value="">No task</option>
+                    {incompleteTasks.length > 0 && (
+                      <optgroup label="Kanban Tasks">
+                        {incompleteTasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                      </optgroup>
+                    )}
+                    {incompleteTodos.length > 0 && (
+                      <optgroup label="Todos">
+                        {incompleteTodos.map(t => <option key={t.id} value={t.id}>{t.content}</option>)}
+                      </optgroup>
+                    )}
+                  </select>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </div>

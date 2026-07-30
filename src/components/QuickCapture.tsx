@@ -3,7 +3,7 @@ import { useApp } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Hash, ListTodo, BookOpen, Timer, StickyNote, Columns3, Zap } from 'lucide-react';
+import { Plus, Hash, ListTodo, BookOpen, Timer, StickyNote, Columns3, Zap, X } from 'lucide-react';
 import type { UniversalTag } from '@/types';
 
 type QuickType = 'todo' | 'book' | 'session' | 'note' | 'task';
@@ -296,6 +296,15 @@ export function QuickCapture() {
                 onClick={handleSubmit}
               >
                 <Zap className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setIsOpen(false)}
+                className="text-muted-foreground hover:text-foreground"
+                title="Close"
+              >
+                <X className="h-4 w-4" />
               </Button>
             </div>
 

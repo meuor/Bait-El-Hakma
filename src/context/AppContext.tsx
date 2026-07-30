@@ -66,6 +66,7 @@ interface State {
   lastApiError: string | null;
   dataSource: 'api' | 'local';
   timerDisplay: TimerDisplay | null;
+  timerToggle: number;
   activeVideo: ActiveVideo | null;
   pinnedItems: PinnedItems;
   pinnedPositions: PinnedPositions;
@@ -110,6 +111,7 @@ type Action =
   | { type: 'CLEAR_SYNC_ERRORS' }
   | { type: 'SET_DATA_SOURCE'; payload: 'api' | 'local' }
   | { type: 'SET_TIMER_DISPLAY'; payload: TimerDisplay | null }
+  | { type: 'TOGGLE_TIMER' }
   | { type: 'SET_ACTIVE_VIDEO'; payload: ActiveVideo | null }
   | { type: 'TOGGLE_PIN'; payload: keyof PinnedItems }
   | { type: 'SET_PIN_POSITION'; payload: { key: keyof PinnedPositions; position: { x: number; y: number } } }
@@ -179,6 +181,7 @@ const initialState: State = {
   lastApiError: null,
   dataSource: 'local',
   timerDisplay: null,
+  timerToggle: 0,
   activeVideo: null,
   pinnedItems: { timer: false, localVideo: false, youtubeVideo: false },
   pinnedPositions: { timer: { x: 0, y: 0 }, localVideo: { x: 0, y: 0 }, youtubeVideo: { x: 0, y: 0 } },
@@ -316,6 +319,8 @@ function appReducer(state: State, action: Action): State {
       return { ...state, dataSource: action.payload };
     case 'SET_TIMER_DISPLAY':
       return { ...state, timerDisplay: action.payload };
+    case 'TOGGLE_TIMER':
+      return { ...state, timerToggle: Date.now() };
     case 'SET_ACTIVE_VIDEO':
       return { ...state, activeVideo: action.payload };
     case 'TOGGLE_PIN':
