@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.5.0';
+export const APP_VERSION = '2.6.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -29,8 +29,20 @@ export const SYNCED_DATA_LABELS: { key: string; label: string; labelAr: string }
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.6.0',
+    date: 'August 2026',
+    title: 'Tab Reordering, Drag-and-Drop & Native Audio Player',
+    titleAr: 'إعادة ترتيب التبويبات، السحب والإفلات ومشغل الصوت الأصلي',
+    changes: [
+      { type: 'new', text: 'Tab reordering — rearrange section tabs via drag-and-drop; Profile and Help stay pinned at the end', textAr: 'إعادة ترتيب التبويبات — رتب أقسامك بالسحب والإفلات؛ الملف الشخصي والمساعدة مثبتان في النهاية' },
+      { type: 'new', text: 'Native audio file picker with browser controls — choose and play audio files directly in the Pomodoro sounds panel', textAr: 'منتقي ملفات صوتي أصلي مع عناصر تحكم المتصفح — اختر وشغل ملفات صوتية مباشرة في لوحة أصوات بومودورو' },
+      { type: 'fixed', text: 'Tab order now persists across page refreshes and syncs to local storage', textAr: 'ترتيب التبويبات يُحفظ الآن بعد تحديث الصفحة ويُزامن مع التخزين المحلي' },
+      { type: 'improved', text: 'TabOrderDialog redesigned with HTML5 drag-and-drop, order numbers, reset button, and shadcn Tooltip', textAr: 'إعادة تصميم حوار ترتيب التبويبات مع السحب والإفلات HTML5، أرقام الترتيب، زر إعادة التعيين، وتلميح أدوات shadcn' },
+    ],
+  },
+  {
     version: '2.5.0',
-    date: 'July 2026',
+    date: 'August 2026',
     title: 'Pinned Timer Fix, Help Guide & UI Improvements',
     titleAr: 'إصلاح الموقت المثبت، دليل المساعدة وتحسينات الواجهة',
     changes: [
