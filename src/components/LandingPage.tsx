@@ -3,8 +3,9 @@ import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Timer, LayoutGrid, Library,
   Cloud, Sparkles, ArrowRight, ChevronRight, X,
-  Star, Headphones, Brain, Heart,
+  Star, Headphones, Brain, Heart, Quote,
 } from 'lucide-react';
+import { WallpaperBackground } from './WallpaperBackground';
 import './LandingPage.css';
 
 interface LandingPageProps {
@@ -297,28 +298,9 @@ function Counter({ end, suffix = '', duration = 2 }: { end: number; suffix?: str
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
-const wallpapers = [
-  'https://w.wallhaven.cc/full/rq/wallhaven-rq215j.png',
-  'https://w.wallhaven.cc/full/5g/wallhaven-5gqpx8.png',
-  'https://w.wallhaven.cc/full/nz/wallhaven-nzy5rw.jpg',
-  'https://w.wallhaven.cc/full/73/wallhaven-73rppe.jpg',
-  'https://w.wallhaven.cc/full/l8/wallhaven-l8og6p.png',
-  'https://w.wallhaven.cc/full/1q/wallhaven-1q13w3.png',
-  'https://w.wallhaven.cc/full/je/wallhaven-je15pp.png',
-  'https://w.wallhaven.cc/full/nz/wallhaven-nzee1o.jpg',
-];
-
 export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [lightboxTitle, setLightboxTitle] = useState('');
-  const [wallpaperIndex, setWallpaperIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setWallpaperIndex(prev => (prev + 1) % wallpapers.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <div className="landing">
@@ -354,86 +336,85 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </div>
       </motion.nav>
 
-      {/* Hero */}
+      {/* Hero - Redesigned */}
       <section className="landing-hero">
-        <div className="landing-wallpaper">
-          {wallpapers.map((url, i) => (
-            <div
-              key={url}
-              className={`landing-wallpaper-slide${i === wallpaperIndex ? ' active' : ''}`}
-              style={{ backgroundImage: `url(${url})` }}
-            />
-          ))}
-          <div className="landing-wallpaper-overlay" />
-        </div>
+        <WallpaperBackground />
         <div className="landing-hero-glow" />
-        <motion.div
-          className="landing-hero-badge"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <span className="landing-hero-badge-dot" />
-          <Sparkles className="w-3.5 h-3.5" />
-          Free & Open — No ads, no tracking
-        </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-        >
-          <span className="gradient-text">Bait El-Hakma</span>
-          <span className="arabic-text">بيت الحكمة</span>
-        </motion.h1>
+        {/* Decorative floating elements */}
+        <div className="hero-deco hero-deco-1" />
+        <div className="hero-deco hero-deco-2" />
+        <div className="hero-deco hero-deco-3" />
 
-        <motion.p
-          className="landing-hero-sub"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-        >
-          Your intelligent productivity companion. Read the Quran with audio, manage tasks,
-          track books, build habits — all beautifully designed and securely synced.
-        </motion.p>
+        <div className="hero-glass-card">
+          <motion.div
+            className="hero-badge"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <span className="hero-badge-dot" />
+            <Sparkles className="w-3.5 h-3.5" />
+            Free & Open — No ads, no tracking
+          </motion.div>
 
-        <motion.div
-          className="landing-hero-actions"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.5 }}
-        >
-          <motion.button className="landing-btn-primary" onClick={onRegister} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            Get Started Free <ArrowRight className="w-5 h-5" />
-          </motion.button>
-          <motion.button className="landing-btn-secondary" onClick={onLogin} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            Sign In <ChevronRight className="w-5 h-5" />
-          </motion.button>
-        </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+          >
+            <span className="hero-title-gradient">Bait El-Hakma</span>
+            <span className="hero-title-arabic">بيت الحكمة</span>
+          </motion.h1>
 
-        <motion.div
-          className="landing-hero-stats"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.6 }}
-        >
-          <div className="landing-hero-stat">
-            <div className="landing-hero-stat-num">114</div>
-            <div className="landing-hero-stat-label">Surahs</div>
-          </div>
-          <div className="landing-hero-stat">
-            <div className="landing-hero-stat-num">6,236</div>
-            <div className="landing-hero-stat-label">Ayahs</div>
-          </div>
-          <div className="landing-hero-stat">
-            <div className="landing-hero-stat-num">13</div>
-            <div className="landing-hero-stat-label">Reciters</div>
-          </div>
-          <div className="landing-hero-stat">
-            <div className="landing-hero-stat-num">8</div>
-            <div className="landing-hero-stat-label">Tools</div>
-          </div>
-        </motion.div>
+          <motion.p
+            className="hero-subtitle"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+          >
+            Your intelligent productivity companion. Read the Quran with audio, manage tasks,
+            track books, build habits — all beautifully designed and securely synced.
+          </motion.p>
+
+          <motion.div
+            className="hero-actions"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.5 }}
+          >
+            <motion.button className="landing-btn-primary" onClick={onRegister} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              Get Started Free <ArrowRight className="w-5 h-5" />
+            </motion.button>
+            <motion.button className="landing-btn-secondary" onClick={onLogin} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              Sign In <ChevronRight className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
+
+          <motion.div
+            className="hero-stats"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+          >
+            <div className="hero-stat">
+              <div className="hero-stat-num">114</div>
+              <div className="hero-stat-label">Surahs</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-num">6,236</div>
+              <div className="hero-stat-label">Ayahs</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-num">13</div>
+              <div className="hero-stat-label">Reciters</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-num">8</div>
+              <div className="hero-stat-label">Tools</div>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* Features */}

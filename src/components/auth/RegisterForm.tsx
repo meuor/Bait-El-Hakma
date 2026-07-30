@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { WallpaperBackground } from '@/components/WallpaperBackground';
 
 interface RegisterFormProps {
   onLogin: (user: AuthUser, token: string) => void;
@@ -91,14 +92,16 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
-      <Card className="tab-card w-full max-w-md">
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <WallpaperBackground />
+      <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '28rem' }}>
+        <Card className="tab-card w-full" style={{ background: 'rgba(7, 3, 18, 0.65)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(139, 92, 246, 0.12)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}>
         <CardHeader className="text-center">
           <img src="/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
-          <CardTitle className="text-2xl">
+          <CardTitle className="text-2xl" style={{ color: '#f0ecf8' }}>
             {registered ? 'Account Created!' : 'Create Account'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription style={{ color: '#8a82a0' }}>
             {registered 
               ? `Welcome ${registeredName}! Your data will be synced to the cloud.`
               : 'Start your productivity journey today'
@@ -256,6 +259,7 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
           </form>
         )}
       </Card>
+      </div>
     </motion.div>
   );
 }
