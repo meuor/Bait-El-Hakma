@@ -20,12 +20,35 @@ import {
   Coffee, Brain, Bed, CheckCircle2, Pin, PinOff, Tv, Youtube,
   BookOpen, Code, Film, Briefcase, GraduationCap, Gamepad2,
   PenLine, Dumbbell, Heart, Lightbulb, Palette, MoreHorizontal,
-  Type, ListChecks, Trash2,
+  Type, ListChecks, Trash2, Music, Headphones,
 } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import type { PomodoroSession, TimerState, ActivityMode, PomodoroTheme } from '@/types';
+import type { PomodoroSession, TimerState, ActivityMode, PomodoroTheme, BackgroundSoundId } from '@/types';
+
+interface SoundOption {
+  id: BackgroundSoundId;
+  label: string;
+  icon: string;
+  type: 'youtube' | 'generated';
+  youtubeId?: string;
+  color: string;
+}
+
+const soundOptions: SoundOption[] = [
+  { id: 'none', label: 'None', icon: '🔇', type: 'generated', color: '#6b6380' },
+  { id: 'nasheed1', label: 'Nasheed 1', icon: '🎵', type: 'youtube', youtubeId: '0RR1GLQ65Vs', color: '#d4a853' },
+  { id: 'nasheed2', label: 'Nasheed 2', icon: '🎵', type: 'youtube', youtubeId: 'nWPnLX0deGw', color: '#d4a853' },
+  { id: 'rain', label: 'Rain', icon: '🌧', type: 'youtube', youtubeId: 'mPZkdNFkNps', color: '#0ea5e9' },
+  { id: 'cafe', label: 'Cafe', icon: '☕', type: 'youtube', youtubeId: 'VMAPTo7RVCo', color: '#f59e0b' },
+  { id: 'fire', label: 'Fire Woods', icon: '🔥', type: 'youtube', youtubeId: 'NoE31RWe3oA', color: '#ef4444' },
+  { id: 'forest', label: 'Forest', icon: '🌲', type: 'youtube', youtubeId: 'Qm0isN8I5eM', color: '#22c55e' },
+  { id: 'whitenoise', label: 'White Noise', icon: '📡', type: 'generated', color: '#a78bfa' },
+  { id: 'brownnoise', label: 'Brown Noise', icon: '〰️', type: 'generated', color: '#8b5cf6' },
+  { id: 'night', label: 'Night Sounds', icon: '🌙', type: 'youtube', youtubeId: 'VsX3LQ8lVo0', color: '#6366f1' },
+  { id: 'lain', label: 'Serial Experiments Lain', icon: '👁', type: 'youtube', youtubeId: 'H97x5PLFaY4', color: '#ec4899' },
+];
 
 const themeColors: Record<PomodoroTheme, string> = {
   classic: '#8b5cf6',
@@ -120,6 +143,12 @@ export function PomodoroTimer() {
   const [activityMode, setActivityMode] = useState<ActivityMode | ''>('');
   const [customName, setCustomName] = useState('');
   const [linkedTaskId, setLinkedTaskId] = useState('');
+
+  const [showSoundPicker, setShowSoundPicker] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const noiseNodeRef = useRef<AudioScheduledSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const youtubeAudioRef = useRef<HTMLIFrameElement | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionStartTime = useRef<Date | null>(null);
@@ -249,6 +278,93 @@ export function PomodoroTimer() {
       return () => clearInterval(id);
     }
   }, [timerState]);
+
+  // --- Background Sound Playback ---
+  const stopCurrentSound = useCallback(() => {
+    try {
+      noiseNodeRef.current?.stop?.();
+      noiseNodeRef.current?.disconnect?.();
+    } catch {}
+    noiseNodeRef.current = null;
+    gainNodeRef.current?.disconnect?.();
+    gainNodeRef.current = null;
+    if (audioContextRef.current?.state !== 'closed') {
+      audioContextRef.current?.close();
+    }
+    audioContextRef.current = null;
+  }, []);
+
+  const startGeneratedNoise = useCallback((type: 'whitenoise' | 'brownnoise') => {
+    stopCurrentSound();
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioContextRef.current = ctx;
+    const bufferSize = ctx.sampleRate * 5;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      if (type === 'brownnoise') {
+        lastOut = (lastOut + 0.02 * white) / 1.02;
+        data[i] = lastOut * 3.5;
+      } else {
+        data[i] = white * 0.4;
+      }
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.3;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+    noiseNodeRef.current = source;
+    gainNodeRef.current = gain;
+  }, [stopCurrentSound]);
+
+  const soundIframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const stopYouTubeSound = useCallback(() => {
+    if (soundIframeRef.current) {
+      soundIframeRef.current.remove();
+      soundIframeRef.current = null;
+    }
+  }, []);
+
+  const startYouTubeSound = useCallback((youtubeId: string) => {
+    stopYouTubeSound();
+    stopCurrentSound();
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0`;
+    iframe.style.cssText = 'position:fixed;bottom:-100px;left:-100px;width:1px;height:1px;opacity:0;pointer-events:none;';
+    iframe.allow = 'autoplay';
+    document.body.appendChild(iframe);
+    soundIframeRef.current = iframe;
+  }, [stopYouTubeSound, stopCurrentSound]);
+
+  useEffect(() => {
+    const sound = pomodoroSettings.selectedSound;
+    const option = soundOptions.find(s => s.id === sound);
+    if (!option || sound === 'none') {
+      stopYouTubeSound();
+      stopCurrentSound();
+      return;
+    }
+    if (option.type === 'youtube' && option.youtubeId) {
+      startYouTubeSound(option.youtubeId);
+    } else if (option.type === 'generated' && sound !== 'none') {
+      stopYouTubeSound();
+      startGeneratedNoise(sound as 'whitenoise' | 'brownnoise');
+    }
+  }, [pomodoroSettings.selectedSound, stopYouTubeSound, stopCurrentSound, startGeneratedNoise, startYouTubeSound]);
+
+  useEffect(() => {
+    return () => {
+      stopYouTubeSound();
+      stopCurrentSound();
+    };
+  }, [stopYouTubeSound, stopCurrentSound]);
 
   const startTimer = useCallback(() => {
     if (timerState === 'idle' || timerState === 'paused') {
@@ -447,11 +563,35 @@ export function PomodoroTimer() {
             </div>
           )}
 
-          <div className="flex items-center justify-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setSoundEnabled(!soundEnabled)} className={soundEnabled ? 'text-primary' : 'text-muted-foreground'}>
-              {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </Button>
-            <Dialog open={showSettings} onOpenChange={setShowSettings}>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center justify-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => setSoundEnabled(!soundEnabled)} className={soundEnabled ? 'text-primary' : 'text-muted-foreground'} title="Timer beep sounds">
+                {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+              </Button>
+              <div className="relative">
+                <Button variant={showSoundPicker ? 'default' : 'ghost'} size="sm" onClick={() => setShowSoundPicker(!showSoundPicker)} className="gap-2 text-xs">
+                  <Headphones className="w-4 h-4" />
+                  {pomodoroSettings.selectedSound !== 'none' ? soundOptions.find(s => s.id === pomodoroSettings.selectedSound)?.label || 'Sound' : 'Sound'}
+                </Button>
+                {showSoundPicker && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 rounded-xl border bg-popover shadow-xl z-50" style={{ backdropFilter: 'blur(12px)' }}>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {soundOptions.map(s => {
+                        const isActive = pomodoroSettings.selectedSound === s.id;
+                        return (
+                          <button key={s.id} onClick={() => { dispatch({ type: 'SET_POMODORO_SETTINGS', payload: { ...pomodoroSettings, selectedSound: s.id } }); setShowSoundPicker(false); }}
+                            className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all ${isActive ? 'bg-primary/20 ring-1 ring-primary/40' : 'hover:bg-accent/50'}`}>
+                            <span style={{ fontSize: '1rem' }}>{s.icon}</span>
+                            <span className={isActive ? 'text-primary font-medium' : 'text-muted-foreground'}>{s.label}</span>
+                            {s.type === 'youtube' && <Youtube className="w-3 h-3 ml-auto text-muted-foreground/50" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <Dialog open={showSettings} onOpenChange={setShowSettings}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon"><Settings2 className="w-5 h-5" /></Button>
               </DialogTrigger>
@@ -526,6 +666,7 @@ export function PomodoroTimer() {
                 </div>
               </DialogContent>
             </Dialog>
+          </div>
           </div>
         </CardContent>
       </Card>

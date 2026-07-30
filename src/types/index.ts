@@ -69,6 +69,8 @@ export const pomodoroThemes: PomodoroThemeConfig[] = [
   { id: 'amber', label: 'Amber', ringColor: '#f59e0b', bgFrom: 'from-amber-500/10', bgTo: 'to-yellow-500/10' },
 ];
 
+export type BackgroundSoundId = 'none' | 'nasheed1' | 'nasheed2' | 'rain' | 'cafe' | 'fire' | 'forest' | 'whitenoise' | 'brownnoise' | 'night' | 'lain';
+
 export interface PomodoroSettings {
   focusTime: number;
   shortBreak: number;
@@ -79,6 +81,7 @@ export interface PomodoroSettings {
   soundEnabled: boolean;
   videoSyncEnabled: boolean;
   theme: PomodoroTheme;
+  selectedSound: BackgroundSoundId;
 }
 
 export interface PomodoroSession {

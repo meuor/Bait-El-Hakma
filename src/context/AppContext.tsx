@@ -137,6 +137,7 @@ const defaultPomodoroSettings: PomodoroSettings = {
   soundEnabled: true,
   videoSyncEnabled: false,
   theme: 'classic',
+  selectedSound: 'none',
 };
 
 // Default Kanban Columns
