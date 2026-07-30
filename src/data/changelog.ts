@@ -39,6 +39,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       { type: 'new', text: 'Local audio upload — choose audio files from your PC as background sounds in Pomodoro', textAr: 'رفع صوت محلي — اختر ملفات صوتية من جهازك كأصوات خلفية في بومودورو' },
       { type: 'new', text: 'Focus Time and Reading ambient sound options added to Pomodoro', textAr: 'إضافة خيارات أصوات محيطة للتركيز والقراءة في بومودورو' },
       { type: 'fixed', text: 'Fixed Forest and Night Sounds YouTube links in Pomodoro', textAr: 'إصلاح روابط يوتيوب للغابة وأصوات الليل في بومودورو' },
+      { type: 'improved', text: 'Graph section removed — Knowledge Graph tab and component deleted to simplify navigation', textAr: 'إزالة قسم الرسم البياني — حذف تبويب الرسم البياني والمكون لتبسيط التنقل' },
     ],
   },
   {

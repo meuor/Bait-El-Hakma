@@ -14,7 +14,7 @@ import {
   Sparkles,
   Trophy,
   UserCircle,
-  GitFork,
+
   Calendar,
 } from 'lucide-react';
 
@@ -73,12 +73,6 @@ const tabs: Tab[] = [
     label: 'Challenges',
     icon: <Trophy className="w-5 h-5" />,
     description: 'Track your 100-day challenges',
-  },
-  {
-    id: 'graph',
-    label: 'Graph',
-    icon: <GitFork className="w-5 h-5" />,
-    description: 'Interactive knowledge graph',
   },
   {
     id: 'daily',

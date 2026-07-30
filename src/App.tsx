@@ -25,7 +25,7 @@ import { LandingPage } from '@/components/LandingPage';
 import { WhatsNew, useWhatsNewAutoShow } from '@/components/WhatsNew';
 import { CommandPalette } from '@/components/CommandPalette';
 import { QuickCapture } from '@/components/QuickCapture';
-import { GraphView } from '@/sections/GraphView';
+
 import { DailyNotes } from '@/sections/DailyNotes';
 import { syncManager } from '@/lib/SyncManager';
 import { motion } from 'framer-motion';
@@ -184,7 +184,7 @@ function AppContent() {
       {!state.isMinimized && (
         <main className="flex-1 container mx-auto px-4 py-6 overflow-auto">
           <AnimatePresenceWrapper currentTab={currentTab}>
-            {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'graph', 'daily', 'profile'] as const).map((tab) => (
+            {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'daily', 'profile'] as const).map((tab) => (
               <TabPanel key={tab} tab={tab} currentTab={currentTab}>
                 {tab === 'pomodoro' && <PomodoroTimer />}
                 {tab === 'video' && <VideoPlayer />}
@@ -194,7 +194,6 @@ function AppContent() {
                 {tab === 'stats' && <ActivityStats />}
                 {tab === 'motivation' && <Motivation />}
                 {tab === 'challenges' && <ChallengeTracker />}
-                {tab === 'graph' && <GraphView />}
                 {tab === 'daily' && <DailyNotes />}
                 {tab === 'profile' && (
                   <ProfilePage
