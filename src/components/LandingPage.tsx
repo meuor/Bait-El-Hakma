@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { motion, useInView, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   BookOpen, Timer, LayoutGrid, Library,
   Cloud, Sparkles, ArrowRight, ChevronRight, X,
-  Star, Headphones, Brain, Heart,
+  Star, Headphones, Brain, Heart, Check,
+  Zap, Globe, Shield, Download, Monitor,
 } from 'lucide-react';
-import { WallpaperBackground } from './WallpaperBackground';
 import './LandingPage.css';
 
 interface LandingPageProps {
@@ -72,190 +72,16 @@ const features = [
   },
 ];
 
-// Inline feature preview SVGs — Graph & Daily still use SVGs (no screenshot yet)
-function GraphPreview() {
-  const colors = ['#8b5cf6','#22c55e','#f59e0b','#3b82f6','#ef4444','#0ea5e9','#ec4899','#d4a853'];
-  const nodes = [
-    { x: 60, y: 50 }, { x: 190, y: 30 }, { x: 120, y: 100 },
-    { x: 320, y: 80 }, { x: 250, y: 150 }, { x: 80, y: 190 },
-    { x: 170, y: 220 }, { x: 300, y: 230 }, { x: 45, y: 120 },
-    { x: 350, y: 170 }, { x: 200, y: 290 }, { x: 130, y: 310 },
-  ];
-  const edges = [
-    [0,2],[2,1],[1,3],[2,4],[4,5],[5,6],[6,7],[3,7],[0,8],[8,5],[4,9],[9,7],[6,10],[10,11],[8,10],
-  ];
-  return (
-    <svg viewBox="0 0 380 400" className="w-full h-full">
-      <rect width="380" height="400" fill="#0a0518" rx="8" />
-      {/* Search bar */}
-      <rect x="10" y="10" width="360" height="30" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(139,92,246,0.08)" strokeWidth="0.5" />
-      <text x="24" y="30" fill="#5a5270" fontSize="8">🔍 Search nodes...</text>
-      {/* Filter chips */}
-      {['Book','Todo','Card','Pomo','Chall'].map((f,i) => (
-        <g key={i}>
-          <rect x={10 + i * 74} y="48" width="68" height="20" rx="6" fill={i<3?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.03)'} />
-          <text x={44 + i * 74} y="62" textAnchor="middle" fill={i<3?'#a78bfa':'#5a5270'} fontSize="6.5" fontWeight="bold">{f}</text>
-        </g>
-      ))}
-      {/* Graph canvas */}
-      <rect x="10" y="76" width="360" height="310" rx="8" fill="rgba(255,255,255,0.01)" />
-      {/* Grid dots */}
-      {Array.from({ length: 80 }, (_, i) => (
-        <circle key={i} cx={20 + (i%10)*36} cy={90 + Math.floor(i/10)*34} r="1" fill="rgba(139,92,246,0.06)" />
-      ))}
-      {/* Edges */}
-      {edges.map((e, i) => {
-        const s = nodes[e[0]], t = nodes[e[1]];
-        return (
-          <g key={i}>
-            <line x1={s.x} y1={s.y} x2={t.x} y2={t.y} stroke="rgba(139,92,246,0.15)" strokeWidth="1" />
-          </g>
-        );
-      })}
-      {/* Nodes */}
-      {nodes.map((n, i) => (
-        <g key={i}>
-          <circle cx={n.x} cy={n.y} r={8 + (i%3)*4} fill={colors[i]} fillOpacity="0.2" stroke={colors[i]} strokeWidth="1.5" />
-          <circle cx={n.x} cy={n.y} r={3} fill={colors[i]} />
-          <text x={n.x} y={n.y + 18} textAnchor="middle" fill="#8a82a0" fontSize="4.5">
-            {['Quran','Tasks','Books','Stats','Notes','Goals','Habits','Journal','Focus','Links','Ideas','Todos'][i]}
-          </text>
-        </g>
-      ))}
-      {/* Zoom controls */}
-      <rect x="334" y="88" width="24" height="24" rx="6" fill="rgba(18,8,42,0.8)" stroke="rgba(139,92,246,0.1)" strokeWidth="0.5" />
-      <text x="346" y="106" textAnchor="middle" fill="#8a82a0" fontSize="12">+</text>
-      <rect x="334" y="116" width="24" height="24" rx="6" fill="rgba(18,8,42,0.8)" stroke="rgba(139,92,246,0.1)" strokeWidth="0.5" />
-      <text x="346" y="134" textAnchor="middle" fill="#8a82a0" fontSize="12">−</text>
-      {/* Legend */}
-      <text x="16" y="370" fill="#8a82a0" fontSize="6">12 nodes · 15 connections</text>
-      {['●','●','●','●','●'].map((d,i) => (
-        <text key={i} x={140 + i * 44} y={370} fill={colors[i]} fontSize="6">{d} {['Bk','Td','Kb','Po','Ch'][i]}</text>
-      ))}
-    </svg>
-  );
-}
-
-function DailyPreview() {
-  const days = Array.from({ length: 35 }, (_, i) => ({
-    d: i + 1, isToday: i === 16, hasContent: i % 3 === 0, isWeekend: i % 7 === 5 || i % 7 === 6,
-  }));
-  return (
-    <svg viewBox="0 0 380 400" className="w-full h-full">
-      <rect width="380" height="400" fill="#0a0518" rx="8" />
-      {/* Date header */}
-      <rect x="10" y="10" width="360" height="44" rx="8" fill="rgba(139,92,246,0.06)" />
-      <text x="24" y="30" fill="#c8c4d8" fontSize="11" fontWeight="bold">Daily Notes</text>
-      <text x="24" y="44" fill="#8a82a0" fontSize="7">Wednesday, July 29, 2026 · 17 Rajab 1447</text>
-      <rect x="280" y="16" width="80" height="20" rx="6" fill="rgba(139,92,246,0.12)" />
-      <text x="320" y="31" textAnchor="middle" fill="#a78bfa" fontSize="7">◀  Today  ▶</text>
-      {/* Mini calendar grid */}
-      <text x="16" y="72" fill="#c8c4d8" fontSize="8" fontWeight="bold">Rajab 1447</text>
-      {['Sat','Sun','Mon','Tue','Wed','Thu','Fri'].map((d,i) => (
-        <text key={i} x={24 + i * 48} y="86" fill="#5a5270" fontSize="6" textAnchor="middle">{d}</text>
-      ))}
-      {days.slice(0, 35).map((day, i) => (
-        <g key={i}>
-          <rect x={16 + (i%7)*48} y={92 + Math.floor(i/7)*26} width="40" height="22" rx="5"
-            fill={day.isToday ? 'rgba(139,92,246,0.2)' : day.hasContent ? 'rgba(255,255,255,0.03)' : 'transparent'}
-            stroke={day.isToday ? 'rgba(139,92,246,0.4)' : 'none'} strokeWidth="1" />
-          <text x={36 + (i%7)*48} y={106 + Math.floor(i/7)*26} textAnchor="middle"
-            fill={day.isToday ? '#a78bfa' : day.isWeekend ? '#5a5270' : '#8a82a0'} fontSize="7" fontWeight={day.isToday?'bold':'normal'}>{day.d}</text>
-          {day.hasContent && <circle cx={56 + (i%7)*48} cy={110 + Math.floor(i/7)*26} r="2" fill="#8b5cf6" opacity="0.5" />}
-        </g>
-      ))}
-      {/* Notes area */}
-      <rect x="10" y="220" width="360" height="170" rx="8" fill="rgba(255,255,255,0.02)" />
-      <text x="24" y="240" fill="#c8c4d8" fontSize="9" fontWeight="bold">Today's Notes</text>
-      {/* Note blocks */}
-      {[
-        { t: 'Quran Reading', c: 'Completed Juz 1 review. Focus on tajweed.', time: '08:30', tag: 'ibadah' },
-        { t: 'Project Update', c: 'API integration done. Need to test edge cases.', time: '10:15', tag: 'work' },
-        { t: 'Study Session', c: 'React 19 features: use() hook and actions.', time: '14:00', tag: 'learning' },
-      ].map((n, i) => (
-        <g key={i}>
-          <rect x={18} y={248 + i * 44} width="344" height="38" rx="5" fill="rgba(255,255,255,0.02)" />
-          <rect x={18} y={248 + i * 44} width="3" height="38" rx="1.5" fill={['#d4a853','#8b5cf6','#22c55e'][i]} opacity="0.5" />
-          <text x={28} y={262 + i * 44} fill="#c8c4d8" fontSize="7.5" fontWeight="bold">{n.t}</text>
-          <text x={280} y={262 + i * 44} fill="#5a5270" fontSize="6">{n.time}</text>
-          <text x={28} y={276 + i * 44} fill="#8a82a0" fontSize="6.5">{n.c}</text>
-          <rect x={310} y={270 + i * 44} width="40" height="10" rx="3" fill="rgba(139,92,246,0.08)" />
-          <text x={330} y={278 + i * 44} textAnchor="middle" fill="#a78bfa" fontSize="5">{n.tag}</text>
-        </g>
-      ))}
-      {/* Add note */}
-      <rect x="18" y="338" width="344" height="28" rx="6" fill="none" stroke="rgba(139,92,246,0.08)" strokeWidth="0.5" strokeDasharray="3,3" />
-      <text x="28" y="357" fill="#5a5270" fontSize="7">+ Write a new note...</text>
-      {/* Tags section */}
-      <rect x="18" y="368" width="80" height="16" rx="4" fill="rgba(212,168,83,0.1)" />
-      <text x="58" y="380" textAnchor="middle" fill="#d4a853" fontSize="5">#ibadah</text>
-      <rect x="104" y="368" width="60" height="16" rx="4" fill="rgba(139,92,246,0.1)" />
-      <text x="134" y="380" textAnchor="middle" fill="#a78bfa" fontSize="5">#work</text>
-      <rect x="170" y="368" width="70" height="16" rx="4" fill="rgba(34,197,94,0.1)" />
-      <text x="205" y="380" textAnchor="middle" fill="#22c55e" fontSize="5">#learning</text>
-      <rect x="300" y="368" width="60" height="16" rx="4" fill="rgba(245,158,11,0.1)" />
-      <text x="330" y="380" textAnchor="middle" fill="#f59e0b" fontSize="5">+ Add tag</text>
-    </svg>
-  );
-}
-
 const screenshots = [
-  { preview: <img src="/screenshots/pomodoro.png" alt="Pomodoro" className="w-full h-full object-cover" />, src: '/screenshots/pomodoro.png', title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player', size: 'tall' },
-  { preview: <img src="/screenshots/focus-video.png" alt="Focus Video" className="w-full h-full object-cover" />, src: '/screenshots/focus-video.png', title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate', size: 'wide' },
-  { preview: <img src="/screenshots/kanban.png" alt="Kanban" className="w-full h-full object-cover" />, src: '/screenshots/kanban.png', title: 'Kanban', desc: 'Drag-and-drop task management board', size: 'square' },
-  { preview: <img src="/screenshots/library.png" alt="Library" className="w-full h-full object-cover" />, src: '/screenshots/library.png', title: 'Library', desc: 'Track books with progress & notes', size: 'square' },
-  { preview: <img src="/screenshots/tasks.png" alt="Tasks" className="w-full h-full object-cover" />, src: '/screenshots/tasks.png', title: 'Tasks', desc: 'Daily todos with priority & categories', size: 'tall' },
-  { preview: <img src="/screenshots/stats.png" alt="Stats" className="w-full h-full object-cover" />, src: '/screenshots/stats.png', title: 'Stats', desc: 'Activity analytics & focus breakdown', size: 'square' },
-  { preview: <img src="/screenshots/inspire.png" alt="Inspire" className="w-full h-full object-cover" />, src: '/screenshots/inspire.png', title: 'Inspire', desc: 'Quran, hadith & daily quotes', size: 'square' },
-  { preview: <img src="/screenshots/challenges.png" alt="Challenges" className="w-full h-full object-cover" />, src: '/screenshots/challenges.png', title: 'Challenges', desc: 'Build habits with streaks & achievements', size: 'wide' },
-  { preview: <GraphPreview />, src: null, title: 'Graph', desc: 'Visual entity relationship network', size: 'square' },
-  { preview: <DailyPreview />, src: null, title: 'Daily', desc: 'Daily notes with Hijri calendar', size: 'tall' },
+  { src: '/screenshots/pomodoro.png', title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player' },
+  { src: '/screenshots/focus-video.png', title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate' },
+  { src: '/screenshots/kanban.png', title: 'Kanban', desc: 'Drag-and-drop task management board' },
+  { src: '/screenshots/library.png', title: 'Library', desc: 'Track books with progress & notes' },
+  { src: '/screenshots/tasks.png', title: 'Tasks', desc: 'Daily todos with priority & categories' },
+  { src: '/screenshots/stats.png', title: 'Stats', desc: 'Activity analytics & focus breakdown' },
+  { src: '/screenshots/inspire.png', title: 'Inspire', desc: 'Quran, hadith & daily quotes' },
+  { src: '/screenshots/challenges.png', title: 'Challenges', desc: 'Build habits with streaks & achievements' },
 ];
-
-// Live animating timer for the landing page
-function LiveTimerPreview() {
-  const [time, setTime] = useState(1500); // 25:00
-  const [running, setRunning] = useState(false);
-  const timer = useRef<ReturnType<typeof setInterval>>(undefined);
-
-  const toggle = () => {
-    if (running) {
-      clearInterval(timer.current);
-      setRunning(false);
-    } else {
-      setRunning(true);
-      timer.current = setInterval(() => {
-        setTime(prev => {
-          if (prev <= 1) { clearInterval(timer.current); setRunning(false); return 1500; }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-  };
-
-  useEffect(() => () => clearInterval(timer.current), []);
-
-  const mins = Math.floor(time / 60);
-  const secs = time % 60;
-  const radius = 54;
-  const circ = 2 * Math.PI * radius;
-  const progress = ((1500 - time) / 1500) * 100;
-  const offset = circ - (progress / 100) * circ;
-
-  return (
-    <div className="landing-live-timer" onClick={toggle}>
-      <svg viewBox="0 0 128 128" className="landing-live-timer-ring">
-        <circle cx="64" cy="64" r={radius} fill="none" stroke="rgba(139,92,246,0.15)" strokeWidth="6" />
-        <circle cx="64" cy="64" r={radius} fill="none" stroke="#8b5cf6" strokeWidth="6" strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1s linear' }} />
-      </svg>
-      <div className="landing-live-timer-inner">
-        <span className="landing-live-timer-time">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
-        <span className="landing-live-timer-label">{running ? 'Focusing' : 'Tap to start'}</span>
-      </div>
-    </div>
-  );
-}
 
 const steps = [
   { num: '01', title: 'Create your account', desc: 'Sign up in seconds with email. Pick a unique username for your public profile.', titleAr: 'أنشئ حسابك' },
@@ -263,15 +89,22 @@ const steps = [
   { num: '03', title: 'Make it yours', desc: 'Pin widgets, customize themes, set goals, build habits. Your space, your rules.', titleAr: 'اجعله خاصاً بك' },
 ];
 
+const highlights = [
+  { icon: <Zap className="w-5 h-5" />, label: 'Lightning Fast' },
+  { icon: <Globe className="w-5 h-5" />, label: 'Works Everywhere' },
+  { icon: <Shield className="w-5 h-5" />, label: 'Privacy First' },
+  { icon: <Download className="w-5 h-5" />, label: 'Desktop App' },
+];
+
 function FadeInSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 50 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -295,38 +128,137 @@ function Counter({ end, suffix = '', duration = 2 }: { end: number; suffix?: str
     return () => clearInterval(timer);
   }, [isInView, end, duration]);
 
-  return <span ref={ref}>{count}{suffix}</span>;
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
+
+function GeometricBackground() {
+  return (
+    <div className="lp-geo-bg">
+      <svg viewBox="0 0 1200 800" className="lp-geo-svg" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="lp-glow-1" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="rgba(139,92,246,0.15)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+          <radialGradient id="lp-glow-2" cx="70%" cy="70%">
+            <stop offset="0%" stopColor="rgba(245,158,11,0.1)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+        </defs>
+        <rect width="1200" height="800" fill="url(#lp-glow-1)" />
+        <rect width="1200" height="800" fill="url(#lp-glow-2)" />
+        {/* Islamic geometric pattern - octagonal stars */}
+        {Array.from({ length: 6 }, (_, row) =>
+          Array.from({ length: 8 }, (_, col) => {
+            const cx = 75 + col * 150;
+            const cy = 75 + row * 150;
+            const size = 30;
+            return (
+              <g key={`${row}-${col}`} opacity={0.04 + (row + col) * 0.005}>
+                <polygon
+                  points={`${cx},${cy - size} ${cx + size * 0.38},${cy - size * 0.38} ${cx + size},${cy} ${cx + size * 0.38},${cy + size * 0.38} ${cx},${cy + size} ${cx - size * 0.38},${cy + size * 0.38} ${cx - size},${cy} ${cx - size * 0.38},${cy - size * 0.38}`}
+                  fill="none"
+                  stroke="rgba(139,92,246,0.3)"
+                  strokeWidth="0.5"
+                />
+                <circle cx={cx} cy={cy} r={size * 0.2} fill="rgba(139,92,246,0.15)" />
+              </g>
+            );
+          })
+        )}
+      </svg>
+    </div>
+  );
+}
+
+function FloatingMockup() {
+  return (
+    <div className="lp-mockup-wrapper">
+      <div className="lp-mockup-card">
+        <div className="lp-mockup-header">
+          <div className="lp-mockup-dots">
+            <span /><span /><span />
+          </div>
+          <span className="lp-mockup-title">Bait El-Hakma</span>
+        </div>
+        <div className="lp-mockup-body">
+          <div className="lp-mockup-sidebar">
+            {['Quran', 'Timer', 'Kanban', 'Books', 'Tasks'].map((item, i) => (
+              <div key={item} className={`lp-mockup-nav-item ${i === 0 ? 'active' : ''}`}>
+                <div className="lp-mockup-nav-icon" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+          <div className="lp-mockup-content">
+            <div className="lp-mockup-topbar">
+              <span>Al-Fatiha</span>
+              <span className="lp-mockup-badge">7 Ayahs</span>
+            </div>
+            <div className="lp-mockup-ayahs">
+              {['بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ', 'ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', 'مَٰلِكِ يَوْمِ ٱلدِّينِ'].map((ayah, i) => (
+                <div key={i} className="lp-mockup-ayah">
+                  <span className="lp-mockup-ayah-num">{i + 1}</span>
+                  <span className="lp-mockup-ayah-text">{ayah}</span>
+                </div>
+              ))}
+            </div>
+            <div className="lp-mockup-player">
+              <div className="lp-mockup-play-btn">▶</div>
+              <div className="lp-mockup-wave">
+                {Array.from({ length: 20 }, (_, i) => (
+                  <div key={i} className="lp-mockup-wave-bar" style={{ height: `${8 + Math.sin(i * 0.8) * 12}px` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Floating accent elements */}
+      <div className="lp-mockup-float lp-mockup-float-1">
+        <Timer className="w-5 h-5" />
+        <span>25:00</span>
+      </div>
+      <div className="lp-mockup-float lp-mockup-float-2">
+        <BookOpen className="w-4 h-4" />
+        <span>Juz 1</span>
+      </div>
+      <div className="lp-mockup-float lp-mockup-float-3">
+        <Check className="w-4 h-4" />
+        <span>3/5 done</span>
+      </div>
+    </div>
+  );
 }
 
 export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [lightboxTitle, setLightboxTitle] = useState('');
+  const [activeFeature, setActiveFeature] = useState(0);
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
-    <div className="landing">
-      <div className="landing-orb landing-orb-1" />
-      <div className="landing-orb landing-orb-2" />
-      <div className="landing-orb landing-orb-3" />
-      <div className="landing-pattern" />
-
+    <div className="lp">
       {/* Navigation */}
       <motion.nav
-        className="landing-nav"
+        className="lp-nav"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        <a href="/" className="landing-nav-brand">
-          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="landing-nav-logo" />
-          <span className="landing-nav-title">Bait El-Hakma</span>
+        <a href="/" className="lp-nav-brand">
+          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="lp-nav-logo" />
+          <span className="lp-nav-title">Bait El-Hakma</span>
         </a>
-        <div className="landing-nav-links">
-          <a href="#features" className="landing-nav-link">Features</a>
-          <a href="#screenshots" className="landing-nav-link">Screenshots</a>
-          <a href="#how" className="landing-nav-link">How it Works</a>
+        <div className="lp-nav-links">
+          <a href="#features" className="lp-nav-link">Features</a>
+          <a href="#gallery" className="lp-nav-link">Gallery</a>
+          <a href="#how" className="lp-nav-link">How it Works</a>
           <motion.button
-            className="landing-btn-primary"
-            style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}
+            className="lp-btn-primary lp-btn-sm"
             onClick={onLogin}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -336,215 +268,187 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </div>
       </motion.nav>
 
-      {/* Hero - Redesigned */}
-      <section className="landing-hero">
-        <WallpaperBackground />
-        <div className="landing-hero-glow" />
+      {/* Hero */}
+      <section className="lp-hero" ref={heroRef}>
+        <GeometricBackground />
+        <motion.div className="lp-hero-content" style={{ y: heroY, opacity: heroOpacity }}>
+          <div className="lp-hero-left">
+            <motion.div
+              className="lp-hero-badge"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <span className="lp-badge-dot" />
+              <Sparkles className="w-3.5 h-3.5" />
+              Free & Open Source
+            </motion.div>
 
-        {/* Decorative floating elements */}
-        <div className="hero-deco hero-deco-1" />
-        <div className="hero-deco hero-deco-2" />
-        <div className="hero-deco hero-deco-3" />
+            <motion.h1
+              className="lp-hero-title"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="lp-title-gradient">Bait El-Hakma</span>
+              <span className="lp-title-arabic">بيت الحكمة</span>
+            </motion.h1>
 
-        <div className="hero-glass-card">
+            <motion.p
+              className="lp-hero-desc"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.45 }}
+            >
+              Your intelligent productivity companion. Read the Quran with audio, manage tasks,
+              track books, build habits — all beautifully designed and securely synced.
+            </motion.p>
+
+            <motion.div
+              className="lp-hero-actions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.55 }}
+            >
+              <motion.button className="lp-btn-primary" onClick={onRegister} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                Get Started Free <ArrowRight className="w-5 h-5" />
+              </motion.button>
+              <motion.button className="lp-btn-secondary" onClick={onLogin} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                Sign In <ChevronRight className="w-5 h-5" />
+              </motion.button>
+            </motion.div>
+
+            <motion.div
+              className="lp-hero-highlights"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.65 }}
+            >
+              {highlights.map((h, i) => (
+                <div key={i} className="lp-highlight">
+                  {h.icon}
+                  <span>{h.label}</span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
           <motion.div
-            className="hero-badge"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            className="lp-hero-right"
+            initial={{ opacity: 0, x: 60, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="hero-badge-dot" />
-            <Sparkles className="w-3.5 h-3.5" />
-            Free & Open — No ads, no tracking
+            <FloatingMockup />
           </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-          >
-            <span className="hero-title-gradient">Bait El-Hakma</span>
-            <span className="hero-title-arabic">بيت الحكمة</span>
-          </motion.h1>
-
-          <motion.p
-            className="hero-subtitle"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-          >
-            Your intelligent productivity companion. Read the Quran with audio, manage tasks,
-            track books, build habits — all beautifully designed and securely synced.
-          </motion.p>
-
-          <motion.div
-            className="hero-actions"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-          >
-            <motion.button className="landing-btn-primary" onClick={onRegister} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              Get Started Free <ArrowRight className="w-5 h-5" />
-            </motion.button>
-            <motion.button className="landing-btn-secondary" onClick={onLogin} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              Sign In <ChevronRight className="w-5 h-5" />
-            </motion.button>
-          </motion.div>
-
-          <motion.div
-            className="hero-stats"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.6 }}
-          >
-            <div className="hero-stat">
-              <div className="hero-stat-num">114</div>
-              <div className="hero-stat-label">Surahs</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat-num">6,236</div>
-              <div className="hero-stat-label">Ayahs</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat-num">13</div>
-              <div className="hero-stat-label">Reciters</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat-num">8</div>
-              <div className="hero-stat-label">Tools</div>
-            </div>
-          </motion.div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Arabic Introduction */}
-      <section className="arabic-intro">
+      {/* Basmalah */}
+      <section className="lp-basmalah">
         <FadeInSection>
-          <div className="arabic-intro-ornament" />
-          <motion.div
-            className="arabic-intro-content"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="arabic-intro-decoration">
-              <span className="arabic-intro-deco-line" />
-              <span className="arabic-intro-deco-diamond">◆</span>
-              <span className="arabic-intro-deco-line" />
+          <div className="lp-basmalah-card">
+            <div className="lp-basmalah-ornament">
+              <span className="lp-basmalah-line" />
+              <span className="lp-basmalah-diamond">◆</span>
+              <span className="lp-basmalah-line" />
             </div>
-            <p className="arabic-intro-arabic">
-              بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-            </p>
-            <p className="arabic-intro-translation">
-              In the Name of Allah, the Most Gracious, the Most Merciful
-            </p>
-            <div className="arabic-intro-divider" />
-            <h3 className="arabic-into-title-ar">
-              بيت الحكمة
-            </h3>
-            <p className="arabic-intro-sub-ar">
-              — حَيْثُ يَلْتَقِي الْعِلْمُ بِالْإِيمَانِ —
-            </p>
-            <p className="arabic-intro-english">
+            <p className="lp-basmalah-arabic">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>
+            <p className="lp-basmalah-translation">In the Name of Allah, the Most Gracious, the Most Merciful</p>
+            <div className="lp-basmalah-divider" />
+            <h3 className="lp-basmalah-name-ar">بيت الحكمة</h3>
+            <p className="lp-basmalah-subtitle-ar">— حَيْثُ يَلْتَقِي الْعِلْمُ بِالْإِيمَانِ —</p>
+            <p className="lp-basmalah-desc">
               A digital sanctuary where knowledge meets faith. Read, learn, track your progress,
               and build lasting habits — all in one beautifully crafted space, free forever.
             </p>
-            <div className="arabic-intro-decoration">
-              <span className="arabic-intro-deco-line" />
-              <span className="arabic-intro-deco-diamond">◆</span>
-              <span className="arabic-intro-deco-line" />
+            <div className="lp-basmalah-ornament">
+              <span className="lp-basmalah-line" />
+              <span className="lp-basmalah-diamond">◆</span>
+              <span className="lp-basmalah-line" />
             </div>
-          </motion.div>
-          <div className="arabic-intro-ornament arabic-intro-ornament-bottom" />
+          </div>
         </FadeInSection>
       </section>
 
       {/* Features */}
-      <section className="landing-features" id="features">
+      <section className="lp-features" id="features">
         <FadeInSection>
-          <div className="landing-section-header">
-            <div className="landing-section-tag">Features</div>
-            <h2 className="landing-section-title">Everything you need, in one place</h2>
-            <p className="landing-section-desc">
+          <div className="lp-section-header">
+            <span className="lp-section-tag">Features</span>
+            <h2 className="lp-section-title">Everything you need, in one place</h2>
+            <p className="lp-section-desc">
               From Quran recitation to productivity tools — a complete digital workspace.
             </p>
           </div>
         </FadeInSection>
 
-        <div className="landing-features-grid">
+        <div className="lp-features-grid">
           {features.map((f, i) => (
             <motion.div
               key={i}
-              className="landing-feature-card"
+              className={`lp-feature-card ${activeFeature === i ? 'lp-feature-active' : ''}`}
               data-accent={f.accent}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              whileHover={{ y: -6, transition: { duration: 0.2 } }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.6, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -8, transition: { duration: 0.25 } }}
+              onClick={() => setActiveFeature(i)}
             >
-              <div className="landing-feature-icon">{f.icon}</div>
+              <div className="lp-feature-icon">{f.icon}</div>
               <h3>{f.title}</h3>
-              <p className="landing-feature-title-ar">{f.titleAr}</p>
+              <p className="lp-feature-title-ar">{f.titleAr}</p>
               <p>{f.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Stats Counter */}
-      <section className="landing-stats-section">
-        <div className="landing-stats-grid">
-          <div className="landing-stat-item">
-            <div className="landing-stat-num"><Counter end={114} /></div>
-            <div className="landing-stat-label">Surahs</div>
-          </div>
-          <div className="landing-stat-item">
-            <div className="landing-stat-num"><Counter end={6236} /></div>
-            <div className="landing-stat-label">Ayahs</div>
-          </div>
-          <div className="landing-stat-item">
-            <div className="landing-stat-num"><Counter end={13} /></div>
-            <div className="landing-stat-label">Reciters</div>
-          </div>
-          <div className="landing-stat-item">
-            <div className="landing-stat-num"><Counter end={8} /></div>
-            <div className="landing-stat-label">Features</div>
-          </div>
-          <div className="landing-stat-item">
-            <div className="landing-stat-num"><Counter end={100} suffix="%" /></div>
-            <div className="landing-stat-label">Free</div>
-          </div>
+      {/* Stats */}
+      <section className="lp-stats">
+        <div className="lp-stats-inner">
+          {[
+            { value: 114, label: 'Surahs', suffix: '' },
+            { value: 6236, label: 'Ayahs', suffix: '' },
+            { value: 13, label: 'Reciters', suffix: '' },
+            { value: 8, label: 'Features', suffix: '' },
+            { value: 100, label: 'Free', suffix: '%' },
+          ].map((s, i) => (
+            <div key={i} className="lp-stat">
+              <div className="lp-stat-value"><Counter end={s.value} suffix={s.suffix} /></div>
+              <div className="lp-stat-label">{s.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Screenshots */}
-      <section className="landing-showcase" id="screenshots">
+      {/* Gallery */}
+      <section className="lp-gallery" id="gallery">
         <FadeInSection>
-          <div className="landing-section-header">
-            <div className="landing-section-tag">Gallery</div>
-            <h2 className="landing-section-title">See it in action</h2>
-            <p className="landing-section-desc">
+          <div className="lp-section-header">
+            <span className="lp-section-tag">Gallery</span>
+            <h2 className="lp-section-title">See it in action</h2>
+            <p className="lp-section-desc">
               Every feature crafted with care for a delightful experience.
             </p>
           </div>
         </FadeInSection>
 
-        <div className="landing-showcase-grid">
+        <div className="lp-gallery-grid">
           {screenshots.map((s, i) => (
             <motion.div
               key={i}
-              className={`landing-showcase-item landing-showcase-${s.size}`}
-              onClick={() => { if (s.src) { setLightboxImg(s.src); setLightboxTitle(s.title); } }}
-              initial={{ opacity: 0, scale: 0.9 }}
+              className={`lp-gallery-item lp-gallery-${i % 3 === 0 ? 'wide' : 'normal'}`}
+              onClick={() => { setLightboxImg(s.src); setLightboxTitle(s.title); }}
+              initial={{ opacity: 0, scale: 0.92 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
               whileHover={{ scale: 1.03, zIndex: 10 }}
             >
-              {s.preview}
-              <div className="landing-showcase-overlay">
+              <img src={s.src} alt={s.title} />
+              <div className="lp-gallery-overlay">
                 <h4>{s.title}</h4>
                 <p>{s.desc}</p>
               </div>
@@ -554,31 +458,32 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       </section>
 
       {/* How It Works */}
-      <section className="landing-how" id="how">
+      <section className="lp-how" id="how">
         <FadeInSection>
-          <div className="landing-section-header">
-            <div className="landing-section-tag">How It Works</div>
-            <h2 className="landing-section-title">Up and running in minutes</h2>
-            <p className="landing-section-desc">
+          <div className="lp-section-header">
+            <span className="lp-section-tag">How It Works</span>
+            <h2 className="lp-section-title">Up and running in minutes</h2>
+            <p className="lp-section-desc">
               No complicated setup. Just create an account and start using all features instantly.
             </p>
           </div>
         </FadeInSection>
 
-        <div className="landing-steps">
+        <div className="lp-steps">
+          <div className="lp-steps-line" />
           {steps.map((s, i) => (
             <motion.div
               key={i}
-              className="landing-step"
-              initial={{ opacity: 0, x: -30 }}
+              className="lp-step"
+              initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.5, delay: i * 0.2 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="landing-step-num">{s.num}</div>
-              <div className="landing-step-content">
+              <div className="lp-step-num">{s.num}</div>
+              <div className="lp-step-content">
                 <h3>{s.title}</h3>
-                <p className="landing-step-arabic">{s.titleAr}</p>
+                <p className="lp-step-arabic">{s.titleAr}</p>
                 <p>{s.desc}</p>
               </div>
             </motion.div>
@@ -586,19 +491,59 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </div>
       </section>
 
+      {/* Desktop App Banner */}
+      <section className="lp-desktop">
+        <FadeInSection>
+          <div className="lp-desktop-card">
+            <div className="lp-desktop-left">
+              <Monitor className="w-12 h-12 text-violet-400 mb-4" />
+              <h2>Also available as a Desktop App</h2>
+              <p>Download Bait El-Hakma for Windows. Same powerful features, native experience, offline support.</p>
+              <div className="lp-desktop-features">
+                {['Offline Access', 'System Tray', 'Auto Updates', 'Native Feel'].map((f, i) => (
+                  <div key={i} className="lp-desktop-feature">
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="lp-desktop-right">
+              <div className="lp-desktop-mockup">
+                <div className="lp-desktop-screen">
+                  <div className="lp-desktop-appbar">
+                    <span className="lp-desktop-appbar-dot" />
+                    <span className="lp-desktop-appbar-dot" />
+                    <span className="lp-desktop-appbar-dot" />
+                  </div>
+                  <div className="lp-desktop-content">
+                    <div className="lp-desktop-sidebar">
+                      <div className="lp-desktop-nav-item active" /><div className="lp-desktop-nav-item" /><div className="lp-desktop-nav-item" />
+                    </div>
+                    <div className="lp-desktop-main">
+                      <div className="lp-desktop-line" /><div className="lp-desktop-line short" /><div className="lp-desktop-line" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FadeInSection>
+      </section>
+
       {/* CTA */}
-      <section className="landing-cta">
-        <div className="landing-cta-glow" />
+      <section className="lp-cta">
+        <div className="lp-cta-glow" />
         <motion.div
-          className="landing-cta-box"
-          initial={{ opacity: 0, y: 40 }}
+          className="lp-cta-box"
+          initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
           >
             <Star className="w-10 h-10 text-amber-400 mx-auto mb-4" />
           </motion.div>
@@ -607,11 +552,11 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             Join Bait El-Hakma today. Free forever, no credit card, no ads, no tracking.
             Just pure focus and spiritual growth.
           </p>
-          <div className="landing-cta-actions">
-            <motion.button className="landing-btn-primary" onClick={onRegister} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <div className="lp-cta-actions">
+            <motion.button className="lp-btn-primary" onClick={onRegister} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               Create Free Account <ArrowRight className="w-5 h-5" />
             </motion.button>
-            <motion.button className="landing-btn-secondary" onClick={onLogin} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.button className="lp-btn-secondary" onClick={onLogin} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               Sign In
             </motion.button>
           </div>
@@ -619,20 +564,20 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
-        <div className="landing-footer-inner">
-          <div className="landing-footer-brand">
-            <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-20 h-auto" />
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div className="lp-footer-brand">
+            <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="lp-footer-logo" />
             <span>Bait El-Hakma</span>
           </div>
-          <div className="landing-footer-links">
+          <div className="lp-footer-links">
             <a href="#features">Features</a>
-            <a href="#screenshots">Gallery</a>
+            <a href="#gallery">Gallery</a>
             <a href="#how">How It Works</a>
             <a href="https://github.com/meuor/Bait-El-Hakma" target="_blank" rel="noreferrer">GitHub</a>
             <a href="mailto:support@baitelhakma.dev">Support</a>
           </div>
-          <div className="landing-footer-copy">
+          <div className="lp-footer-copy">
             &copy; 2026 Bait El-Hakma — House of Wisdom
           </div>
         </div>
@@ -642,14 +587,14 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <AnimatePresence>
         {lightboxImg && (
           <motion.div
-            className="landing-lightbox"
+            className="lp-lightbox"
             onClick={() => setLightboxImg(null)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.button
-              className="landing-lightbox-close"
+              className="lp-lightbox-close"
               onClick={() => setLightboxImg(null)}
               whileHover={{ rotate: 90 }}
             >
@@ -658,16 +603,16 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <motion.img
               src={lightboxImg}
               alt={lightboxTitle}
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
+              exit={{ scale: 0.85, opacity: 0 }}
               transition={{ duration: 0.3 }}
             />
             <motion.div
-              className="landing-lightbox-title"
+              className="lp-lightbox-title"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.15 }}
             >
               {lightboxTitle}
             </motion.div>

@@ -25,6 +25,7 @@
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&style=flat-square" alt="Tailwind" />
   <img src="https://img.shields.io/badge/Neon_DB-PostgreSQL-00E599?logo=postgresql&style=flat-square" alt="Neon" />
   <img src="https://img.shields.io/badge/Vercel-Deploy-000?logo=vercel&style=flat-square" alt="Vercel" />
+  <img src="https://img.shields.io/badge/Electron-35-47848F?logo=electron&style=flat-square" alt="Electron" />
 </p>
 
 ---
@@ -219,6 +220,32 @@ Bait El-Hakma features a complete authentication system:
 
 ---
 
+## Desktop App (Electron for Windows)
+
+A native Windows desktop application built with Electron:
+
+- **Same features** as the web app — full Quran reader, Kanban, Library, Timer, and more
+- **System tray** — minimize to tray, double-click to restore
+- **Offline support** — works without internet after first load
+- **NSIS installer** — standard Windows installer with desktop/start menu shortcuts
+- **Auto-update ready** — infrastructure in place for future updates
+
+### Running the Desktop App
+
+```bash
+# Development mode (starts Vite + Electron)
+npm run electron:dev
+
+# Build Windows installer
+npm run electron:build
+# Output: release/Bait-El-Hakma-2.8.0-Setup.exe
+
+# Build portable version (no installer)
+npm run electron:build:portable
+```
+
+---
+
 ## Themes
 
 5 built-in themes with full dark mode support:
@@ -250,6 +277,7 @@ Bait El-Hakma features a complete authentication system:
 | Audio CDN | cdn.islamic.network (13 reciters, 128kbps) |
 | Database | Neon PostgreSQL (serverless) |
 | Hosting | Vercel |
+| Desktop | Electron 35 + electron-builder |
 
 ---
 
@@ -269,6 +297,9 @@ Bait-El-Hakma/
 │   ├── quran/                  # Quran progress sync (bookmarks, theme, last-read)
 │   ├── profile/                # Public profile pages
 │   └── migrate/                # Safe data migration (CREATE IF NOT EXISTS)
+├── electron/                   # Electron desktop app
+│   ├── main.ts                 # Main process (window, tray, IPC)
+│   └── preload.ts              # Preload script (contextBridge)
 ├── src/
 │   ├── components/
 │   │   ├── auth/               # LoginForm, RegisterForm, ProfilePage, PublicProfile, ForgotPasswordForm, ResetPasswordForm
@@ -338,8 +369,11 @@ npm install
 cp .env.example .env
 # Edit .env with your DATABASE_URL and JWT_SECRET
 
-# Start dev server
+# Start dev server (web only)
 npm run dev
+
+# Start dev server with Electron desktop app
+npm run electron:dev
 ```
 
 ### Environment Variables
