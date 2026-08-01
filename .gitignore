@@ -5,9 +5,18 @@ node_modules/
 
 # Build output
 dist/
-build/
 dist-electron/
 release/
+
+# Build generated files (keep build config)
+build/*.exe
+build/*.dmg
+build/*.AppImage
+build/*.deb
+build/*.rpm
+build/*.tar.gz
+build/*.zip
+build/icons/icon.png
 
 # Environment variables
 .env

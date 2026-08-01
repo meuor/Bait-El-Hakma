@@ -11,10 +11,13 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "vite build && electron-builder --win",
+    "electron:build": "vite build && electron-builder --win --linux --mac",
+    "electron:build:win": "vite build && electron-builder --win",
     "electron:build:portable": "vite build && electron-builder --win portable",
     "electron:build:linux": "vite build && electron-builder --linux",
-    "electron:build:mac": "vite build && electron-builder --mac"
+    "electron:build:mac": "vite build && electron-builder --mac --universal",
+    "electron:build:all": "node scripts/build-all.js all",
+    "electron:build:current": "node scripts/build-all.js current"
   },
   "build": {
     "appId": "com.baithaelhakma.app",
@@ -27,14 +30,26 @@
       "dist/**/*",
       "dist-electron/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "build/icons",
+        "to": "icons",
+        "filter": ["**/*"]
+      }
+    ],
     "win": {
       "target": [
         {
           "target": "nsis",
           "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
         }
       ],
-      "icon": "public/img/bait-el-hakma logo.png"
+      "icon": "build/icon.png",
+      "artifactName": "Bait-El-Hakma-${version}-Win.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -43,7 +58,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Bait El-Hakma",
-      "artifactName": "Bait-El-Hakma-${version}-Setup.${ext}"
+      "artifactName": "Bait-El-Hakma-${version}-Setup.${ext}",
+      "installerIcon": "build/icon.png",
+      "uninstallerIcon": "build/icon.png",
+      "installerHeaderIcon": "build/icon.png"
     },
     "linux": {
       "target": [
@@ -52,23 +70,67 @@
           "arch": ["x64"]
         },
         {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
+          "target": "rpm",
+          "arch": ["x64"]
+        },
+        {
           "target": "tar.gz",
           "arch": ["x64"]
         }
       ],
-      "icon": "public/img/bait-el-hakma logo.png",
+      "icon": "build/icon.png",
       "category": "Utility",
-      "artifactName": "Bait-El-Hakma-${version}.${ext}"
+      "artifactName": "Bait-El-Hakma-${version}-Linux.${ext}",
+      "desktop": {
+        "Name": "Bait El-Hakma",
+        "Comment": "House of Wisdom - All-in-one productivity suite",
+        "Keywords": "productivity;islamic;quran;timer;kanban;tasks",
+        "StartupWMClass": "bait-el-hakma"
+      },
+      "mimeTypes": ["x-scheme-handler/bait-el-hakma"]
+    },
+    "deb": {
+      "depends": ["gconf2", "gconf-service", "libnotify4", "libappindicator1", "libxtst6", "libnss3"],
+      "artifactName": "Bait-El-Hakma-${version}-amd64.deb"
+    },
+    "rpm": {
+      "depends": ["GConf2", "libnotify", "libappindicator", "libXtst", "nss"],
+      "artifactName": "Bait-El-Hakma-${version}.x86_64.rpm"
     },
     "mac": {
       "target": [
         {
           "target": "dmg",
           "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
         }
       ],
-      "icon": "public/img/bait-el-hakma logo.png",
-      "category": "public.app-category.productivity"
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "artifactName": "Bait-El-Hakma-${version}-Mac.${ext}"
+    },
+    "dmg": {
+      "backgroundColor": "#06020f",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        { "x": 140, "y": 200 },
+        { "x": 400, "y": 200, "type": "link", "path": "/Applications" }
+      ],
+      "artifactName": "Bait-El-Hakma-${version}-Mac.${ext}"
     }
   },
   "dependencies": {

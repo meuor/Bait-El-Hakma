@@ -220,29 +220,53 @@ Bait El-Hakma features a complete authentication system:
 
 ---
 
-## Desktop App (Electron for Windows)
+## Desktop App (Electron)
 
-A native Windows desktop application built with Electron:
+Native desktop applications for Windows, Linux, and macOS built with Electron:
 
 - **Same features** as the web app — full Quran reader, Kanban, Library, Timer, and more
 - **System tray** — minimize to tray, double-click to restore
 - **Offline support** — works without internet after first load
-- **NSIS installer** — standard Windows installer with desktop/start menu shortcuts
+- **Cross-platform** — Windows (NSIS installer), Linux (AppImage/deb/rpm), macOS (DMG)
 - **Auto-update ready** — infrastructure in place for future updates
 
-### Running the Desktop App
+### Platform Downloads
+
+| Platform | Format | Command |
+|----------|--------|---------|
+| Windows | NSIS Installer (.exe) | `npm run electron:build:win` |
+| Windows | Portable (.exe) | `npm run electron:build:portable` |
+| Linux | AppImage (.AppImage) | `npm run electron:build:linux` |
+| Linux | Debian (.deb) | `npm run electron:build:linux` |
+| Linux | RPM (.rpm) | `npm run electron:build:linux` |
+| macOS | DMG (.dmg) | `npm run electron:build:mac` |
+| All | Universal | `npm run electron:build:all` |
+
+### Development
 
 ```bash
 # Development mode (starts Vite + Electron)
 npm run electron:dev
 
-# Build Windows installer
-npm run electron:build
-# Output: release/Bait-El-Hakma-2.8.0-Setup.exe
+# Build for current platform
+npm run electron:build:current
 
-# Build portable version (no installer)
-npm run electron:build:portable
+# Build for all platforms
+npm run electron:build:all
 ```
+
+### Linux Notes
+
+- **AppImage**: Portable, runs on most Linux distributions without installation
+- **Debian/Ubuntu**: Install with `sudo dpkg -i Bait-El-Hakma-*.deb`
+- **Fedora/RHEL**: Install with `sudo rpm -i Bait-El-Hakma-*.rpm`
+- **System tray**: Requires `libappindicator1` for tray support
+
+### macOS Notes
+
+- **DMG**: Drag to Applications folder to install
+- **Universal**: Works on both Intel and Apple Silicon Macs
+- **Gatekeeper**: First launch may require right-click → Open (unsigned builds)
 
 ---
 

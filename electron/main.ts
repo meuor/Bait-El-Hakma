@@ -8,21 +8,33 @@ const __dirname = path.dirname(__filename);
 
 const isDev = !app.isPackaged;
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];
+const isMac = process.platform === 'darwin';
+const isLinux = process.platform === 'linux';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 
 const DIST_PATH = path.join(__dirname, '..', 'dist');
 
+function getIconPath(): string {
+  // In production, icons are in extraResources
+  if (!isDev) {
+    const resourcesPath = process.resourcesPath;
+    const iconPath = path.join(resourcesPath, 'icons', 'icon.png');
+    if (fs.existsSync(iconPath)) return iconPath;
+  }
+  // Fallback to build directory in dev
+  return path.join(__dirname, '..', 'build', 'icon.png');
+}
+
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1400,
     height: 900,
     minWidth: 800,
     minHeight: 600,
     title: 'Bait El-Hakma - House of Wisdom',
-    icon: path.join(__dirname, '../public/img/bait-el-hakma logo.png'),
-    titleBarStyle: 'default',
+    icon: getIconPath(),
     backgroundColor: '#06020f',
     show: false,
     webPreferences: {
@@ -31,7 +43,20 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
     },
-  });
+  };
+
+  // macOS: hidden title bar for native look
+  if (isMac) {
+    windowOptions.titleBarStyle = 'hiddenInset';
+    windowOptions.trafficLightPosition = { x: 15, y: 15 };
+    windowOptions.titleBarOverlay = {
+      color: '#06020f',
+      symbolColor: '#a78bfa',
+      height: 40,
+    };
+  }
+
+  mainWindow = new BrowserWindow(windowOptions);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -69,9 +94,12 @@ function createWindow() {
 }
 
 function createTray() {
-  const iconPath = path.join(__dirname, '../public/img/bait-el-hakma logo.png');
+  const iconPath = getIconPath();
   const icon = nativeImage.createFromPath(iconPath);
-  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+
+  // Linux needs smaller tray icons
+  const trayIconSize = isLinux ? 22 : 16;
+  tray = new Tray(icon.resize({ width: trayIconSize, height: trayIconSize }));
 
   const contextMenu = Menu.buildFromTemplate([
     {
