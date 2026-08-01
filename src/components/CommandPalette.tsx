@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Search, BookOpen, CheckSquare, KanbanSquare, Timer, Trophy,
-  Hash, Sun, Moon, Monitor, Command
+  BookOpen, CheckSquare, KanbanSquare, Timer, Trophy,
+  Hash
 } from 'lucide-react';
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { useApp } from '@/context/AppContext';

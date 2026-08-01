@@ -38,7 +38,7 @@ interface QuranAudioProps {
   onAyahChange: (ayahNum: number) => void;
 }
 
-export function QuranAudio({ surahNumber, ayahs, currentAyah, onAyahChange }: QuranAudioProps) {
+export function QuranAudio({ surahNumber: _surahNumber, ayahs, currentAyah, onAyahChange }: QuranAudioProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [reciter, setReciter] = useState('ar.alafasy');

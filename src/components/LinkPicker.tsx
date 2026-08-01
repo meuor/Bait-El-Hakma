@@ -31,7 +31,7 @@ const ENTITY_LABELS: Record<string, string> = {
   'challenge': 'Challenges',
 };
 
-export function LinkPicker({ currentEntityType, currentEntityId, existingLinks, onLinkAdd, onLinkRemove }: LinkPickerProps) {
+export function LinkPicker({ currentEntityType: _currentEntityType, currentEntityId, existingLinks, onLinkAdd, onLinkRemove }: LinkPickerProps) {
   const { state } = useApp();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');

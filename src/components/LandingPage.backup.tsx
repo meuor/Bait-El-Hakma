@@ -212,51 +212,6 @@ const screenshots = [
   { preview: <DailyPreview />, src: null, title: 'Daily', desc: 'Daily notes with Hijri calendar', size: 'tall' },
 ];
 
-// Live animating timer for the landing page
-function LiveTimerPreview() {
-  const [time, setTime] = useState(1500); // 25:00
-  const [running, setRunning] = useState(false);
-  const timer = useRef<ReturnType<typeof setInterval>>(undefined);
-
-  const toggle = () => {
-    if (running) {
-      clearInterval(timer.current);
-      setRunning(false);
-    } else {
-      setRunning(true);
-      timer.current = setInterval(() => {
-        setTime(prev => {
-          if (prev <= 1) { clearInterval(timer.current); setRunning(false); return 1500; }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-  };
-
-  useEffect(() => () => clearInterval(timer.current), []);
-
-  const mins = Math.floor(time / 60);
-  const secs = time % 60;
-  const radius = 54;
-  const circ = 2 * Math.PI * radius;
-  const progress = ((1500 - time) / 1500) * 100;
-  const offset = circ - (progress / 100) * circ;
-
-  return (
-    <div className="landing-live-timer" onClick={toggle}>
-      <svg viewBox="0 0 128 128" className="landing-live-timer-ring">
-        <circle cx="64" cy="64" r={radius} fill="none" stroke="rgba(139,92,246,0.15)" strokeWidth="6" />
-        <circle cx="64" cy="64" r={radius} fill="none" stroke="#8b5cf6" strokeWidth="6" strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1s linear' }} />
-      </svg>
-      <div className="landing-live-timer-inner">
-        <span className="landing-live-timer-time">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
-        <span className="landing-live-timer-label">{running ? 'Focusing' : 'Tap to start'}</span>
-      </div>
-    </div>
-  );
-}
-
 const steps = [
   { num: '01', title: 'Create your account', desc: 'Sign up in seconds with email. Pick a unique username for your public profile.', titleAr: 'أنشئ حسابك' },
   { num: '02', title: 'Explore the dashboard', desc: 'Navigate Quran, Timer, Kanban, Library, Tasks & more from one interface.', titleAr: 'استكشف لوحة التحكم' },
@@ -317,7 +272,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         transition={{ duration: 0.6 }}
       >
         <a href="/" className="landing-nav-brand">
-          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="landing-nav-logo" />
+          <img src="/img/logo.png" alt="Bait El-Hakma" className="landing-nav-logo" />
           <span className="landing-nav-title">Bait El-Hakma</span>
         </a>
         <div className="landing-nav-links">
@@ -622,7 +577,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <footer className="landing-footer">
         <div className="landing-footer-inner">
           <div className="landing-footer-brand">
-            <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-20 h-auto" />
+            <img src="/img/logo.png" alt="Bait El-Hakma" className="w-20 h-auto" />
             <span>Bait El-Hakma</span>
           </div>
           <div className="landing-footer-links">

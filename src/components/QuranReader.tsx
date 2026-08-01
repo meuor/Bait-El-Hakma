@@ -122,7 +122,7 @@ export function QuranReader() {
   const [view, setView] = useState<'list' | 'surah' | 'dashboard'>('list');
   const [selectedSurah, setSelectedSurah] = useState<SurahInfo | null>(null);
   const [surahData, setSurahData] = useState<SurahData | null>(null);
-  const [search, setSearch] = useState('');
+  const [search, _setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'meccan' | 'medinan'>('all');
   const [theme, setTheme] = useState<MushafTheme>(loadTheme);
   const [progress, setProgress] = useState(loadProgress);
@@ -183,7 +183,7 @@ export function QuranReader() {
       dailyPages,
       mushafTheme: theme,
       lastRead: getLastRead() || {},
-    }));
+    }).then(() => {}));
   }, [bookmarks, progress.completedSurahs, dailyCompleted, dailyPages, theme]);
 
   const pullFromCloud = useCallback(() => {
@@ -1067,7 +1067,7 @@ export function QuranReader() {
 }
 
 function DailyReadingCard({
-  onReadSurah,
+  onReadSurah: _onReadSurah,
   dailyCompleted,
   setDailyCompleted,
   dailyPages,

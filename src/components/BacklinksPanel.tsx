@@ -19,7 +19,7 @@ const ENTITY_ICONS: Record<string, React.ElementType> = {
   'challenge': Trophy,
 };
 
-export function BacklinksPanel({ targetId, incomingLinks, onNavigate, onClose }: BacklinksPanelProps) {
+export function BacklinksPanel({ targetId: _targetId, incomingLinks, onNavigate, onClose }: BacklinksPanelProps) {
   if (!incomingLinks || incomingLinks.length === 0) return null;
 
   const getTargetTab = (type: string): AppTab => {

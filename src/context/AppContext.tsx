@@ -19,6 +19,7 @@ import type {
   UniversalTag,
   EntityType,
   DailyNote,
+  ContentBlock,
   AutomationRule,
   PropertySchema,
   PropertyValue
@@ -670,6 +671,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           activityMode: s.activity_mode || s.activityMode || undefined,
           customName: s.custom_name || s.customName || undefined,
           linkedTaskId: s.linked_task_id || s.linkedTaskId || undefined,
+          tags: typeof s.tags === 'string' ? JSON.parse(s.tags) : (s.tags || []),
+          links: typeof s.links === 'string' ? JSON.parse(s.links) : (s.links || []),
         }));
       }
 
@@ -693,6 +696,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           priority: c.priority,
           createdAt: new Date(c.created_at || c.createdAt),
           dueDate: c.due_date || c.dueDate ? new Date(c.due_date || c.dueDate) : undefined,
+          tags: typeof c.tags === 'string' ? JSON.parse(c.tags) : (c.tags || []),
+          links: typeof c.links === 'string' ? JSON.parse(c.links) : (c.links || []),
         }));
       }
 
@@ -722,6 +727,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date(t.created_at || t.createdAt),
           dueDate: t.due_date || t.dueDate ? new Date(t.due_date || t.dueDate) : undefined,
           priority: t.priority,
+          tags: typeof t.tags === 'string' ? JSON.parse(t.tags) : (t.tags || []),
+          links: typeof t.links === 'string' ? JSON.parse(t.links) : (t.links || []),
         }));
       }
 
@@ -735,6 +742,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           startDate: new Date(c.start_date || c.startDate),
           color: c.color,
           icon: c.icon,
+          tags: typeof c.tags === 'string' ? JSON.parse(c.tags) : (c.tags || []),
+          links: typeof c.links === 'string' ? JSON.parse(c.links) : (c.links || []),
         }));
       }
 
@@ -750,6 +759,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           soundEnabled: sv.sound_enabled !== undefined ? sv.sound_enabled : (sv.soundEnabled !== undefined ? sv.soundEnabled : true),
           videoSyncEnabled: sv.video_sync_enabled !== undefined ? sv.video_sync_enabled : (sv.videoSyncEnabled !== undefined ? sv.videoSyncEnabled : false),
           theme: sv.theme || 'classic',
+          selectedSound: sv.selected_sound || sv.selectedSound || 'none',
         };
       }
 

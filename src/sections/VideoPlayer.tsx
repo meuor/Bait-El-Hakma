@@ -21,7 +21,6 @@ import {
   SkipForward,
   Pin,
   PinOff,
-  Clock,
   Timer,
   History,
   Trash2,

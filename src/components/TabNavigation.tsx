@@ -49,7 +49,7 @@ export function TabNavigation() {
   const activeTabRef = useRef<HTMLButtonElement>(null);
 
   const orderedTabs = [...tabOrder, ...pinnedIds]
-    .map(id => tabMap.get(id))
+    .map(id => tabMap.get(id as AppTab))
     .filter((t): t is Tab => !!t);
 
   const handleTabChange = (tabId: AppTab) => {

@@ -146,8 +146,8 @@ export function PomodoroTimer() {
   const [linkedTaskId, setLinkedTaskId] = useState('');
 
   const [localAudioUrl, setLocalAudioUrl] = useState<string | null>(null);
-  const [localFileName, setLocalFileName] = useState<string>('');
-  const [localAudioPlaying, setLocalAudioPlaying] = useState(false);
+  const [_localFileName, setLocalFileName] = useState<string>('');
+  const [_localAudioPlaying, setLocalAudioPlaying] = useState(false);
   const localAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -228,6 +228,8 @@ export function PomodoroTimer() {
       duration: totalTime / 60,
       type: sessionTypeRef.current,
       completed: true,
+      tags: [],
+      links: [],
     };
     if (activityMode) session.activityMode = activityMode;
     if (customName.trim()) session.customName = customName.trim();
@@ -453,17 +455,6 @@ export function PomodoroTimer() {
   const incompleteTodos = todos.filter(t => !t.completed);
   const incompleteTasks = state.kanbanCards.filter(c => c.columnId !== 'done');
   const currentActivity = activityOptions.find(a => a.id === activityMode);
-
-  const toggleLocalAudio = useCallback(() => {
-    if (!localAudioRef.current) return;
-    if (localAudioRef.current.paused) {
-      localAudioRef.current.play().catch(() => {});
-      setLocalAudioPlaying(true);
-    } else {
-      localAudioRef.current.pause();
-      setLocalAudioPlaying(false);
-    }
-  }, []);
 
   const handleLocalFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

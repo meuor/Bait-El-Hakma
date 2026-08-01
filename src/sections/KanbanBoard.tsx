@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import type { KanbanCard, Label as LabelType, UniversalTag, LinkRef } from '@/types';
+import type { KanbanCard, Label as LabelType, UniversalTag } from '@/types';
 import { TagEditor } from '@/components/TagEditor';
 import { LinkPicker } from '@/components/LinkPicker';
 import { BacklinksPanel } from '@/components/BacklinksPanel';

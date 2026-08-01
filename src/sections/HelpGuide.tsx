@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useApp } from '@/context/AppContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { APP_VERSION } from '@/data/changelog';
-import { ChevronDown, ChevronRight, HelpCircle, Keyboard, BookOpen, Timer, Columns3, CheckSquare, BarChart3, Sparkles, Trophy, Calendar, Play, UserCircle, Youtube, Music, Globe } from 'lucide-react';
+import { ChevronDown, ChevronRight, HelpCircle, Keyboard, BookOpen, Timer, Columns3, CheckSquare, BarChart3, Sparkles, Trophy, Calendar, Play, UserCircle, Globe } from 'lucide-react';
 
 interface HelpSection {
   id: string;

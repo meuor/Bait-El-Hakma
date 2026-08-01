@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, GripVertical, Zap, Bell, Tag, Link2, FilePlus, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Trash2, Zap } from 'lucide-react';
 import type { AutomationRule } from '@/types';
 
 const TRIGGER_OPTIONS: { value: AutomationRule['trigger']; label: string }[] = [
@@ -57,11 +57,6 @@ export function AutomationRuleEditor() {
   const handleStartEditing = useCallback(() => {
     setDraftRules(state.automationRules.map(r => ({ ...r, conditions: { ...r.conditions }, actions: r.actions.map(a => ({ ...a, params: { ...a.params } })) })));
     setEditingId('__new__');
-  }, [state.automationRules]);
-
-  const handleEditRule = useCallback((ruleId: string) => {
-    setDraftRules(state.automationRules.map(r => ({ ...r, conditions: { ...r.conditions }, actions: r.actions.map(a => ({ ...a, params: { ...a.params } })) })));
-    setEditingId(ruleId);
   }, [state.automationRules]);
 
   const handleCancelEditing = useCallback(() => {
@@ -179,8 +174,6 @@ export function AutomationRuleEditor() {
   }, []);
 
   const triggerLabel = (value: AutomationRule['trigger']) => TRIGGER_OPTIONS.find(o => o.value === value)?.label ?? value;
-  const actionLabel = (value: AutomationRule['actions'][number]['type']) => ACTION_OPTIONS.find(o => o.value === value)?.label ?? value;
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -220,7 +213,6 @@ export function AutomationRuleEditor() {
 
       <div className="space-y-3">
         {rules.map(rule => {
-          const isNew = rule.id === '__new__' || (isEditing && !state.automationRules.some(r => r.id === rule.id));
           const isCurrentlyEditing = isEditing;
 
           return (

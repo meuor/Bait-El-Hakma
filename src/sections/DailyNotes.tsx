@@ -3,14 +3,14 @@ import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { TagEditor } from '@/components/TagEditor';
 import { LinkPicker } from '@/components/LinkPicker';
 import { BacklinksPanel } from '@/components/BacklinksPanel';
-import { Calendar, ChevronLeft, ChevronRight, Plus, Heading, Type, Link2, Minus, List, Save, Timer, BookOpen, CheckSquare, X } from 'lucide-react';
-import type { ContentBlock, ContentBlockType, DailyNote, UniversalTag, LinkRef, AppTab, EntityType } from '@/types';
+import { Calendar, ChevronLeft, ChevronRight, Plus, Heading, Type, Link2, Minus, List, Timer, BookOpen, CheckSquare, X } from 'lucide-react';
+import type { ContentBlock, ContentBlockType, UniversalTag, LinkRef, AppTab } from '@/types';
 
 function getToday(): string {
   const d = new Date();
@@ -41,7 +41,7 @@ export function DailyNotes() {
   const [links, setLinks] = useState<LinkRef[]>([]);
 
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const prevDateRef = useRef('');
   const dailyNotesRef = useRef(state.dailyNotes);
   dailyNotesRef.current = state.dailyNotes;

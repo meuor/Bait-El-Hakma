@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-  Trophy, Target, Flame, BookOpen, Star, Calendar,
-  TrendingUp, Clock, Award, Zap, Heart, Crown,
+  Trophy, Flame, BookOpen,
+  TrendingUp, Award,
 } from 'lucide-react';
 import { SURAH_LIST, TOTAL_AYAHS } from '@/data/quranData';
-import { quranAPI } from '@/lib/api';
 
 interface AyahStatus {
   [key: string]: 'new' | 'learning' | 'review' | 'mastered';
@@ -47,17 +45,6 @@ const ACHIEVEMENTS_DEF: Omit<Achievement, 'unlocked' | 'date'>[] = [
   { id: 'hafiz', name: 'Al-Hafiz', nameAr: 'الحافظ', desc: 'Master the entire Quran', icon: '🕌' },
 ];
 
-function getJuzForSurah(surahNum: number): number {
-  const juzBoundaries = [
-    1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-    21,22,23,24,25,26,27,28,29,30,31
-  ];
-  for (let j = 30; j >= 1; j--) {
-    if (surahNum >= juzBoundaries[j - 1]) return j;
-  }
-  return 1;
-}
-
 const JUZ_SURAH_MAP: Record<number, { start: number; end: number }> = {
   1: { start: 1, end: 2 }, 2: { start: 2, end: 2 }, 3: { start: 2, end: 3 },
   4: { start: 3, end: 4 }, 5: { start: 4, end: 5 }, 6: { start: 5, end: 7 },
@@ -71,17 +58,6 @@ const JUZ_SURAH_MAP: Record<number, { start: number; end: number }> = {
   28: { start: 36, end: 39 }, 29: { start: 39, end: 51 }, 30: { start: 51, end: 114 },
 };
 
-function getAyahsInJuz(juz: number): number {
-  const bounds = JUZ_SURAH_MAP[juz];
-  if (!bounds) return 0;
-  let total = 0;
-  for (let s = bounds.start; s <= bounds.end; s++) {
-    const surah = SURAH_LIST.find(x => x.number === s);
-    if (surah) total += surah.numberOfAyahs;
-  }
-  return total;
-}
-
 const STORAGE_KEY = 'quran-memorization';
 
 function loadMemorization(): AyahStatus {
@@ -89,10 +65,6 @@ function loadMemorization(): AyahStatus {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
-}
-
-function saveMemorization(data: AyahStatus) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 function loadDailyStats(): DailyStats {
@@ -108,12 +80,11 @@ interface QuranDashboardProps {
 }
 
 export function QuranDashboard({ completedSurahs, onReadSurah }: QuranDashboardProps) {
-  const [memStatus, setMemStatus] = useState<AyahStatus>(loadMemorization);
-  const [dailyStats, setDailyStats] = useState<DailyStats>(loadDailyStats);
+  const [memStatus, _setMemStatus] = useState<AyahStatus>(loadMemorization);
+  const [dailyStats, _setDailyStats] = useState<DailyStats>(loadDailyStats);
 
   // Calculate stats
   const totalMemorized = Object.values(memStatus).filter(v => v === 'mastered').length;
-  const totalLearning = Object.values(memStatus).filter(v => v === 'learning' || v === 'review').length;
   const totalRead = completedSurahs.reduce((sum, sn) => {
     const s = SURAH_LIST.find(x => x.number === sn);
     return sum + (s ? s.numberOfAyahs : 0);

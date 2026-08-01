@@ -78,7 +78,7 @@ export function BookLibrary() {
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.author.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTags = selectedTags.length === 0 || 
-      book.tags.some(tag => selectedTags.includes(tag.id));
+      book.tags.some(tag => selectedTags.includes(tag.name));
     const matchesStatus = statusFilter === 'all' || book.status === statusFilter;
     return matchesSearch && matchesTags && matchesStatus;
   });
@@ -95,7 +95,7 @@ export function BookLibrary() {
       author: newBookAuthor,
       description: newBookDescription,
       coverUrl: newBookCoverUrl || `https://placehold.co/200x300/8b5cf6/ffffff?text=${encodeURIComponent(newBookTitle)}`,
-      tags: defaultBookTags.filter(t => newBookTags.includes(t.id)),
+      tags: defaultBookTags.filter(t => newBookTags.includes(t.name)),
       notes: [],
       content: [],
       links: [],
@@ -295,7 +295,7 @@ export function BookLibrary() {
                     <div className="flex flex-wrap gap-1 mt-3">
                       {book.tags.slice(0, 2).map((tag) => (
                         <span
-                          key={tag.id}
+                          key={tag.name}
                           className="text-[10px] px-1.5 py-0.5 rounded-full"
                           style={{
                             backgroundColor: `${tag.color}20`,
@@ -445,7 +445,7 @@ export function BookLibrary() {
                     <div className="flex flex-wrap gap-2 mb-4">
                       {viewingBook.tags.map((tag) => (
                         <span
-                          key={tag.id}
+                          key={tag.name}
                           className="text-xs px-2 py-1 rounded-full"
                           style={{
                             backgroundColor: `${tag.color}20`,

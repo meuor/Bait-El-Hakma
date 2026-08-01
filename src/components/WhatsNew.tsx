@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Sparkles, Star, Zap, BookOpen, Palette, Globe } from 'lucide-react';
+import { X, Sparkles, Star, Zap, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChangelogEntry {

@@ -36,7 +36,7 @@ function setItemValue(item: any, key: string, value: string | number | null): an
 
 const emptyItem = (id: string) => ({ id, properties: {} as Record<string, string | number | null> });
 
-export function DatabaseView({ title = 'Database', entityType = 'item', items: externalItems, defaultSchema, onItemsChange, onSchemaChange }: DatabaseViewProps) {
+export function DatabaseView({ title = 'Database', entityType = 'todo', items: externalItems, defaultSchema, onItemsChange, onSchemaChange }: DatabaseViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
