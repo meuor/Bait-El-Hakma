@@ -3,16 +3,25 @@ import { authAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Loader2, ArrowLeft, Mail, CheckCircle2, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import './AuthLayout.css';
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
   onCodeVerified: (email: string, code: string) => void;
 }
+
+const features = [
+  { icon: <BookOpen className="w-5 h-5" />, label: 'Full Quran Reader', color: 'text-amber-400' },
+  { icon: <Timer className="w-5 h-5" />, label: 'Pomodoro Timer', color: 'text-blue-400' },
+  { icon: <Library className="w-5 h-5" />, label: 'Book Library', color: 'text-emerald-400' },
+  { icon: <ListTodo className="w-5 h-5" />, label: 'Tasks & Kanban', color: 'text-pink-400' },
+  { icon: <Trophy className="w-5 h-5" />, label: 'Challenge Tracker', color: 'text-violet-400' },
+  { icon: <RefreshCw className="w-5 h-5" />, label: 'Cloud Sync', color: 'text-cyan-400' },
+];
 
 export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState('');
@@ -38,97 +47,182 @@ export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFor
     }
   };
 
-  if (sent) {
-    return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
-      <Card className="tab-card w-full max-w-md">
-        <CardHeader className="text-center">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>
-              We sent a 6-character code to<br />
-              <strong className="text-foreground">{email}</strong>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Enter the code from your email to reset your password. The code expires in 15 minutes.
-            </p>
-            {devCode && (
-              <div className="border border-amber-300 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 text-center space-y-2">
-                <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">Email not configured — use this code:</p>
-                <p className="text-3xl font-mono font-bold text-foreground tracking-widest">{devCode}</p>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3 pb-6">
-            <Button className="w-full" onClick={() => onCodeVerified(email, '')}>
-              Enter Code
-            </Button>
-            <Button variant="ghost" className="gap-2" onClick={() => { setSent(false); }}>
-              <Mail className="w-4 h-4" />
-              Resend code
-            </Button>
-            <Button variant="link" className="text-muted-foreground" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back to sign in
-            </Button>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
-      <Card className="tab-card w-full max-w-md">
-        <CardHeader className="text-center">
-          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
-          <CardDescription>Enter your email and we'll send you a reset code</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-5">
-            {error && (
-              <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
-              </Alert>
-            )}
+    <div className="auth">
+      <IslamicWallpaper variant="hero" />
 
-            <div className="space-y-2">
-              <Label htmlFor="reset-email">Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                required
-              />
+      <div className="auth-container">
+        {/* Left Side - Form */}
+        <div className="auth-form-side">
+          <motion.div
+            className="auth-form-card"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="auth-form-header">
+              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <h1>{sent ? 'Check Your Email' : 'Reset Password'}</h1>
+              <p>{sent ? `We sent a code to ${email}` : "Enter your email and we'll send you a reset code"}</p>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3 pb-6">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending code...
-                </>
+
+            <AnimatePresence mode="wait">
+              {sent ? (
+                <motion.div
+                  key="sent"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="auth-form-fields"
+                >
+                  <div className="auth-success">
+                    <div className="auth-success-icon">
+                      <CheckCircle2 className="w-16 h-16 text-emerald-400" />
+                    </div>
+                    <h2>Code Sent!</h2>
+                    <p>Check your inbox for the 6-character reset code. It expires in 15 minutes.</p>
+                  </div>
+
+                  {devCode && (
+                    <div style={{
+                      border: '1px solid rgba(251, 191, 36, 0.3)',
+                      background: 'rgba(251, 191, 36, 0.06)',
+                      borderRadius: '10px',
+                      padding: '1rem',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.5rem' }}>
+                        Email not configured — use this code:
+                      </p>
+                      <p style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: 700, color: '#f0ecf8', letterSpacing: '0.15em', margin: 0 }}>
+                        {devCode}
+                      </p>
+                    </div>
+                  )}
+
+                  <Button className="auth-btn-primary" onClick={() => onCodeVerified(email, '')}>
+                    Enter Code
+                  </Button>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <button className="auth-link-btn" onClick={() => { setSent(false); }}>
+                      Resend code
+                    </button>
+                  </div>
+                </motion.div>
               ) : (
-                <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Reset Code
-                </>
+                <motion.div
+                  key="form"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <form onSubmit={handleSubmit}>
+                    <div className="auth-form-fields">
+                      <AnimatePresence>
+                        {error && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                          >
+                            <div className="auth-alert">
+                              <p>{error}</p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <div className="auth-field">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input
+                          id="reset-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                          required
+                          className="auth-input"
+                        />
+                      </div>
+
+                      <Button type="submit" className="auth-btn-primary" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending code...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Send Reset Code
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </motion.div>
               )}
-            </Button>
-            <Button variant="link" className="text-muted-foreground" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back to sign in
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
-    </motion.div>
+            </AnimatePresence>
+
+            <div className="auth-form-footer">
+              <p><button onClick={onBack}><ArrowLeft className="w-4 h-4" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.25rem' }} /> Back to sign in</button></p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Side - Decorative */}
+        <div className="auth-decor-side">
+          <motion.div
+            className="auth-decor-content"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2>House of Wisdom</h2>
+            <p className="auth-decor-arabic">بيت الحكمة</p>
+            <p className="auth-decor-desc">
+              A digital sanctuary where knowledge meets faith. Read, learn, track your progress,
+              and build lasting habits — all in one beautifully crafted space.
+            </p>
+
+            <div className="auth-decor-features">
+              {features.map((f, i) => (
+                <motion.div
+                  key={i}
+                  className="auth-decor-feature"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                >
+                  <span className={f.color}>{f.icon}</span>
+                  <span>{f.label}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="auth-decor-stats">
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">114</span>
+                <span className="auth-decor-stat-label">Surahs</span>
+              </div>
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">13</span>
+                <span className="auth-decor-stat-label">Reciters</span>
+              </div>
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">100%</span>
+                <span className="auth-decor-stat-label">Free</span>
+              </div>
+            </div>
+
+            <div className="auth-decor-trust">
+              <Shield className="w-4 h-4" />
+              <span>Privacy First • No Ads • No Tracking</span>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </div>
   );
 }

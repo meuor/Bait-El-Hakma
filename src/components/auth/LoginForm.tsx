@@ -3,18 +3,27 @@ import { authAPI, type AuthUser } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Eye, EyeOff, Loader2, ArrowRight, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import './AuthLayout.css';
 
 interface LoginFormProps {
   onLogin: (user: AuthUser, token: string) => void;
   onSwitchToRegister: () => void;
   onForgotPassword: () => void;
 }
+
+const features = [
+  { icon: <BookOpen className="w-5 h-5" />, label: 'Full Quran Reader', color: 'text-amber-400' },
+  { icon: <Timer className="w-5 h-5" />, label: 'Pomodoro Timer', color: 'text-blue-400' },
+  { icon: <Library className="w-5 h-5" />, label: 'Book Library', color: 'text-emerald-400' },
+  { icon: <ListTodo className="w-5 h-5" />, label: 'Tasks & Kanban', color: 'text-pink-400' },
+  { icon: <Trophy className="w-5 h-5" />, label: 'Challenge Tracker', color: 'text-violet-400' },
+  { icon: <RefreshCw className="w-5 h-5" />, label: 'Cloud Sync', color: 'text-cyan-400' },
+];
 
 export function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword }: LoginFormProps) {
   const [email, setEmail] = useState('');
@@ -23,7 +32,6 @@ export function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword }: Log
   const [isLoading, setIsLoading] = useState(false);
   const [keepLoggedIn, setKeepLoggedIn] = useState(true);
   const [error, setError] = useState('');
-  const [shakeField, setShakeField] = useState<'email' | 'password' | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,101 +49,168 @@ export function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword }: Log
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed';
       setError(msg);
-      setShakeField('email');
-      setTimeout(() => setShakeField(null), 500);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
-      <Card className="tab-card w-full max-w-md">
-        <CardHeader className="text-center">
-          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to access your productivity dashboard</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-5">
-            {error && (
-              <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
-              </Alert>
-            )}
+    <div className="auth">
+      <IslamicWallpaper variant="hero" />
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className={error ? 'text-destructive' : ''}>Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                required
-                className={shakeField === 'email' ? 'border-destructive animate-pulse' : ''}
-              />
+      <div className="auth-container">
+        {/* Left Side - Form */}
+        <div className="auth-form-side">
+          <motion.div
+            className="auth-form-card"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="auth-form-header">
+              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <h1>Welcome Back</h1>
+              <p>Sign in to access your productivity dashboard</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className={error ? 'text-destructive' : ''}>Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  required
-                  className={`pr-10 ${shakeField === 'password' ? 'border-destructive animate-pulse' : ''}`}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+
+            <form onSubmit={handleSubmit}>
+              <div className="auth-form-fields">
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <div className="auth-alert">
+                        <p>{error}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="auth-field">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                    required
+                    className="auth-input"
+                  />
+                </div>
+
+                <div className="auth-field">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="auth-input-wrapper">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                      required
+                      className="auth-input"
+                    />
+                    <button
+                      type="button"
+                      className="auth-input-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="auth-checkbox-row">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Checkbox
+                      id="keep-logged-in"
+                      checked={keepLoggedIn}
+                      onCheckedChange={(checked) => setKeepLoggedIn(checked === true)}
+                    />
+                    <Label htmlFor="keep-logged-in" style={{ fontSize: '0.8rem', color: '#8b82a0', fontWeight: 400 }}>
+                      Keep me logged in
+                    </Label>
+                  </div>
+                  <button type="button" className="auth-link-btn" onClick={onForgotPassword}>
+                    Forgot password?
+                  </button>
+                </div>
+
+                <Button type="submit" className="auth-btn-primary" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>Sign In <ArrowRight className="w-4 h-4" /></>
+                  )}
                 </Button>
               </div>
-              <div className="flex justify-end">
-                <Button type="button" variant="link" className="p-0 h-auto text-sm text-muted-foreground" onClick={onForgotPassword}>
-                  Forgot password?
-                </Button>
-              </div>
+            </form>
+
+            <div className="auth-form-footer">
+              <p>Don't have an account? <button onClick={onSwitchToRegister}>Sign up</button></p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="keep-logged-in"
-                checked={keepLoggedIn}
-                onCheckedChange={(checked) => setKeepLoggedIn(checked === true)}
-              />
-              <Label htmlFor="keep-logged-in" className="text-sm font-normal cursor-pointer">
-                Keep me logged in
-              </Label>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4 pb-6">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Don't have an account?{' '}
-              <Button variant="link" className="p-0 h-auto" onClick={onSwitchToRegister}>
-                Sign up
-              </Button>
+          </motion.div>
+        </div>
+
+        {/* Right Side - Decorative */}
+        <div className="auth-decor-side">
+          <motion.div
+            className="auth-decor-content"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2>House of Wisdom</h2>
+            <p className="auth-decor-arabic">بيت الحكمة</p>
+            <p className="auth-decor-desc">
+              A digital sanctuary where knowledge meets faith. Read, learn, track your progress,
+              and build lasting habits — all in one beautifully crafted space.
             </p>
-          </CardFooter>
-        </form>
-      </Card>
-    </motion.div>
+
+            <div className="auth-decor-features">
+              {features.map((f, i) => (
+                <motion.div
+                  key={i}
+                  className="auth-decor-feature"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                >
+                  <span className={f.color}>{f.icon}</span>
+                  <span>{f.label}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="auth-decor-stats">
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">114</span>
+                <span className="auth-decor-stat-label">Surahs</span>
+              </div>
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">13</span>
+                <span className="auth-decor-stat-label">Reciters</span>
+              </div>
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">100%</span>
+                <span className="auth-decor-stat-label">Free</span>
+              </div>
+            </div>
+
+            <div className="auth-decor-trust">
+              <Shield className="w-4 h-4" />
+              <span>Privacy First • No Ads • No Tracking</span>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </div>
   );
 }

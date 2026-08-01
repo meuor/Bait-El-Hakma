@@ -26,6 +26,7 @@ import { LandingPage } from '@/components/LandingPage';
 import { WhatsNew, useWhatsNewAutoShow } from '@/components/WhatsNew';
 import { CommandPalette } from '@/components/CommandPalette';
 import { QuickCapture } from '@/components/QuickCapture';
+import { IslamicWallpaper } from '@/components/IslamicWallpaper';
 
 import { DailyNotes } from '@/sections/DailyNotes';
 import { syncManager } from '@/lib/SyncManager';
@@ -115,8 +116,9 @@ function AppContent() {
 
   if (isLoadingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ position: 'relative', overflow: 'hidden' }}>
+        <IslamicWallpaper variant="hero" />
+        <div className="text-center" style={{ position: 'relative', zIndex: 2 }}>
           <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <Loader2 className="h-8 w-8 animate-spin text-violet-600 mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
@@ -174,7 +176,8 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col" style={{ position: 'relative' }}>
+      <IslamicWallpaper variant="subtle" />
       {!state.isMinimized && (
         <>
           <Header user={user} onLogout={handleLogout} />

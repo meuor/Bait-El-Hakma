@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, ArrowRight, Sparkles, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IslamicWallpaper } from '@/components/IslamicWallpaper';
-import './RegisterForm.css';
+import './AuthLayout.css';
 
 interface RegisterFormProps {
   onLogin: (user: AuthUser, token: string) => void;
@@ -105,20 +105,20 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
   const canProceedStep2 = email.trim().length > 0 && password.length >= 6;
 
   return (
-    <div className="reg">
+    <div className="auth">
       <IslamicWallpaper variant="hero" />
 
-      <div className="reg-container">
+      <div className="auth-container">
         {/* Left Side - Form */}
-        <div className="reg-form-side">
+        <div className="auth-form-side">
           <motion.div
-            className="reg-form-card"
+            className="auth-form-card"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="reg-form-header">
-              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="reg-logo" />
+            <div className="auth-form-header">
+              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="auth-logo" />
               <h1>{registered ? 'Welcome!' : 'Create Account'}</h1>
               <p>{registered ? `Hello ${registeredName}, your workspace is ready` : 'Start your productivity journey today'}</p>
             </div>
@@ -129,18 +129,28 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                   key="success"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="reg-success"
+                  className="auth-success"
                 >
-                  <div className="reg-success-icon">
+                  <div className="auth-success-icon">
                     <CheckCircle2 className="w-16 h-16 text-emerald-400" />
                   </div>
                   <h2>Account Created!</h2>
                   <p>Welcome, {registeredName}! Your data will be synced to the cloud.</p>
-                  <div className="reg-success-features">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.5rem' }}>
                     {features.map((f, i) => (
                       <motion.div
                         key={i}
-                        className="reg-success-feature"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem 0.75rem',
+                          background: 'rgba(139, 92, 246, 0.06)',
+                          border: '1px solid rgba(139, 92, 246, 0.08)',
+                          borderRadius: '8px',
+                          fontSize: '0.75rem',
+                          color: '#c4a8fa',
+                        }}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 + i * 0.1 }}
@@ -150,21 +160,21 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                       </motion.div>
                     ))}
                   </div>
-                  <p className="reg-success-redirect">Redirecting you to the app...</p>
+                  <p style={{ fontSize: '0.8rem', color: '#5a5270' }}>Redirecting you to the app...</p>
                   <Loader2 className="h-6 w-6 animate-spin text-violet-400 mx-auto" />
                 </motion.div>
               ) : (
                 <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   {/* Progress Steps */}
-                  <div className="reg-steps">
-                    <div className={`reg-step ${step >= 1 ? 'active' : ''}`}>
+                  <div className="auth-steps">
+                    <div className={`auth-step ${step >= 1 ? 'active' : ''}`}>
                       <span>1</span>
-                      <span className="reg-step-label">Profile</span>
+                      <span className="auth-step-label">Profile</span>
                     </div>
-                    <div className="reg-step-line" />
-                    <div className={`reg-step ${step >= 2 ? 'active' : ''}`}>
+                    <div className="auth-step-line" />
+                    <div className={`auth-step ${step >= 2 ? 'active' : ''}`}>
                       <span>2</span>
-                      <span className="reg-step-label">Account</span>
+                      <span className="auth-step-label">Account</span>
                     </div>
                   </div>
 
@@ -176,9 +186,9 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="reg-form-fields"
+                          className="auth-form-fields"
                         >
-                          <div className="reg-field">
+                          <div className="auth-field">
                             <Label htmlFor="name">Display Name</Label>
                             <Input
                               id="name"
@@ -187,40 +197,40 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                               value={displayName}
                               onChange={(e) => setDisplayName(e.target.value)}
                               required
-                              className="reg-input"
+                              className="auth-input"
                             />
                           </div>
-                          <div className="reg-field">
+                          <div className="auth-field">
                             <Label htmlFor="username">
                               Username
-                              <span className="reg-label-hint">(optional, your public profile)</span>
+                              <span className="auth-label-hint">(optional, your public profile)</span>
                             </Label>
-                            <div className="reg-input-wrapper">
-                              <span className="reg-input-prefix">@</span>
+                            <div className="auth-input-wrapper">
+                              <span className="auth-input-prefix">@</span>
                               <Input
                                 id="username"
                                 type="text"
                                 placeholder="your_username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-                                className="reg-input reg-input-prefix-input"
+                                className="auth-input auth-input-prefix-input"
                               />
-                              <span className="reg-input-status">
+                              <span className="auth-input-status">
                                 {usernameStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                                 {usernameStatus === 'available' && <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
                                 {usernameStatus === 'taken' && <XCircle className="h-4 w-4 text-red-400" />}
                               </span>
                             </div>
                             {username && usernameStatus === 'taken' && (
-                              <p className="reg-field-error">This username is already taken</p>
+                              <p className="auth-field-error">This username is already taken</p>
                             )}
                             {username && usernameStatus === 'available' && (
-                              <p className="reg-field-success">bait-el-hakma.vercel.app/@{username}</p>
+                              <p className="auth-field-success">bait-el-hakma.vercel.app/@{username}</p>
                             )}
                           </div>
                           <Button
                             type="button"
-                            className="reg-btn-primary"
+                            className="auth-btn-primary"
                             onClick={() => setStep(2)}
                             disabled={!canProceedStep1}
                           >
@@ -235,9 +245,9 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="reg-form-fields"
+                          className="auth-form-fields"
                         >
-                          <div className="reg-field">
+                          <div className="auth-field">
                             <Label htmlFor="email">Email</Label>
                             <Input
                               id="email"
@@ -246,12 +256,12 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               required
-                              className="reg-input"
+                              className="auth-input"
                             />
                           </div>
-                          <div className="reg-field">
+                          <div className="auth-field">
                             <Label htmlFor="password">Password</Label>
-                            <div className="reg-input-wrapper">
+                            <div className="auth-input-wrapper">
                               <Input
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
@@ -259,21 +269,21 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="reg-input"
+                                className="auth-input"
                               />
                               <button
                                 type="button"
-                                className="reg-input-toggle"
+                                className="auth-input-toggle"
                                 onClick={() => setShowPassword(!showPassword)}
                               >
                                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                               </button>
                             </div>
                             {password && password.length < 6 && (
-                              <p className="reg-field-error">Password must be at least 6 characters</p>
+                              <p className="auth-field-error">Password must be at least 6 characters</p>
                             )}
                           </div>
-                          <div className="reg-field">
+                          <div className="auth-field">
                             <Label htmlFor="confirmPassword">Confirm Password</Label>
                             <Input
                               id="confirmPassword"
@@ -282,17 +292,17 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
                               required
-                              className="reg-input"
+                              className="auth-input"
                             />
                             {confirmPassword && password !== confirmPassword && (
-                              <p className="reg-field-error">Passwords do not match</p>
+                              <p className="auth-field-error">Passwords do not match</p>
                             )}
                           </div>
-                          <div className="reg-form-actions">
-                            <Button type="button" variant="ghost" onClick={() => setStep(1)} className="reg-btn-back">
+                          <div className="auth-form-actions">
+                            <Button type="button" variant="ghost" onClick={() => setStep(1)} className="auth-btn-back">
                               Back
                             </Button>
-                            <Button type="submit" className="reg-btn-primary" disabled={isLoading || !canProceedStep2}>
+                            <Button type="submit" className="auth-btn-primary" disabled={isLoading || !canProceedStep2}>
                               {isLoading ? (
                                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...</>
                               ) : (
@@ -305,7 +315,7 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                     </AnimatePresence>
                   </form>
 
-                  <div className="reg-form-footer">
+                  <div className="auth-form-footer">
                     <p>Already have an account? <button onClick={onSwitchToLogin}>Sign in</button></p>
                   </div>
                 </motion.div>
@@ -315,25 +325,25 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
         </div>
 
         {/* Right Side - Decorative */}
-        <div className="reg-decor-side">
+        <div className="auth-decor-side">
           <motion.div
-            className="reg-decor-content"
+            className="auth-decor-content"
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h2>House of Wisdom</h2>
-            <p className="reg-decor-arabic">بيت الحكمة</p>
-            <p className="reg-decor-desc">
+            <p className="auth-decor-arabic">بيت الحكمة</p>
+            <p className="auth-decor-desc">
               A digital sanctuary where knowledge meets faith. Read, learn, track your progress,
               and build lasting habits — all in one beautifully crafted space.
             </p>
 
-            <div className="reg-decor-features">
+            <div className="auth-decor-features">
               {features.map((f, i) => (
                 <motion.div
                   key={i}
-                  className="reg-decor-feature"
+                  className="auth-decor-feature"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + i * 0.1 }}
@@ -344,22 +354,22 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
               ))}
             </div>
 
-            <div className="reg-decor-stats">
-              <div className="reg-decor-stat">
-                <span className="reg-decor-stat-num">114</span>
-                <span className="reg-decor-stat-label">Surahs</span>
+            <div className="auth-decor-stats">
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">114</span>
+                <span className="auth-decor-stat-label">Surahs</span>
               </div>
-              <div className="reg-decor-stat">
-                <span className="reg-decor-stat-num">13</span>
-                <span className="reg-decor-stat-label">Reciters</span>
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">13</span>
+                <span className="auth-decor-stat-label">Reciters</span>
               </div>
-              <div className="reg-decor-stat">
-                <span className="reg-decor-stat-num">100%</span>
-                <span className="reg-decor-stat-label">Free</span>
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">100%</span>
+                <span className="auth-decor-stat-label">Free</span>
               </div>
             </div>
 
-            <div className="reg-decor-trust">
+            <div className="auth-decor-trust">
               <Shield className="w-4 h-4" />
               <span>Privacy First • No Ads • No Tracking</span>
             </div>

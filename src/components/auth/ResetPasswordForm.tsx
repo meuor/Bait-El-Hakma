@@ -3,11 +3,11 @@ import { authAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, KeyRound, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Loader2, ArrowLeft, KeyRound, CheckCircle2, Eye, EyeOff, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import './AuthLayout.css';
 
 interface ResetPasswordFormProps {
   email: string;
@@ -15,6 +15,15 @@ interface ResetPasswordFormProps {
   onBack: () => void;
   onSuccess: () => void;
 }
+
+const features = [
+  { icon: <BookOpen className="w-5 h-5" />, label: 'Full Quran Reader', color: 'text-amber-400' },
+  { icon: <Timer className="w-5 h-5" />, label: 'Pomodoro Timer', color: 'text-blue-400' },
+  { icon: <Library className="w-5 h-5" />, label: 'Book Library', color: 'text-emerald-400' },
+  { icon: <ListTodo className="w-5 h-5" />, label: 'Tasks & Kanban', color: 'text-pink-400' },
+  { icon: <Trophy className="w-5 h-5" />, label: 'Challenge Tracker', color: 'text-violet-400' },
+  { icon: <RefreshCw className="w-5 h-5" />, label: 'Cloud Sync', color: 'text-cyan-400' },
+];
 
 export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }: ResetPasswordFormProps) {
   const [code, setCode] = useState(initialCode.replace(/-/g, ''));
@@ -111,147 +120,242 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 p-4">
-      <Card className="tab-card w-full max-w-md">
-        <CardHeader className="text-center">
-          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
-          <CardTitle className="text-2xl">
-            {codeVerified ? 'New Password' : 'Enter Reset Code'}
-          </CardTitle>
-          <CardDescription>
-            {codeVerified
-              ? `Set a new password for ${email}`
-              : `Enter the 6-character code sent to ${email}`
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          {error && (
-            <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
-            </Alert>
-          )}
+    <div className="auth">
+      <IslamicWallpaper variant="hero" />
 
-          {!codeVerified ? (
-            <div className="space-y-4">
-              <Label>Reset Code</Label>
-              <div className="flex items-center justify-center gap-2">
-                {[0, 1, 2].map((i) => (
-                  <Input
-                    key={i}
-                    ref={(el) => { codeInputRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="text"
-                    maxLength={1}
-                    value={code[i] || ''}
-                    onChange={(e) => handleCodeChange(i, e.target.value)}
-                    onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                    onPaste={handleCodePaste}
-                    className="w-12 h-14 text-center text-xl font-mono font-bold uppercase text-center"
-                    autoFocus={i === 0}
-                  />
-                ))}
-                <span className="text-2xl font-bold text-muted-foreground mx-1">-</span>
-                {[3, 4, 5].map((i) => (
-                  <Input
-                    key={i}
-                    ref={(el) => { codeInputRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="text"
-                    maxLength={1}
-                    value={code[i] || ''}
-                    onChange={(e) => handleCodeChange(i, e.target.value)}
-                    onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                    onPaste={handleCodePaste}
-                    className="w-12 h-14 text-center text-xl font-mono font-bold uppercase text-center"
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Code format: <span className="font-mono font-bold">ABC-123</span> (letters &amp; numbers)
-              </p>
+      <div className="auth-container">
+        {/* Left Side - Form */}
+        <div className="auth-form-side">
+          <motion.div
+            className="auth-form-card"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="auth-form-header">
+              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <h1>{codeVerified ? 'New Password' : 'Enter Reset Code'}</h1>
+              <p>{codeVerified ? `Set a new password for ${email}` : `Enter the 6-character code sent to ${email}`}</p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="new-password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={(e) => { setNewPassword(e.target.value); setError(''); }}
-                    required
-                    minLength={6}
-                    className="pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+
+            <AnimatePresence mode="wait">
+              {codeVerified ? (
+                <motion.div
+                  key="reset"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <form onSubmit={handleResetPassword}>
+                    <div className="auth-form-fields">
+                      <AnimatePresence>
+                        {error && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                          >
+                            <div className="auth-alert">
+                              <p>{error}</p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <div className="auth-field">
+                        <Label htmlFor="new-password">New Password</Label>
+                        <div className="auth-input-wrapper">
+                          <Input
+                            id="new-password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={newPassword}
+                            onChange={(e) => { setNewPassword(e.target.value); setError(''); }}
+                            required
+                            minLength={6}
+                            className="auth-input"
+                          />
+                          <button
+                            type="button"
+                            className="auth-input-toggle"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="auth-field">
+                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <Input
+                          id="confirm-password"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
+                          required
+                          minLength={6}
+                          className="auth-input"
+                        />
+                        {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                          <p className="auth-field-error">Passwords do not match</p>
+                        )}
+                      </div>
+
+                      <Button type="submit" className="auth-btn-primary" disabled={isLoading || !newPassword || !confirmPassword}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Resetting...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Reset Password
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="code"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="auth-form-fields"
+                >
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        <div className="auth-alert">
+                          <p>{error}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="auth-field">
+                    <Label>Reset Code</Label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      {[0, 1, 2].map((i) => (
+                        <Input
+                          key={i}
+                          ref={(el) => { codeInputRefs.current[i] = el; }}
+                          type="text"
+                          inputMode="text"
+                          maxLength={1}
+                          value={code[i] || ''}
+                          onChange={(e) => handleCodeChange(i, e.target.value)}
+                          onKeyDown={(e) => handleCodeKeyDown(i, e)}
+                          onPaste={handleCodePaste}
+                          className="auth-input"
+                          style={{ width: '48px', height: '56px', textAlign: 'center', fontSize: '1.25rem', fontFamily: 'monospace', fontWeight: 700 }}
+                          autoFocus={i === 0}
+                        />
+                      ))}
+                      <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#6b6380', margin: '0 0.25rem' }}>-</span>
+                      {[3, 4, 5].map((i) => (
+                        <Input
+                          key={i}
+                          ref={(el) => { codeInputRefs.current[i] = el; }}
+                          type="text"
+                          inputMode="text"
+                          maxLength={1}
+                          value={code[i] || ''}
+                          onChange={(e) => handleCodeChange(i, e.target.value)}
+                          onKeyDown={(e) => handleCodeKeyDown(i, e)}
+                          onPaste={handleCodePaste}
+                          className="auth-input"
+                          style={{ width: '48px', height: '56px', textAlign: 'center', fontSize: '1.25rem', fontFamily: 'monospace', fontWeight: 700 }}
+                        />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: '0.7rem', color: '#5a5270', textAlign: 'center', marginTop: '0.5rem' }}>
+                      Code format: <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>ABC-123</span> (letters &amp; numbers)
+                    </p>
+                  </div>
+
+                  <Button className="auth-btn-primary" onClick={handleVerifyCode} disabled={code.length !== 6 || verifying}>
+                    {verifying ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <KeyRound className="mr-2 h-4 w-4" />
+                        Verify Code
+                      </>
+                    )}
                   </Button>
-                </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="auth-form-footer">
+              <p><button onClick={onBack}><ArrowLeft className="w-4 h-4" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.25rem' }} /> Back to sign in</button></p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Side - Decorative */}
+        <div className="auth-decor-side">
+          <motion.div
+            className="auth-decor-content"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2>House of Wisdom</h2>
+            <p className="auth-decor-arabic">بيت الحكمة</p>
+            <p className="auth-decor-desc">
+              A digital sanctuary where knowledge meets faith. Read, learn, track your progress,
+              and build lasting habits — all in one beautifully crafted space.
+            </p>
+
+            <div className="auth-decor-features">
+              {features.map((f, i) => (
+                <motion.div
+                  key={i}
+                  className="auth-decor-feature"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                >
+                  <span className={f.color}>{f.icon}</span>
+                  <span>{f.label}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="auth-decor-stats">
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">114</span>
+                <span className="auth-decor-stat-label">Surahs</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
-                  required
-                  minLength={6}
-                />
-                {newPassword && confirmPassword && newPassword !== confirmPassword && (
-                  <p className="text-xs text-destructive">Passwords do not match</p>
-                )}
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">13</span>
+                <span className="auth-decor-stat-label">Reciters</span>
+              </div>
+              <div className="auth-decor-stat">
+                <span className="auth-decor-stat-num">100%</span>
+                <span className="auth-decor-stat-label">Free</span>
               </div>
             </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex flex-col gap-3 pb-6">
-          {!codeVerified ? (
-            <Button className="w-full" onClick={handleVerifyCode} disabled={code.length !== 6 || verifying}>
-              {verifying ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  Verify Code
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button className="w-full" onClick={handleResetPassword} disabled={isLoading || !newPassword || !confirmPassword}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Resetting...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Reset Password
-                </>
-              )}
-            </Button>
-          )}
-          <Button variant="link" className="text-muted-foreground" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to sign in
-          </Button>
-        </CardFooter>
-      </Card>
-    </motion.div>
+
+            <div className="auth-decor-trust">
+              <Shield className="w-4 h-4" />
+              <span>Privacy First • No Ads • No Tracking</span>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </div>
   );
 }
