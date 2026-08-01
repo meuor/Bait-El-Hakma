@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.8.0",
   "description": "Bait El-Hakma - House of Wisdom - All-in-one productivity suite",
-  "main": "dist-electron/main.mjs",
+  "main": "dist-electron/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,12 +11,13 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "tsc -b && vite build && electron-builder --win",
-    "electron:build:portable": "tsc -b && vite build && electron-builder --win portable"
+    "electron:build": "vite build && electron-builder --win",
+    "electron:build:portable": "vite build && electron-builder --win portable"
   },
   "build": {
     "appId": "com.baithaelhakma.app",
     "productName": "Bait El-Hakma",
+    "npmRebuild": false,
     "directories": {
       "output": "release"
     },

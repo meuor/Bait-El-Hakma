@@ -1,0 +1,475 @@
+/* ============================================
+   Register Form — Modern Split Layout
+   ============================================ */
+
+.reg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.reg-container {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1000px;
+  width: 100%;
+  min-height: 600px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(7, 3, 18, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Form Side ---------- */
+.reg-form-side {
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reg-form-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.reg-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.reg-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+.reg-form-header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f0ecf8;
+  margin: 0 0 0.35rem;
+}
+
+.reg-form-header p {
+  font-size: 0.85rem;
+  color: #6b6380;
+  margin: 0;
+}
+
+/* ---------- Steps ---------- */
+.reg-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.reg-step {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 100px;
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  font-size: 0.8rem;
+  color: #6b6380;
+  transition: all 0.3s ease;
+}
+
+.reg-step.active {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #a78bfa;
+}
+
+.reg-step span:first-child {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.reg-step.active span:first-child {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+.reg-step-label {
+  font-weight: 500;
+}
+
+.reg-step-line {
+  width: 30px;
+  height: 1px;
+  background: rgba(139, 92, 246, 0.15);
+}
+
+/* ---------- Form Fields ---------- */
+.reg-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.reg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reg-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c4a8fa;
+}
+
+.reg-label-hint {
+  font-weight: 400;
+  color: #5a5270;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.reg-input {
+  background: rgba(18, 8, 42, 0.4) !important;
+  border: 1px solid rgba(139, 92, 246, 0.1) !important;
+  color: #e8e4f0 !important;
+  border-radius: 10px !important;
+  padding: 0.7rem 1rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.reg-input:focus {
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08) !important;
+}
+
+.reg-input::placeholder {
+  color: #4a4360 !important;
+}
+
+.reg-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.reg-input-prefix {
+  position: absolute;
+  left: 0.85rem;
+  color: #6b6380;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+.reg-input-prefix-input {
+  padding-left: 2rem !important;
+}
+
+.reg-input-status {
+  position: absolute;
+  right: 0.75rem;
+}
+
+.reg-input-toggle {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #6b6380;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reg-input-toggle:hover {
+  color: #a78bfa;
+}
+
+.reg-field-error {
+  font-size: 0.75rem;
+  color: #f87171;
+}
+
+.reg-field-success {
+  font-size: 0.75rem;
+  color: #34d399;
+}
+
+/* ---------- Buttons ---------- */
+.reg-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1) !important;
+  color: white !important;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.reg-btn-primary:hover {
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.35);
+}
+
+.reg-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reg-btn-back {
+  color: #6b6380 !important;
+  font-size: 0.85rem;
+}
+
+.reg-btn-back:hover {
+  color: #a78bfa !important;
+}
+
+.reg-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.reg-form-actions .reg-btn-primary {
+  flex: 1;
+}
+
+/* ---------- Footer ---------- */
+.reg-form-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(139, 92, 246, 0.06);
+}
+
+.reg-form-footer p {
+  font-size: 0.85rem;
+  color: #6b6380;
+  margin: 0;
+}
+
+.reg-form-footer button {
+  background: none;
+  border: none;
+  color: #a78bfa;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.reg-form-footer button:hover {
+  color: #c4a8fa;
+}
+
+/* ---------- Success ---------- */
+.reg-success {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.reg-success-icon {
+  margin-bottom: 1rem;
+}
+
+.reg-success h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f0ecf8;
+  margin: 0 0 0.5rem;
+}
+
+.reg-success p {
+  font-size: 0.85rem;
+  color: #6b6380;
+  margin: 0 0 1.5rem;
+}
+
+.reg-success-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.reg-success-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.08);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #c4a8fa;
+}
+
+.reg-success-redirect {
+  font-size: 0.8rem;
+  color: #5a5270;
+}
+
+/* ---------- Decorative Side ---------- */
+.reg-decor-side {
+  background: rgba(18, 8, 42, 0.4);
+  border-left: 1px solid rgba(139, 92, 246, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.reg-decor-content {
+  max-width: 340px;
+}
+
+.reg-decor-content h2 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #f0ecf8;
+  margin: 0 0 0.25rem;
+}
+
+.reg-decor-arabic {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+  font-size: 1.5rem;
+  color: #d4a853;
+  direction: rtl;
+  margin: 0 0 1rem;
+}
+
+.reg-decor-desc {
+  font-size: 0.9rem;
+  color: #7a7290;
+  line-height: 1.7;
+  margin: 0 0 2rem;
+}
+
+.reg-decor-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+}
+
+.reg-decor-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.06);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #c4a8fa;
+  transition: all 0.3s ease;
+}
+
+.reg-decor-feature:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.15);
+}
+
+.reg-decor-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.reg-decor-stat {
+  text-align: center;
+}
+
+.reg-decor-stat-num {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #a78bfa, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.reg-decor-stat-label {
+  font-size: 0.7rem;
+  color: #5a5270;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.reg-decor-trust {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #5a5270;
+}
+
+.reg-decor-trust svg {
+  color: #10b981;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .reg-container {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+
+  .reg-decor-side {
+    display: none;
+  }
+
+  .reg-form-side {
+    padding: 2rem 1.5rem;
+  }
+
+  .reg-success-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .reg {
+    padding: 1rem;
+  }
+
+  .reg-form-side {
+    padding: 1.5rem 1rem;
+  }
+
+  .reg-steps {
+    gap: 0.5rem;
+  }
+
+  .reg-step-label {
+    display: none;
+  }
+}

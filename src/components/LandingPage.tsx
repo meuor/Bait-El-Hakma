@@ -4,8 +4,9 @@ import {
   BookOpen, Timer, LayoutGrid, Library,
   Cloud, Sparkles, ArrowRight, ChevronRight, X,
   Star, Headphones, Brain, Heart, Check,
-  Zap, Globe, Shield, Download, Monitor,
+  Zap, Globe, Shield, Download, Monitor, Laptop,
 } from 'lucide-react';
+import { IslamicWallpaper } from './IslamicWallpaper';
 import './LandingPage.css';
 
 interface LandingPageProps {
@@ -131,46 +132,6 @@ function Counter({ end, suffix = '', duration = 2 }: { end: number; suffix?: str
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-function GeometricBackground() {
-  return (
-    <div className="lp-geo-bg">
-      <svg viewBox="0 0 1200 800" className="lp-geo-svg" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <radialGradient id="lp-glow-1" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="rgba(139,92,246,0.15)" />
-            <stop offset="100%" stopColor="transparent" />
-          </radialGradient>
-          <radialGradient id="lp-glow-2" cx="70%" cy="70%">
-            <stop offset="0%" stopColor="rgba(245,158,11,0.1)" />
-            <stop offset="100%" stopColor="transparent" />
-          </radialGradient>
-        </defs>
-        <rect width="1200" height="800" fill="url(#lp-glow-1)" />
-        <rect width="1200" height="800" fill="url(#lp-glow-2)" />
-        {/* Islamic geometric pattern - octagonal stars */}
-        {Array.from({ length: 6 }, (_, row) =>
-          Array.from({ length: 8 }, (_, col) => {
-            const cx = 75 + col * 150;
-            const cy = 75 + row * 150;
-            const size = 30;
-            return (
-              <g key={`${row}-${col}`} opacity={0.04 + (row + col) * 0.005}>
-                <polygon
-                  points={`${cx},${cy - size} ${cx + size * 0.38},${cy - size * 0.38} ${cx + size},${cy} ${cx + size * 0.38},${cy + size * 0.38} ${cx},${cy + size} ${cx - size * 0.38},${cy + size * 0.38} ${cx - size},${cy} ${cx - size * 0.38},${cy - size * 0.38}`}
-                  fill="none"
-                  stroke="rgba(139,92,246,0.3)"
-                  strokeWidth="0.5"
-                />
-                <circle cx={cx} cy={cy} r={size * 0.2} fill="rgba(139,92,246,0.15)" />
-              </g>
-            );
-          })
-        )}
-      </svg>
-    </div>
-  );
-}
-
 function FloatingMockup() {
   return (
     <div className="lp-mockup-wrapper">
@@ -214,7 +175,6 @@ function FloatingMockup() {
           </div>
         </div>
       </div>
-      {/* Floating accent elements */}
       <div className="lp-mockup-float lp-mockup-float-1">
         <Timer className="w-5 h-5" />
         <span>25:00</span>
@@ -256,6 +216,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         <div className="lp-nav-links">
           <a href="#features" className="lp-nav-link">Features</a>
           <a href="#gallery" className="lp-nav-link">Gallery</a>
+          <a href="#desktop" className="lp-nav-link">Desktop App</a>
           <a href="#how" className="lp-nav-link">How it Works</a>
           <motion.button
             className="lp-btn-primary lp-btn-sm"
@@ -270,7 +231,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
       {/* Hero */}
       <section className="lp-hero" ref={heroRef}>
-        <GeometricBackground />
+        <IslamicWallpaper variant="hero" />
         <motion.div className="lp-hero-content" style={{ y: heroY, opacity: heroOpacity }}>
           <div className="lp-hero-left">
             <motion.div
@@ -492,7 +453,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       </section>
 
       {/* Desktop App Banner */}
-      <section className="lp-desktop">
+      <section className="lp-desktop" id="desktop">
         <FadeInSection>
           <div className="lp-desktop-card">
             <div className="lp-desktop-left">
@@ -506,6 +467,20 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                     <span>{f}</span>
                   </div>
                 ))}
+              </div>
+              <div className="lp-desktop-actions">
+                <motion.a
+                  href="https://github.com/meuor/Bait-El-Hakma/releases/latest"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lp-btn-primary"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Laptop className="w-5 h-5" />
+                  Download for Windows
+                </motion.a>
+                <span className="lp-desktop-version">v2.8.0 • NSIS Installer</span>
               </div>
             </div>
             <div className="lp-desktop-right">
@@ -573,7 +548,12 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="lp-footer-links">
             <a href="#features">Features</a>
             <a href="#gallery">Gallery</a>
+            <a href="#desktop">Desktop App</a>
             <a href="#how">How It Works</a>
+            <a href="https://github.com/meuor/Bait-El-Hakma/releases/latest" target="_blank" rel="noreferrer">
+              <Download className="w-3.5 h-3.5 inline mr-1" />
+              Download
+            </a>
             <a href="https://github.com/meuor/Bait-El-Hakma" target="_blank" rel="noreferrer">GitHub</a>
             <a href="mailto:support@baitelhakma.dev">Support</a>
           </div>

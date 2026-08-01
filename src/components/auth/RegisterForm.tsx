@@ -3,18 +3,28 @@ import { authAPI, type AuthUser } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { WallpaperBackground } from '@/components/WallpaperBackground';
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, ArrowRight, Sparkles, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import './RegisterForm.css';
 
 interface RegisterFormProps {
   onLogin: (user: AuthUser, token: string) => void;
   onSwitchToLogin: () => void;
 }
 
+const features = [
+  { icon: <BookOpen className="w-5 h-5" />, label: 'Full Quran Reader', color: 'text-amber-400' },
+  { icon: <Timer className="w-5 h-5" />, label: 'Pomodoro Timer', color: 'text-blue-400' },
+  { icon: <Library className="w-5 h-5" />, label: 'Book Library', color: 'text-emerald-400' },
+  { icon: <ListTodo className="w-5 h-5" />, label: 'Tasks & Kanban', color: 'text-pink-400' },
+  { icon: <Trophy className="w-5 h-5" />, label: 'Challenge Tracker', color: 'text-violet-400' },
+  { icon: <RefreshCw className="w-5 h-5" />, label: 'Cloud Sync', color: 'text-cyan-400' },
+];
+
 export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
+  const [step, setStep] = useState(1);
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -83,7 +93,7 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
       toast.success(`Welcome, ${result.user.displayName}! Your account has been created.`);
       setTimeout(() => {
         onLogin(result.user, result.token);
-      }, 2000);
+      }, 2500);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Registration failed');
     } finally {
@@ -91,175 +101,271 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
     }
   };
 
-  return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <WallpaperBackground />
-      <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '28rem' }}>
-        <Card className="tab-card w-full" style={{ background: 'rgba(7, 3, 18, 0.65)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(139, 92, 246, 0.12)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}>
-        <CardHeader className="text-center">
-          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
-          <CardTitle className="text-2xl" style={{ color: '#f0ecf8' }}>
-            {registered ? 'Account Created!' : 'Create Account'}
-          </CardTitle>
-          <CardDescription style={{ color: '#8a82a0' }}>
-            {registered 
-              ? `Welcome ${registeredName}! Your data will be synced to the cloud.`
-              : 'Start your productivity journey today'
-            }
-          </CardDescription>
-        </CardHeader>
+  const canProceedStep1 = displayName.trim().length > 0;
+  const canProceedStep2 = email.trim().length > 0 && password.length >= 6;
 
-        {registered ? (
-          <CardContent className="text-center space-y-4">
-            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-              <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-2" />
-              <p className="font-medium text-green-700 dark:text-green-300">
-                Welcome, {registeredName}! 🎉
-              </p>
-              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                Your account is ready. A welcome email has been sent to your inbox.
-              </p>
+  return (
+    <div className="reg">
+      <IslamicWallpaper variant="hero" />
+
+      <div className="reg-container">
+        {/* Left Side - Form */}
+        <div className="reg-form-side">
+          <motion.div
+            className="reg-form-card"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="reg-form-header">
+              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="reg-logo" />
+              <h1>{registered ? 'Welcome!' : 'Create Account'}</h1>
+              <p>{registered ? `Hello ${registeredName}, your workspace is ready` : 'Start your productivity journey today'}</p>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-left text-sm">
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800">
-                <BookOpen className="h-4 w-4 text-violet-500 shrink-0" />
-                <span className="text-violet-700 dark:text-violet-300">Quran Reader</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
-                <Library className="h-4 w-4 text-blue-500 shrink-0" />
-                <span className="text-blue-700 dark:text-blue-300">Book Library</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-                <Timer className="h-4 w-4 text-amber-500 shrink-0" />
-                <span className="text-amber-700 dark:text-amber-300">Pomodoro Timer</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-                <Trophy className="h-4 w-4 text-green-500 shrink-0" />
-                <span className="text-green-700 dark:text-green-300">Challenges</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-pink-50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800">
-                <ListTodo className="h-4 w-4 text-pink-500 shrink-0" />
-                <span className="text-pink-700 dark:text-pink-300">Tasks & Kanban</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800">
-                <RefreshCw className="h-4 w-4 text-cyan-500 shrink-0" />
-                <span className="text-cyan-700 dark:text-cyan-300">Cloud Sync</span>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Redirecting you to the app...
+
+            <AnimatePresence mode="wait">
+              {registered ? (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="reg-success"
+                >
+                  <div className="reg-success-icon">
+                    <CheckCircle2 className="w-16 h-16 text-emerald-400" />
+                  </div>
+                  <h2>Account Created!</h2>
+                  <p>Welcome, {registeredName}! Your data will be synced to the cloud.</p>
+                  <div className="reg-success-features">
+                    {features.map((f, i) => (
+                      <motion.div
+                        key={i}
+                        className="reg-success-feature"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + i * 0.1 }}
+                      >
+                        <span className={f.color}>{f.icon}</span>
+                        <span>{f.label}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <p className="reg-success-redirect">Redirecting you to the app...</p>
+                  <Loader2 className="h-6 w-6 animate-spin text-violet-400 mx-auto" />
+                </motion.div>
+              ) : (
+                <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  {/* Progress Steps */}
+                  <div className="reg-steps">
+                    <div className={`reg-step ${step >= 1 ? 'active' : ''}`}>
+                      <span>1</span>
+                      <span className="reg-step-label">Profile</span>
+                    </div>
+                    <div className="reg-step-line" />
+                    <div className={`reg-step ${step >= 2 ? 'active' : ''}`}>
+                      <span>2</span>
+                      <span className="reg-step-label">Account</span>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSubmit}>
+                    <AnimatePresence mode="wait">
+                      {step === 1 && (
+                        <motion.div
+                          key="step1"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="reg-form-fields"
+                        >
+                          <div className="reg-field">
+                            <Label htmlFor="name">Display Name</Label>
+                            <Input
+                              id="name"
+                              type="text"
+                              placeholder="Your name"
+                              value={displayName}
+                              onChange={(e) => setDisplayName(e.target.value)}
+                              required
+                              className="reg-input"
+                            />
+                          </div>
+                          <div className="reg-field">
+                            <Label htmlFor="username">
+                              Username
+                              <span className="reg-label-hint">(optional, your public profile)</span>
+                            </Label>
+                            <div className="reg-input-wrapper">
+                              <span className="reg-input-prefix">@</span>
+                              <Input
+                                id="username"
+                                type="text"
+                                placeholder="your_username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                                className="reg-input reg-input-prefix-input"
+                              />
+                              <span className="reg-input-status">
+                                {usernameStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                                {usernameStatus === 'available' && <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+                                {usernameStatus === 'taken' && <XCircle className="h-4 w-4 text-red-400" />}
+                              </span>
+                            </div>
+                            {username && usernameStatus === 'taken' && (
+                              <p className="reg-field-error">This username is already taken</p>
+                            )}
+                            {username && usernameStatus === 'available' && (
+                              <p className="reg-field-success">bait-el-hakma.vercel.app/@{username}</p>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            className="reg-btn-primary"
+                            onClick={() => setStep(2)}
+                            disabled={!canProceedStep1}
+                          >
+                            Continue <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      )}
+
+                      {step === 2 && (
+                        <motion.div
+                          key="step2"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="reg-form-fields"
+                        >
+                          <div className="reg-field">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="you@example.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                              className="reg-input"
+                            />
+                          </div>
+                          <div className="reg-field">
+                            <Label htmlFor="password">Password</Label>
+                            <div className="reg-input-wrapper">
+                              <Input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="reg-input"
+                              />
+                              <button
+                                type="button"
+                                className="reg-input-toggle"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
+                            {password && password.length < 6 && (
+                              <p className="reg-field-error">Password must be at least 6 characters</p>
+                            )}
+                          </div>
+                          <div className="reg-field">
+                            <Label htmlFor="confirmPassword">Confirm Password</Label>
+                            <Input
+                              id="confirmPassword"
+                              type={showPassword ? 'text' : 'password'}
+                              placeholder="••••••••"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              required
+                              className="reg-input"
+                            />
+                            {confirmPassword && password !== confirmPassword && (
+                              <p className="reg-field-error">Passwords do not match</p>
+                            )}
+                          </div>
+                          <div className="reg-form-actions">
+                            <Button type="button" variant="ghost" onClick={() => setStep(1)} className="reg-btn-back">
+                              Back
+                            </Button>
+                            <Button type="submit" className="reg-btn-primary" disabled={isLoading || !canProceedStep2}>
+                              {isLoading ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...</>
+                              ) : (
+                                <>Create Account <Sparkles className="w-4 h-4" /></>
+                              )}
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </form>
+
+                  <div className="reg-form-footer">
+                    <p>Already have an account? <button onClick={onSwitchToLogin}>Sign in</button></p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+
+        {/* Right Side - Decorative */}
+        <div className="reg-decor-side">
+          <motion.div
+            className="reg-decor-content"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2>House of Wisdom</h2>
+            <p className="reg-decor-arabic">بيت الحكمة</p>
+            <p className="reg-decor-desc">
+              A digital sanctuary where knowledge meets faith. Read, learn, track your progress,
+              and build lasting habits — all in one beautifully crafted space.
             </p>
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
-          </CardContent>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Display Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  required
-                />
+
+            <div className="reg-decor-features">
+              {features.map((f, i) => (
+                <motion.div
+                  key={i}
+                  className="reg-decor-feature"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                >
+                  <span className={f.color}>{f.icon}</span>
+                  <span>{f.label}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="reg-decor-stats">
+              <div className="reg-decor-stat">
+                <span className="reg-decor-stat-num">114</span>
+                <span className="reg-decor-stat-label">Surahs</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">
-                  Username
-                  <span className="text-xs text-muted-foreground ml-2">(optional, your public profile link)</span>
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">@</span>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="your_username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-                    className="pl-8 pr-8"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {usernameStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                    {usernameStatus === 'available' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                    {usernameStatus === 'taken' && <XCircle className="h-4 w-4 text-red-500" />}
-                  </span>
-                </div>
-                {username && usernameStatus === 'taken' && (
-                  <p className="text-xs text-red-500">This username is already taken</p>
-                )}
-                {username && usernameStatus === 'available' && (
-                  <p className="text-xs text-green-500">Your profile: bait-el-hakma.vercel.app/@{username}</p>
-                )}
+              <div className="reg-decor-stat">
+                <span className="reg-decor-stat-num">13</span>
+                <span className="reg-decor-stat-label">Reciters</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+              <div className="reg-decor-stat">
+                <span className="reg-decor-stat-num">100%</span>
+                <span className="reg-decor-stat-label">Free</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  'Create Account'
-                )}
-              </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                Already have an account?{' '}
-                <Button variant="link" className="p-0 h-auto" onClick={onSwitchToLogin}>
-                  Sign in
-                </Button>
-              </p>
-            </CardFooter>
-          </form>
-        )}
-      </Card>
+            </div>
+
+            <div className="reg-decor-trust">
+              <Shield className="w-4 h-4" />
+              <span>Privacy First • No Ads • No Tracking</span>
+            </div>
+          </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
