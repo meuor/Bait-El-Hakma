@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { AutomationRuleEditor } from '@/components/AutomationRuleEditor';
 import { TemplateManager } from '@/components/TemplateManager';
 import { DatabaseView } from '@/components/DatabaseView';
+import { DesktopSettingsPanel } from '@/components/DesktopSettings';
 import {
   User,
   Mail,
@@ -418,6 +419,9 @@ export function ProfilePage({ user, onUpdate, onLogout }: ProfilePageProps) {
           <TemplateManager />
         </CardContent>
       </Card>
+
+      {/* Desktop Settings */}
+      <DesktopSettingsPanel />
 
       {/* Database View */}
       <Card>

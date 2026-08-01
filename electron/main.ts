@@ -1,8 +1,9 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, protocol } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, protocol, Notification } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import { autoUpdater } from 'electron-updater';
+import { loadSettings, saveSettings, applyAutoStart, type DesktopSettings } from './settings';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,7 @@ const isLinux = process.platform === 'linux';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+let desktopSettings: DesktopSettings = loadSettings();
 
 const DIST_PATH = path.join(__dirname, '..', 'dist');
 
@@ -45,7 +47,7 @@ function createWindow() {
     title: 'Bait El-Hakma - House of Wisdom',
     icon: getIconPath(),
     backgroundColor: '#06020f',
-    show: false,
+    show: !desktopSettings.startMinimized,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       contextIsolation: true,
@@ -78,7 +80,9 @@ function createWindow() {
   }
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+    if (!desktopSettings.startMinimized) {
+      mainWindow?.show();
+    }
     // Check for updates after window is ready (only in production)
     if (!isDev) {
       setTimeout(() => {
@@ -88,10 +92,15 @@ function createWindow() {
   });
 
   mainWindow.on('close', (event) => {
-    if (!app.isQuitting) {
+    if (!app.isQuitting && desktopSettings.closeToTray) {
       event.preventDefault();
       mainWindow?.hide();
+      if (desktopSettings.showNotifications && !Notification.isSupported() === false) {
+        // Silent minimize — no notification needed
+      }
+      return;
     }
+    mainWindow = null;
   });
 
   mainWindow.on('closed', () => {
@@ -105,6 +114,11 @@ function createWindow() {
   mainWindow.on('unmaximize', () => {
     mainWindow?.webContents.send('window-maximized', false);
   });
+
+  // Send initial settings to renderer
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow?.webContents.send('desktop-settings-changed', desktopSettings);
+  });
 }
 
 function createTray() {
@@ -113,10 +127,47 @@ function createTray() {
   const trayIconSize = isLinux ? 22 : 16;
   tray = new Tray(icon.resize({ width: trayIconSize, height: trayIconSize }));
 
+  updateTrayMenu();
+
+  tray.setToolTip('Bait El-Hakma - House of Wisdom');
+
+  tray.on('double-click', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
+
   const contextMenu = Menu.buildFromTemplate([
     {
       label: 'Open Bait El-Hakma',
-      click: () => mainWindow?.show(),
+      click: () => {
+        mainWindow?.show();
+        mainWindow?.focus();
+      },
+    },
+    { type: 'separator' },
+    {
+      label: 'Close to Tray',
+      type: 'checkbox',
+      checked: desktopSettings.closeToTray,
+      click: (menuItem) => {
+        desktopSettings.closeToTray = menuItem.checked;
+        saveSettings(desktopSettings);
+        updateTrayMenu();
+      },
+    },
+    {
+      label: 'Minimize to Tray',
+      type: 'checkbox',
+      checked: desktopSettings.minimizeToTray,
+      click: (menuItem) => {
+        desktopSettings.minimizeToTray = menuItem.checked;
+        saveSettings(desktopSettings);
+        updateTrayMenu();
+      },
     },
     { type: 'separator' },
     {
@@ -136,12 +187,20 @@ function createTray() {
     },
   ]);
 
-  tray.setToolTip('Bait El-Hakma - House of Wisdom');
   tray.setContextMenu(contextMenu);
+}
 
-  tray.on('double-click', () => {
-    mainWindow?.show();
+function sendNotification(title: string, body: string) {
+  if (!desktopSettings.showNotifications) return;
+  if (!Notification.isSupported()) return;
+
+  const notification = new Notification({
+    title,
+    body,
+    icon: getIconPath(),
+    silent: true,
   });
+  notification.show();
 }
 
 // Auto-updater events
@@ -174,15 +233,23 @@ autoUpdater.on('update-downloaded', (info) => {
     version: info.version,
     releaseDate: info.releaseDate,
   });
+  sendNotification(
+    'Update Ready',
+    `Bait El-Hakma v${info.version} has been downloaded and is ready to install.`
+  );
 });
 
 autoUpdater.on('error', (error) => {
   mainWindow?.webContents.send('update-error', error.message);
 });
 
-// IPC Handlers
+// IPC Handlers — Window
 ipcMain.on('window-minimize', () => {
-  mainWindow?.minimize();
+  if (desktopSettings.minimizeToTray) {
+    mainWindow?.hide();
+  } else {
+    mainWindow?.minimize();
+  }
 });
 
 ipcMain.on('window-maximize', () => {
@@ -207,6 +274,23 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-platform', () => {
   return process.platform;
+});
+
+// IPC Handlers — Desktop Settings
+ipcMain.handle('get-desktop-settings', () => {
+  return desktopSettings;
+});
+
+ipcMain.handle('set-desktop-settings', (_, settings: Partial<DesktopSettings>) => {
+  desktopSettings = { ...desktopSettings, ...settings };
+  saveSettings(desktopSettings);
+  applyAutoStart(desktopSettings);
+  updateTrayMenu();
+
+  // Notify renderer
+  mainWindow?.webContents.send('desktop-settings-changed', desktopSettings);
+
+  return desktopSettings;
 });
 
 // Update IPC handlers
@@ -319,6 +403,9 @@ function getMimeType(filePath: string): string {
 }
 
 app.whenReady().then(() => {
+  // Apply auto-start setting
+  applyAutoStart(desktopSettings);
+
   if (!isDev) {
     registerFileProtocol();
   }
@@ -331,6 +418,7 @@ app.whenReady().then(() => {
       createWindow();
     } else {
       mainWindow?.show();
+      mainWindow?.focus();
     }
   });
 });

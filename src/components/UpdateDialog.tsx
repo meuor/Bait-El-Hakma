@@ -20,6 +20,9 @@ declare global {
       isElectron: boolean;
       platform: string;
       getVersion: () => Promise<string>;
+      getDesktopSettings: () => Promise<DesktopSettings>;
+      setDesktopSettings: (settings: Partial<DesktopSettings>) => Promise<DesktopSettings>;
+      onDesktopSettingsChanged: (callback: (settings: DesktopSettings) => void) => () => void;
       checkForUpdates: () => Promise<{ updateInfo?: UpdateInfo; error?: string }>;
       downloadUpdate: () => Promise<{ success?: boolean; error?: string }>;
       installUpdate: () => void;
@@ -30,6 +33,14 @@ declare global {
       onUpdateError: (callback: (error: string) => void) => void;
     };
   }
+}
+
+interface DesktopSettings {
+  closeToTray: boolean;
+  minimizeToTray: boolean;
+  autoStart: boolean;
+  startMinimized: boolean;
+  showNotifications: boolean;
 }
 
 export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {

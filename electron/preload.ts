@@ -3,15 +3,29 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
   platform: process.platform,
   isElectron: true,
+
+  // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
   isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   getVersion: () => ipcRenderer.invoke('get-app-version'),
   getPlatform: () => ipcRenderer.invoke('get-platform'),
+
+  // Window state events
   onMaximized: (callback: (maximized: boolean) => void) => {
     ipcRenderer.on('window-maximized', (_, maximized) => callback(maximized));
   },
+
+  // Desktop settings
+  getDesktopSettings: () => ipcRenderer.invoke('get-desktop-settings'),
+  setDesktopSettings: (settings: Record<string, unknown>) => ipcRenderer.invoke('set-desktop-settings', settings),
+  onDesktopSettingsChanged: (callback: (settings: any) => void) => {
+    const handler = (_: any, settings: any) => callback(settings);
+    ipcRenderer.on('desktop-settings-changed', handler);
+    return () => ipcRenderer.removeListener('desktop-settings-changed', handler);
+  },
+
   // Update system
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   downloadUpdate: () => ipcRenderer.invoke('download-update'),
