@@ -482,7 +482,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, hsl(217 91% 60%), hsl(224 76% 48%))' }}>
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
                     <Laptop className="w-5 h-5 text-white" />
                   </div>
                   <div className="lp-download-info">
@@ -500,7 +500,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, hsl(var(--warning)), hsl(45 80% 45%))' }}>
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
                     <Terminal className="w-5 h-5 text-white" />
                   </div>
                   <div className="lp-download-info">
@@ -518,7 +518,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark)))' }}>
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}>
                     <Apple className="w-5 h-5 text-white" />
                   </div>
                   <div className="lp-download-info">
@@ -536,7 +536,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, hsl(var(--success)), hsl(var(--success) / 0.8))' }}>
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
                     <Globe className="w-5 h-5 text-white" />
                   </div>
                   <div className="lp-download-info">
