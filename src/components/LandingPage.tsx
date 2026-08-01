@@ -5,6 +5,7 @@ import {
   Cloud, Sparkles, ArrowRight, ChevronRight, X,
   Star, Headphones, Brain, Heart, Check,
   Zap, Globe, Shield, Download, Monitor, Laptop,
+  Terminal, Apple,
 } from 'lucide-react';
 import { IslamicWallpaper } from './IslamicWallpaper';
 import './LandingPage.css';
@@ -461,8 +462,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="lp-desktop-card">
             <div className="lp-desktop-left">
               <Monitor className="w-12 h-12 text-violet-400 mb-4" />
-              <h2>Also available as a Desktop App</h2>
-              <p>Download Bait El-Hakma for Windows. Same powerful features, native experience, offline support.</p>
+              <h2>Download for Your Platform</h2>
+              <p>Get Bait El-Hakma on Windows, Linux, or macOS. Same powerful features, native experience, offline support.</p>
               <div className="lp-desktop-features">
                 {['Offline Access', 'System Tray', 'Auto Updates', 'Native Feel'].map((f, i) => (
                   <div key={i} className="lp-desktop-feature">
@@ -471,19 +472,78 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   </div>
                 ))}
               </div>
-              <div className="lp-desktop-actions">
+              <div className="lp-desktop-actions-grid">
+                {/* Windows */}
+                <motion.a
+                  href="https://github.com/meuor/Bait-El-Hakma/releases/latest/download/Bait-El-Hakma-2.8.0-Setup.exe"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lp-download-card"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
+                    <Laptop className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="lp-download-info">
+                    <span className="lp-download-name">Windows</span>
+                    <span className="lp-download-format">EXE Installer • v2.8.0</span>
+                  </div>
+                </motion.a>
+
+                {/* Linux */}
                 <motion.a
                   href="https://github.com/meuor/Bait-El-Hakma/releases/latest"
                   target="_blank"
                   rel="noreferrer"
-                  className="lp-btn-primary"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="lp-download-card"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
                 >
-                  <Laptop className="w-5 h-5" />
-                  Download for Windows
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                    <Terminal className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="lp-download-info">
+                    <span className="lp-download-name">Linux</span>
+                    <span className="lp-download-format">AppImage • DEB • RPM</span>
+                  </div>
                 </motion.a>
-                <span className="lp-desktop-version">v2.8.0 • NSIS Installer</span>
+
+                {/* macOS */}
+                <motion.a
+                  href="https://github.com/meuor/Bait-El-Hakma/releases/latest"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lp-download-card"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}>
+                    <Apple className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="lp-download-info">
+                    <span className="lp-download-name">macOS</span>
+                    <span className="lp-download-format">DMG • Universal</span>
+                  </div>
+                </motion.a>
+
+                {/* Web */}
+                <motion.a
+                  href="https://bait-el-hakma.vercel.app"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lp-download-card"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <div className="lp-download-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                    <Globe className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="lp-download-info">
+                    <span className="lp-download-name">Web App</span>
+                    <span className="lp-download-format">No install needed</span>
+                  </div>
+                </motion.a>
               </div>
             </div>
             <div className="lp-desktop-right">

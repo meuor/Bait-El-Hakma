@@ -1032,6 +1032,58 @@
   color: #5a5270;
 }
 
+/* Download Grid */
+.lp-desktop-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.lp-download-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(18, 8, 42, 0.4);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.lp-download-card:hover {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.lp-download-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lp-download-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.lp-download-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f0ecf8;
+}
+
+.lp-download-format {
+  font-size: 0.7rem;
+  color: #6b6380;
+}
+
 /* Desktop mockup */
 .lp-desktop-mockup {
   width: 100%;

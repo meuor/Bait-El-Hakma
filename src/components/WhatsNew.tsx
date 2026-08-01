@@ -20,9 +20,12 @@ const changelog: ChangelogEntry[] = [
     type: 'major',
     changes: [
       { category: 'new', text: 'Desktop app for Windows, Linux, and macOS' },
+      { category: 'new', text: 'Download buttons for all platforms (Win, Linux, Mac, Web)' },
       { category: 'new', text: 'Real Islamic wallpaper backgrounds from wallhaven.cc' },
       { category: 'new', text: 'Auto-update system — check for updates from the app' },
       { category: 'new', text: 'Modernized login, signup, and password reset pages' },
+      { category: 'new', text: 'Tab order profiles — save, switch, rename & delete custom layouts' },
+      { category: 'new', text: 'Tab order syncs to cloud across all your devices' },
       { category: 'new', text: 'Linux builds: AppImage, deb, rpm' },
       { category: 'new', text: 'macOS builds: DMG, ZIP (universal)' },
       { category: 'improved', text: 'Landing page with animated hero section' },
