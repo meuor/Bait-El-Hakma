@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 
 interface IslamicWallpaperProps {
   className?: string;
@@ -87,15 +88,26 @@ function Rosette({ size = 300, opacity = 0.05, color = '#c4a8fa' }: { size?: num
 }
 
 export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWallpaperProps) {
+  const { theme } = useTheme();
   const [currentBg, setCurrentBg] = useState(0);
   const [currentImage, setCurrentImage] = useState(Math.floor(Math.random() * wallpaperImages.length));
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const backgrounds = [
+  const isDark = theme === 'dark' || theme === 'dracula' || theme === 'monokai';
+
+  const darkBackgrounds = [
     'linear-gradient(135deg, #06020f 0%, #0d0520 30%, #0a0318 60%, #110828 100%)',
     'linear-gradient(135deg, #08030f 0%, #100525 30%, #0c0420 60%, #0e0622 100%)',
     'linear-gradient(135deg, #05020d 0%, #0b041e 30%, #080315 60%, #0f0726 100%)',
   ];
+
+  const lightBackgrounds = [
+    'linear-gradient(135deg, hsl(var(--surface-base)) 0%, hsl(var(--surface-dim)) 50%, hsl(var(--surface-base)) 100%)',
+    'linear-gradient(135deg, hsl(var(--surface-dim)) 0%, hsl(var(--surface-base)) 50%, hsl(var(--surface-dim)) 100%)',
+    'linear-gradient(135deg, hsl(var(--surface-base)) 0%, hsl(var(--surface-overlay)) 50%, hsl(var(--surface-base)) 100%)',
+  ];
+
+  const backgrounds = isDark ? darkBackgrounds : lightBackgrounds;
 
   useEffect(() => {
     if (variant !== 'hero') return;
@@ -107,7 +119,9 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
     return () => clearInterval(interval);
   }, [variant, backgrounds.length]);
 
-  const patternOpacity = variant === 'subtle' ? 0.02 : variant === 'section' ? 0.04 : 0.06;
+  const patternOpacity = isDark
+    ? (variant === 'subtle' ? 0.02 : variant === 'section' ? 0.04 : 0.06)
+    : (variant === 'subtle' ? 0.01 : variant === 'section' ? 0.02 : 0.03);
 
   return (
     <div
@@ -141,7 +155,9 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(180deg, rgba(6,2,15,0.7) 0%, rgba(6,2,15,0.5) 40%, rgba(6,2,15,0.8) 100%)',
+          background: isDark
+            ? 'linear-gradient(180deg, rgba(6,2,15,0.7) 0%, rgba(6,2,15,0.5) 40%, rgba(6,2,15,0.8) 100%)'
+            : 'linear-gradient(180deg, hsl(var(--surface-base) / 0.3) 0%, hsl(var(--surface-base) / 0.1) 40%, hsl(var(--surface-base) / 0.3) 100%)',
         }}
       />
 
@@ -149,36 +165,36 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
       <div className="absolute inset-0">
         {/* Large rosette - top left */}
         <div className="absolute" style={{ top: '-5%', left: '-5%', transform: 'rotate(15deg)' }}>
-          <Rosette size={500} opacity={patternOpacity * 0.8} color="#d4a853" />
+          <Rosette size={500} opacity={patternOpacity * 0.8} color={isDark ? '#d4a853' : 'hsl(var(--gold))'} />
         </div>
 
         {/* Star pattern - top right */}
         <div className="absolute" style={{ top: '10%', right: '-3%', transform: 'rotate(-10deg)' }}>
-          <StarPattern size={400} opacity={patternOpacity} color="#a78bfa" />
+          <StarPattern size={400} opacity={patternOpacity} color={isDark ? '#a78bfa' : 'hsl(var(--brand-light))'} />
         </div>
 
         {/* Hex pattern - center left */}
         <div className="absolute" style={{ top: '40%', left: '5%', transform: 'rotate(30deg)' }}>
-          <HexPattern size={250} opacity={patternOpacity * 0.7} color="#c4a8fa" />
+          <HexPattern size={250} opacity={patternOpacity * 0.7} color={isDark ? '#c4a8fa' : 'hsl(var(--brand-lighter))'} />
         </div>
 
         {/* Rosette - bottom right */}
         <div className="absolute" style={{ bottom: '-10%', right: '10%', transform: 'rotate(-20deg)' }}>
-          <Rosette size={600} opacity={patternOpacity * 0.6} color="#818cf8" />
+          <Rosette size={600} opacity={patternOpacity * 0.6} color={isDark ? '#818cf8' : 'hsl(var(--brand))'} />
         </div>
 
         {/* Star - bottom left */}
         <div className="absolute" style={{ bottom: '15%', left: '15%', transform: 'rotate(45deg)' }}>
-          <StarPattern size={200} opacity={patternOpacity * 0.5} color="#fbbf24" />
+          <StarPattern size={200} opacity={patternOpacity * 0.5} color={isDark ? '#fbbf24' : 'hsl(var(--gold-light))'} />
         </div>
 
         {/* Additional floating elements */}
         <div className="absolute" style={{ top: '60%', right: '25%', transform: 'rotate(60deg)' }}>
-          <HexPattern size={180} opacity={patternOpacity * 0.4} color="#6366f1" />
+          <HexPattern size={180} opacity={patternOpacity * 0.4} color={isDark ? '#6366f1' : 'hsl(var(--brand-dark))'} />
         </div>
 
         <div className="absolute" style={{ top: '20%', left: '40%', transform: 'rotate(-30deg)' }}>
-          <StarPattern size={150} opacity={patternOpacity * 0.3} color="#f59e0b" />
+          <StarPattern size={150} opacity={patternOpacity * 0.3} color={isDark ? '#f59e0b' : 'hsl(var(--warning))'} />
         </div>
       </div>
 
@@ -186,19 +202,25 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%)',
+          background: isDark
+            ? 'radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%)'
+            : 'radial-gradient(ellipse at 20% 30%, hsl(var(--brand) / 0.04) 0%, transparent 50%)',
         }}
       />
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 80% 70%, rgba(212, 168, 83, 0.05) 0%, transparent 50%)',
+          background: isDark
+            ? 'radial-gradient(ellipse at 80% 70%, rgba(212, 168, 83, 0.05) 0%, transparent 50%)'
+            : 'radial-gradient(ellipse at 80% 70%, hsl(var(--gold) / 0.03) 0%, transparent 50%)',
         }}
       />
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 60%)',
+          background: isDark
+            ? 'radial-gradient(ellipse at 50% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 60%)'
+            : 'radial-gradient(ellipse at 50% 50%, hsl(var(--brand-dark) / 0.02) 0%, transparent 60%)',
         }}
       />
     </div>

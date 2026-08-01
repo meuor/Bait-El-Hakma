@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 
 const wallpapers = [
   'https://w.wallhaven.cc/full/rq/wallhaven-rq215j.png',
@@ -19,7 +20,9 @@ interface WallpaperBackgroundProps {
 }
 
 export function WallpaperBackground({ overlay = true, overlayOpacity = 0.85 }: WallpaperBackgroundProps) {
+  const { theme } = useTheme();
   const [index, setIndex] = useState(0);
+  const isDark = theme === 'dark' || theme === 'dracula' || theme === 'monokai';
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -35,7 +38,7 @@ export function WallpaperBackground({ overlay = true, overlayOpacity = 0.85 }: W
       zIndex: 0,
       overflow: 'hidden',
     }}>
-      {wallpapers.map((url, i) => (
+      {isDark && wallpapers.map((url, i) => (
         <div
           key={url}
           style={{
@@ -53,7 +56,9 @@ export function WallpaperBackground({ overlay = true, overlayOpacity = 0.85 }: W
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: `linear-gradient(180deg, rgba(7, 3, 18, ${overlayOpacity}) 0%, rgba(7, 3, 18, ${overlayOpacity * 0.5}) 30%, rgba(7, 3, 18, ${overlayOpacity * 0.4}) 60%, rgba(7, 3, 18, ${overlayOpacity}) 100%)`,
+          background: isDark
+            ? `linear-gradient(180deg, rgba(7, 3, 18, ${overlayOpacity}) 0%, rgba(7, 3, 18, ${overlayOpacity * 0.5}) 30%, rgba(7, 3, 18, ${overlayOpacity * 0.4}) 60%, rgba(7, 3, 18, ${overlayOpacity}) 100%)`
+            : `linear-gradient(180deg, hsl(var(--surface-base) / 0.6) 0%, hsl(var(--surface-base) / 0.3) 30%, hsl(var(--surface-base) / 0.2) 60%, hsl(var(--surface-base) / 0.6) 100%)`,
           zIndex: 1,
         }} />
       )}
