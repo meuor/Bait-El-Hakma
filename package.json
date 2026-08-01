@@ -23,6 +23,12 @@
     "appId": "com.baithaelhakma.app",
     "productName": "Bait El-Hakma",
     "npmRebuild": false,
+    "publish": {
+      "provider": "github",
+      "owner": "meuor",
+      "repo": "Bait-El-Hakma",
+      "releaseType": "release"
+    },
     "directories": {
       "output": "release"
     },
@@ -34,18 +40,24 @@
       {
         "from": "build/icons",
         "to": "icons",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.png",
@@ -67,19 +79,27 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "rpm",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "tar.gz",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.png",
@@ -91,25 +111,46 @@
         "Keywords": "productivity;islamic;quran;timer;kanban;tasks",
         "StartupWMClass": "bait-el-hakma"
       },
-      "mimeTypes": ["x-scheme-handler/bait-el-hakma"]
+      "mimeTypes": [
+        "x-scheme-handler/bait-el-hakma"
+      ]
     },
     "deb": {
-      "depends": ["gconf2", "gconf-service", "libnotify4", "libappindicator1", "libxtst6", "libnss3"],
+      "depends": [
+        "gconf2",
+        "gconf-service",
+        "libnotify4",
+        "libappindicator1",
+        "libxtst6",
+        "libnss3"
+      ],
       "artifactName": "Bait-El-Hakma-${version}-amd64.deb"
     },
     "rpm": {
-      "depends": ["GConf2", "libnotify", "libappindicator", "libXtst", "nss"],
+      "depends": [
+        "GConf2",
+        "libnotify",
+        "libappindicator",
+        "libXtst",
+        "nss"
+      ],
       "artifactName": "Bait-El-Hakma-${version}.x86_64.rpm"
     },
     "mac": {
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "build/icon.png",
@@ -127,8 +168,16 @@
         "height": 380
       },
       "contents": [
-        { "x": 140, "y": 200 },
-        { "x": 400, "y": 200, "type": "link", "path": "/Applications" }
+        {
+          "x": 140,
+          "y": 200
+        },
+        {
+          "x": 400,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
       ],
       "artifactName": "Bait-El-Hakma-${version}-Mac.${ext}"
     }
@@ -207,6 +256,7 @@
     "concurrently": "^9.1.2",
     "electron": "^35.3.0",
     "electron-builder": "^26.0.12",
+    "electron-updater": "^6.8.9",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

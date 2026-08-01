@@ -68,7 +68,7 @@ export function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword }: Log
             transition={{ duration: 0.6 }}
           >
             <div className="auth-form-header">
-              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <img src="/img/logo.png" alt="Bait El-Hakma" className="auth-logo" />
               <h1>Welcome Back</h1>
               <p>Sign in to access your productivity dashboard</p>
             </div>

@@ -1,203 +1,257 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  Sparkles, Cloud, Sparkle, Wrench, Zap,
-  ChevronDown, ChevronUp, ShieldCheck,
-} from 'lucide-react';
-import { APP_VERSION, CHANGELOG, SYNCED_DATA_LABELS, type ChangelogEntry } from '@/data/changelog';
+import { X, Sparkles, Star, Zap, BookOpen, Palette, Globe } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const TYPE_CONFIG = {
-  new: { icon: Sparkles, label: 'New', color: 'text-emerald-500 bg-emerald-500/10' },
-  improved: { icon: Zap, label: 'Improved', color: 'text-blue-500 bg-blue-500/10' },
-  fixed: { icon: Wrench, label: 'Fixed', color: 'text-orange-500 bg-orange-500/10' },
-  sync: { icon: Cloud, label: 'Synced', color: 'text-violet-500 bg-violet-500/10' },
-} as const;
-
-const VERSION_KEY = 'bait-el-hakma-seen-version';
-
-function hasSeenVersion(): boolean {
-  try {
-    return localStorage.getItem(VERSION_KEY) === APP_VERSION;
-  } catch {
-    return false;
-  }
+interface ChangelogEntry {
+  version: string;
+  date: string;
+  type: 'major' | 'minor' | 'patch';
+  changes: {
+    category: 'new' | 'improved' | 'fixed' | 'removed';
+    text: string;
+  }[];
 }
 
-function markVersionSeen() {
-  try {
-    localStorage.setItem(VERSION_KEY, APP_VERSION);
-  } catch {}
-}
+const changelog: ChangelogEntry[] = [
+  {
+    version: '2.8.0',
+    date: '2026-08-01',
+    type: 'major',
+    changes: [
+      { category: 'new', text: 'Desktop app for Windows, Linux, and macOS' },
+      { category: 'new', text: 'Real Islamic wallpaper backgrounds from wallhaven.cc' },
+      { category: 'new', text: 'Auto-update system — check for updates from the app' },
+      { category: 'new', text: 'Modernized login, signup, and password reset pages' },
+      { category: 'new', text: 'Linux builds: AppImage, deb, rpm' },
+      { category: 'new', text: 'macOS builds: DMG, ZIP (universal)' },
+      { category: 'improved', text: 'Landing page with animated hero section' },
+      { category: 'improved', text: 'Split-layout auth pages with glassmorphism' },
+      { category: 'improved', text: 'System tray integration on all platforms' },
+    ],
+  },
+  {
+    version: '2.7.0',
+    date: '2026-07-15',
+    type: 'minor',
+    changes: [
+      { category: 'new', text: 'Quick Capture widget for fast task creation' },
+      { category: 'new', text: 'Command Palette (Ctrl+K) for keyboard navigation' },
+      { category: 'improved', text: 'Cloud sync reliability and error handling' },
+      { category: 'fixed', text: 'Tab persistence across sessions' },
+    ],
+  },
+  {
+    version: '2.6.0',
+    date: '2026-07-01',
+    type: 'minor',
+    changes: [
+      { category: 'new', text: 'Public user profiles with @username' },
+      { category: 'new', text: 'Password reset via email' },
+      { category: 'improved', text: 'Quran reader with 13 reciters' },
+      { category: 'improved', text: 'Pomodoro timer with focus video player' },
+    ],
+  },
+];
 
-function ChangelogSection({ entry, defaultOpen }: { entry: ChangelogEntry; defaultOpen: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-border/50 rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors text-left"
-      >
-        <div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-xs font-mono">v{entry.version}</Badge>
-            <span className="text-xs text-muted-foreground">{entry.date}</span>
-          </div>
-          <p className="text-sm font-semibold mt-1">{entry.title}</p>
-          <p className="text-xs text-muted-foreground" dir="rtl">{entry.titleAr}</p>
-        </div>
-        {open ? <ChevronUp className="w-4 h-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground" />}
-      </button>
-      {open && (
-        <div className="px-4 pb-4 space-y-2">
-          {entry.changes.map((change, i) => {
-            const cfg = TYPE_CONFIG[change.type];
-            const Icon = cfg.icon;
-            return (
-              <div key={i} className="flex items-start gap-2.5 text-sm">
-                <span className={`shrink-0 w-5 h-5 rounded-md flex items-center justify-center mt-0.5 ${cfg.color}`}>
-                  <Icon className="w-3 h-3" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p>{change.text}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5" dir="rtl">{change.textAr}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+const categoryIcons = {
+  new: <Sparkles className="w-4 h-4" />,
+  improved: <Zap className="w-4 h-4" />,
+  fixed: <Star className="w-4 h-4" />,
+  removed: <X className="w-4 h-4" />,
+};
+
+const categoryColors = {
+  new: '#34d399',
+  improved: '#a78bfa',
+  fixed: '#fbbf24',
+  removed: '#f87171',
+};
+
+const categoryLabels = {
+  new: 'New',
+  improved: 'Improved',
+  fixed: 'Fixed',
+  removed: 'Removed',
+};
+
+const typeColors = {
+  major: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+  minor: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+  patch: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+};
 
 interface WhatsNewProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  trigger?: 'auto' | 'manual';
+  trigger: 'auto' | 'manual';
 }
 
-export function WhatsNew({ open, onOpenChange, trigger = 'manual' }: WhatsNewProps) {
-  const [activeTab, setActiveTab] = useState<'changelog' | 'sync'>('changelog');
+const SEEN_VERSION_KEY = 'bait-el-hakma-seen-version';
+
+export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
+  const [selectedVersion, setSelectedVersion] = useState(changelog[0]?.version || '');
 
   useEffect(() => {
-    if (!open) return;
-    if (trigger === 'auto') markVersionSeen();
-  }, [open, trigger]);
+    if (trigger === 'auto') {
+      const seenVersion = localStorage.getItem(SEEN_VERSION_KEY);
+      const latestVersion = changelog[0]?.version;
+      if (latestVersion && seenVersion !== latestVersion) {
+        setTimeout(() => onOpenChange(true), 1500);
+      }
+    }
+  }, [trigger, onOpenChange]);
+
+  const handleClose = () => {
+    localStorage.setItem(SEEN_VERSION_KEY, changelog[0]?.version || '');
+    onOpenChange(false);
+  };
+
+  const selectedEntry = changelog.find(e => e.version === selectedVersion);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkle className="w-5 h-5 text-primary" />
-            What's New
-          </DialogTitle>
-          <DialogDescription dir="rtl">
-            ما الجديد في بيت الحكمة
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex gap-1 bg-muted/50 p-1 rounded-lg shrink-0">
-          <Button
-            variant={activeTab === 'changelog' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('changelog')}
-            className="flex-1 gap-1.5 text-xs"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(8px)' }}
+          onClick={handleClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: 'spring', duration: 0.5 }}
+            className="w-full max-w-2xl max-h-[80vh] rounded-2xl border overflow-hidden flex flex-col"
+            style={{
+              background: 'rgba(7, 3, 18, 0.95)',
+              borderColor: 'rgba(139, 92, 246, 0.15)',
+              boxShadow: '0 32px 100px rgba(0, 0, 0, 0.5)',
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <Sparkle className="w-3.5 h-3.5" /> Changelog
-          </Button>
-          <Button
-            variant={activeTab === 'sync' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('sync')}
-            className="flex-1 gap-1.5 text-xs"
-          >
-            <Cloud className="w-3.5 h-3.5" /> Cloud Sync
-          </Button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto pr-1 space-y-3">
-          {activeTab === 'changelog' && (
-            <>
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
-                <p className="text-xs text-muted-foreground">Current version</p>
-                <p className="text-lg font-bold text-primary font-mono">v{APP_VERSION}</p>
-              </div>
-              {CHANGELOG.map((entry) => (
-                <ChangelogSection
-                  key={entry.version}
-                  entry={entry}
-                  defaultOpen={entry.version === APP_VERSION}
-                />
-              ))}
-            </>
-          )}
-
-          {activeTab === 'sync' && (
-            <>
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold">Your data is safe across all devices</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Sign in on any device and all your progress is automatically restored from the cloud.
-                      Your data is encrypted and stored securely in our database.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1" dir="rtl">
-                      سجّل الدخول على أي جهاز وستُستعاد جميع تقدمك تلقائياً من السحابة. بياناتك مشفرة ومحفوظة بأمان.
-                    </p>
-                  </div>
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 pb-3 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">What's New</h2>
+                  <p className="text-xs" style={{ color: '#6b6380' }}>Latest updates and features</p>
                 </div>
               </div>
+              <button
+                onClick={handleClose}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                style={{ color: '#6b6380' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#6b6380'}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                  What syncs to the cloud
-                </p>
-                <p className="text-xs text-muted-foreground px-1" dir="rtl">ما الذي يتم مزامنته مع السحابة</p>
-                {SYNCED_DATA_LABELS.map((item) => (
-                  <div key={item.key} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-muted/20 border border-border/30">
-                    <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">{item.label}</p>
-                      <p className="text-xs text-muted-foreground" dir="rtl">{item.labelAr}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Version tabs */}
+            <div className="flex gap-2 px-5 pb-3 shrink-0 overflow-x-auto">
+              {changelog.map((entry) => (
+                <button
+                  key={entry.version}
+                  onClick={() => setSelectedVersion(entry.version)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
+                  style={{
+                    background: selectedVersion === entry.version
+                      ? 'rgba(139, 92, 246, 0.15)'
+                      : 'rgba(139, 92, 246, 0.04)',
+                    border: `1px solid ${selectedVersion === entry.version
+                      ? 'rgba(139, 92, 246, 0.3)'
+                      : 'rgba(139, 92, 246, 0.06)'}`,
+                    color: selectedVersion === entry.version ? '#a78bfa' : '#6b6380',
+                  }}
+                >
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white"
+                    style={{ background: typeColors[entry.type] }}>
+                    v{entry.version}
+                  </span>
+                  <span>{entry.date}</span>
+                </button>
+              ))}
+            </div>
 
-              <div className="bg-muted/30 rounded-xl p-3 text-xs text-muted-foreground space-y-1">
-                <p>• Changes auto-sync after 1.5 seconds of inactivity</p>
-                <p>• Retries automatically if sync fails (3 second delay)</p>
-                <p>• Works offline — data saves locally and syncs when online</p>
-                <p className="mt-2" dir="rtl">
-                  • التغييرات تُزامن تلقائياً بعد 1.5 ثانية من عدم النشاط
-                  <br />
-                  • إعادة المحاولة التلقائية عند فشل المزامنة
-                  <br />
-                  • يعمل بدون إنترنت — البيانات تُحفظ محلياً وتُزامن عند الاتصال
-                </p>
-              </div>
-            </>
-          )}
-        </div>
+            {/* Changelog content */}
+            <div className="flex-1 overflow-y-auto px-5 pb-5">
+              {selectedEntry && (
+                <div className="space-y-4">
+                  {(['new', 'improved', 'fixed', 'removed'] as const).map((category) => {
+                    const items = selectedEntry.changes.filter(c => c.category === category);
+                    if (items.length === 0) return null;
+                    return (
+                      <div key={category}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span style={{ color: categoryColors[category] }}>
+                            {categoryIcons[category]}
+                          </span>
+                          <span className="text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: categoryColors[category] }}>
+                            {categoryLabels[category]}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 pl-6">
+                          {items.map((item, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.05 }}
+                              className="flex items-start gap-2 text-sm"
+                              style={{ color: '#c4a8fa' }}
+                            >
+                              <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
+                                style={{ background: categoryColors[category] }} />
+                              {item.text}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-        <div className="shrink-0 pt-2">
-          <Button onClick={() => onOpenChange(false)} className="w-full">
-            Got it
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+            {/* Footer */}
+            <div className="flex items-center justify-between p-4 pt-3 shrink-0"
+              style={{ borderTop: '1px solid rgba(139, 92, 246, 0.06)' }}>
+              <button
+                onClick={() => window.open('https://github.com/meuor/Bait-El-Hakma/releases', '_blank')}
+                className="flex items-center gap-1 text-xs transition-colors"
+                style={{ color: '#5a5270' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#5a5270'}
+              >
+                <Globe className="w-3 h-3" />
+                View all releases
+              </button>
+              <Button
+                onClick={handleClose}
+                size="sm"
+                style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                  color: 'white',
+                  fontWeight: 600,
+                }}
+              >
+                Got it!
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -205,8 +259,10 @@ export function useWhatsNewAutoShow() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!hasSeenVersion()) {
-      const timer = setTimeout(() => setShow(true), 1000);
+    const seenVersion = localStorage.getItem(SEEN_VERSION_KEY);
+    const latestVersion = changelog[0]?.version;
+    if (latestVersion && seenVersion !== latestVersion) {
+      const timer = setTimeout(() => setShow(true), 2000);
       return () => clearTimeout(timer);
     }
   }, []);

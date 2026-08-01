@@ -119,7 +119,7 @@ function AppContent() {
       <div className="min-h-screen flex items-center justify-center" style={{ position: 'relative', overflow: 'hidden' }}>
         <IslamicWallpaper variant="hero" />
         <div className="text-center" style={{ position: 'relative', zIndex: 2 }}>
-          <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
+          <img src="/img/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <Loader2 className="h-8 w-8 animate-spin text-violet-600 mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
@@ -180,7 +180,7 @@ function AppContent() {
       <IslamicWallpaper variant="subtle" />
       {!state.isMinimized && (
         <>
-          <Header user={user} onLogout={handleLogout} />
+          <Header user={user} onLogout={handleLogout} onShowWhatsNew={() => setManualWhatsNew(true)} />
           <TabNavigation />
         </>
       )}

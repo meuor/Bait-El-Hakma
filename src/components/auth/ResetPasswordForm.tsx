@@ -133,7 +133,7 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
             transition={{ duration: 0.6 }}
           >
             <div className="auth-form-header">
-              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <img src="/img/logo.png" alt="Bait El-Hakma" className="auth-logo" />
               <h1>{codeVerified ? 'New Password' : 'Enter Reset Code'}</h1>
               <p>{codeVerified ? `Set a new password for ${email}` : `Enter the 6-character code sent to ${email}`}</p>
             </div>

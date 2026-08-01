@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, protocol }
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
+import { autoUpdater } from 'electron-updater';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,14 +17,22 @@ let tray: Tray | null = null;
 
 const DIST_PATH = path.join(__dirname, '..', 'dist');
 
+// Auto-updater configuration
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.logger = {
+  info: (msg: string) => console.log('[updater]', msg),
+  warn: (msg: string) => console.warn('[updater]', msg),
+  error: (msg: string) => console.error('[updater]', msg),
+  debug: () => {},
+} as any;
+
 function getIconPath(): string {
-  // In production, icons are in extraResources
   if (!isDev) {
     const resourcesPath = process.resourcesPath;
     const iconPath = path.join(resourcesPath, 'icons', 'icon.png');
     if (fs.existsSync(iconPath)) return iconPath;
   }
-  // Fallback to build directory in dev
   return path.join(__dirname, '..', 'build', 'icon.png');
 }
 
@@ -45,7 +54,6 @@ function createWindow() {
     },
   };
 
-  // macOS: hidden title bar for native look
   if (isMac) {
     windowOptions.titleBarStyle = 'hiddenInset';
     windowOptions.trafficLightPosition = { x: 15, y: 15 };
@@ -71,6 +79,12 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
+    // Check for updates after window is ready (only in production)
+    if (!isDev) {
+      setTimeout(() => {
+        autoUpdater.checkForUpdates().catch(() => {});
+      }, 3000);
+    }
   });
 
   mainWindow.on('close', (event) => {
@@ -96,8 +110,6 @@ function createWindow() {
 function createTray() {
   const iconPath = getIconPath();
   const icon = nativeImage.createFromPath(iconPath);
-
-  // Linux needs smaller tray icons
   const trayIconSize = isLinux ? 22 : 16;
   tray = new Tray(icon.resize({ width: trayIconSize, height: trayIconSize }));
 
@@ -105,6 +117,14 @@ function createTray() {
     {
       label: 'Open Bait El-Hakma',
       click: () => mainWindow?.show(),
+    },
+    { type: 'separator' },
+    {
+      label: 'Check for Updates...',
+      click: () => {
+        mainWindow?.show();
+        autoUpdater.checkForUpdates().catch(() => {});
+      },
     },
     { type: 'separator' },
     {
@@ -123,6 +143,42 @@ function createTray() {
     mainWindow?.show();
   });
 }
+
+// Auto-updater events
+autoUpdater.on('checking-for-update', () => {
+  mainWindow?.webContents.send('update-status', 'checking');
+});
+
+autoUpdater.on('update-available', (info) => {
+  mainWindow?.webContents.send('update-available', {
+    version: info.version,
+    releaseDate: info.releaseDate,
+    releaseNotes: info.releaseNotes,
+  });
+});
+
+autoUpdater.on('update-not-available', () => {
+  mainWindow?.webContents.send('update-not-available');
+});
+
+autoUpdater.on('download-progress', (progress) => {
+  mainWindow?.webContents.send('update-progress', {
+    percent: progress.percent,
+    transferred: progress.transferred,
+    total: progress.total,
+  });
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  mainWindow?.webContents.send('update-downloaded', {
+    version: info.version,
+    releaseDate: info.releaseDate,
+  });
+});
+
+autoUpdater.on('error', (error) => {
+  mainWindow?.webContents.send('update-error', error.message);
+});
 
 // IPC Handlers
 ipcMain.on('window-minimize', () => {
@@ -153,22 +209,58 @@ ipcMain.handle('get-platform', () => {
   return process.platform;
 });
 
+// Update IPC handlers
+ipcMain.handle('check-for-updates', async () => {
+  if (isDev) {
+    return { error: 'Updates are not available in development mode' };
+  }
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return {
+      updateInfo: result?.updateInfo ? {
+        version: result.updateInfo.version,
+        releaseDate: result.updateInfo.releaseDate,
+        releaseNotes: result.updateInfo.releaseNotes,
+      } : null,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Failed to check for updates' };
+  }
+});
+
+ipcMain.handle('download-update', async () => {
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Failed to download update' };
+  }
+});
+
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
+ipcMain.handle('get-update-status', () => {
+  return {
+    isDev,
+    version: app.getVersion(),
+    platform: process.platform,
+  };
+});
+
 // Register custom file protocol for serving local assets in production
 function registerFileProtocol() {
   protocol.handle('file', (request) => {
-    const filePath = request.url.slice('file://'.length);
-    let fullPath = decodeURIComponent(filePath);
+    const url = new URL(request.url);
+    let fullPath = decodeURIComponent(url.pathname);
 
-    // On Windows, file URLs look like file:///C:/path/to/file
-    // On Linux/Mac, they look like file:///path/to/file
     if (process.platform === 'win32') {
-      // Remove leading slash for Windows paths
       if (fullPath.startsWith('/') && !fullPath.startsWith('//')) {
         fullPath = fullPath.slice(1);
       }
     }
 
-    // Check if the file exists
     if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
       return new Response(fs.readFileSync(fullPath), {
         headers: {
@@ -177,7 +269,16 @@ function registerFileProtocol() {
       });
     }
 
-    // If file doesn't exist, serve index.html for SPA routing
+    // Try resolving relative to DIST_PATH
+    const relativePath = path.join(DIST_PATH, url.pathname);
+    if (fs.existsSync(relativePath) && fs.statSync(relativePath).isFile()) {
+      return new Response(fs.readFileSync(relativePath), {
+        headers: {
+          'Content-Type': getMimeType(relativePath),
+        },
+      });
+    }
+
     const indexPath = path.join(DIST_PATH, 'index.html');
     if (fs.existsSync(indexPath)) {
       return new Response(fs.readFileSync(indexPath), {

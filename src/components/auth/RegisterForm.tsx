@@ -118,7 +118,7 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
             transition={{ duration: 0.6 }}
           >
             <div className="auth-form-header">
-              <img src="/img/bait-el-hakma%20logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <img src="/img/logo.png" alt="Bait El-Hakma" className="auth-logo" />
               <h1>{registered ? 'Welcome!' : 'Create Account'}</h1>
               <p>{registered ? `Hello ${registeredName}, your workspace is ready` : 'Start your productivity journey today'}</p>
             </div>
