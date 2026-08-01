@@ -49,7 +49,7 @@ export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFor
 
   return (
     <div className="auth">
-      <IslamicWallpaper variant="hero" />
+      <IslamicWallpaper variant="hero" forceDark />
 
       <div className="auth-container">
         {/* Left Side - Form */}

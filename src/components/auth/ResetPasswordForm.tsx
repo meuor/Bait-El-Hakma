@@ -121,7 +121,7 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
 
   return (
     <div className="auth">
-      <IslamicWallpaper variant="hero" />
+      <IslamicWallpaper variant="hero" forceDark />
 
       <div className="auth-container">
         {/* Left Side - Form */}
