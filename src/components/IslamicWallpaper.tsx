@@ -116,7 +116,6 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
       style={{
         background: backgrounds[currentBg],
         transition: 'background 2s ease-in-out',
-        zIndex: 0,
       }}
     >
       {/* Floating geometric elements */}
