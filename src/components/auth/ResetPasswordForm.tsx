@@ -259,7 +259,7 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
                           autoFocus={i === 0}
                         />
                       ))}
-                      <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#6b6380', margin: '0 0.25rem' }}>-</span>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'hsl(var(--text-muted))', margin: '0 0.25rem' }}>-</span>
                       {[3, 4, 5].map((i) => (
                         <Input
                           key={i}
@@ -276,7 +276,7 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
                         />
                       ))}
                     </div>
-                    <p style={{ fontSize: '0.7rem', color: '#5a5270', textAlign: 'center', marginTop: '0.5rem' }}>
+                    <p style={{ fontSize: '0.7rem', color: 'hsl(var(--text-dim))', textAlign: 'center', marginTop: '0.5rem' }}>
                       Code format: <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>ABC-123</span> (letters &amp; numbers)
                     </p>
                   </div>

@@ -145,11 +145,11 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                           alignItems: 'center',
                           gap: '0.5rem',
                           padding: '0.5rem 0.75rem',
-                          background: 'rgba(139, 92, 246, 0.06)',
-                          border: '1px solid rgba(139, 92, 246, 0.08)',
+                          background: 'hsl(var(--brand) / 0.06)',
+                          border: '1px solid hsl(var(--brand) / 0.08)',
                           borderRadius: '8px',
                           fontSize: '0.75rem',
-                          color: '#c4a8fa',
+                          color: 'hsl(var(--brand-lighter))',
                         }}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -160,7 +160,7 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
                       </motion.div>
                     ))}
                   </div>
-                  <p style={{ fontSize: '0.8rem', color: '#5a5270' }}>Redirecting you to the app...</p>
+                  <p style={{ fontSize: '0.8rem', color: 'hsl(var(--text-dim))' }}>Redirecting you to the app...</p>
                   <Loader2 className="h-6 w-6 animate-spin text-violet-400 mx-auto" />
                 </motion.div>
               ) : (

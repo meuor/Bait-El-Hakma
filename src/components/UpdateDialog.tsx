@@ -131,7 +131,7 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'hsl(0 0% 0% / 0.7)', backdropFilter: 'blur(8px)' }}
           onClick={() => onOpenChange(false)}
         >
           <motion.div
@@ -141,9 +141,9 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
             transition={{ type: 'spring', duration: 0.5 }}
             className="w-full max-w-md rounded-2xl border overflow-hidden"
             style={{
-              background: 'rgba(7, 3, 18, 0.95)',
-              borderColor: 'rgba(139, 92, 246, 0.15)',
-              boxShadow: '0 32px 100px rgba(0, 0, 0, 0.5)',
+              background: 'hsl(var(--surface-overlay) / 0.95)',
+              borderColor: 'hsl(var(--brand) / 0.15)',
+              boxShadow: '0 32px 100px hsl(0 0% 0% / 0.5)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -151,20 +151,20 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
             <div className="flex items-center justify-between p-5 pb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>
+                  style={{ background: 'linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark)))' }}>
                   <RefreshCw className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Updates</h2>
-                  <p className="text-xs" style={{ color: '#6b6380' }}>Current: v{currentVersion}</p>
+                  <p className="text-xs" style={{ color: 'hsl(var(--text-muted))' }}>Current: v{currentVersion}</p>
                 </div>
               </div>
               <button
                 onClick={() => onOpenChange(false)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                style={{ color: '#6b6380' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#6b6380'}
+                style={{ color: 'hsl(var(--text-muted))' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--brand-light))'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--text-muted))'}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -174,30 +174,30 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
             <div className="px-5 pb-5">
               {status === 'checking' && (
                 <div className="text-center py-8">
-                  <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" style={{ color: '#a78bfa' }} />
-                  <p className="text-sm" style={{ color: '#8b82a0' }}>Checking for updates...</p>
+                  <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" style={{ color: 'hsl(var(--brand-light))' }} />
+                  <p className="text-sm" style={{ color: 'hsl(var(--text-secondary))' }}>Checking for updates...</p>
                 </div>
               )}
 
               {status === 'latest' && (
                 <div className="text-center py-8">
                   <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
-                    style={{ background: 'rgba(52, 211, 153, 0.1)' }}>
-                    <CheckCircle2 className="h-8 w-8" style={{ color: '#34d399' }} />
+                    style={{ background: 'hsl(var(--success) / 0.1)' }}>
+                    <CheckCircle2 className="h-8 w-8" style={{ color: 'hsl(var(--success-light))' }} />
                   </div>
                   <h3 className="text-base font-semibold text-white mb-1">You're up to date!</h3>
-                  <p className="text-sm" style={{ color: '#6b6380' }}>Version {currentVersion} is the latest release.</p>
+                  <p className="text-sm" style={{ color: 'hsl(var(--text-muted))' }}>Version {currentVersion} is the latest release.</p>
                 </div>
               )}
 
               {status === 'available' && updateInfo && (
                 <div className="py-4">
                   <div className="flex items-center gap-3 mb-4 p-3 rounded-xl"
-                    style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.12)' }}>
-                    <Download className="h-5 w-5" style={{ color: '#a78bfa' }} />
+                    style={{ background: 'hsl(var(--brand) / 0.08)', border: '1px solid hsl(var(--brand) / 0.12)' }}>
+                    <Download className="h-5 w-5" style={{ color: 'hsl(var(--brand-light))' }} />
                     <div>
                       <p className="text-sm font-semibold text-white">Update Available</p>
-                      <p className="text-xs" style={{ color: '#6b6380' }}>
+                      <p className="text-xs" style={{ color: 'hsl(var(--text-muted))' }}>
                         v{updateInfo.version} • {updateInfo.releaseDate ? new Date(updateInfo.releaseDate).toLocaleDateString() : 'Recently released'}
                       </p>
                     </div>
@@ -205,7 +205,7 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
 
                   {updateInfo.releaseNotes && (
                     <div className="mb-4 p-3 rounded-xl text-sm max-h-40 overflow-y-auto"
-                      style={{ background: 'rgba(18, 8, 42, 0.4)', border: '1px solid rgba(139, 92, 246, 0.06)', color: '#8b82a0' }}>
+                      style={{ background: 'hsl(var(--surface-dim) / 0.4)', border: '1px solid hsl(var(--brand) / 0.06)', color: 'hsl(var(--text-secondary))' }}>
                       <p className="whitespace-pre-wrap">{updateInfo.releaseNotes}</p>
                     </div>
                   )}
@@ -214,7 +214,7 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
                     onClick={downloadUpdate}
                     className="w-full"
                     style={{
-                      background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                      background: 'linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark)))',
                       color: 'white',
                       fontWeight: 600,
                     }}
@@ -228,38 +228,38 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
               {status === 'downloading' && (
                 <div className="py-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#a78bfa' }} />
+                    <Loader2 className="h-5 w-5 animate-spin" style={{ color: 'hsl(var(--brand-light))' }} />
                     <p className="text-sm text-white">Downloading update...</p>
                   </div>
                   <div className="w-full h-2 rounded-full overflow-hidden mb-2"
-                    style={{ background: 'rgba(139, 92, 246, 0.1)' }}>
+                    style={{ background: 'hsl(var(--brand) / 0.1)' }}>
                     <motion.div
                       className="h-full rounded-full"
-                      style={{ background: 'linear-gradient(90deg, #8b5cf6, #6366f1)' }}
+                      style={{ background: 'linear-gradient(90deg, hsl(var(--brand)), hsl(var(--brand-dark)))' }}
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 0.3 }}
                     />
                   </div>
-                  <p className="text-xs text-right" style={{ color: '#6b6380' }}>{Math.round(progress)}%</p>
+                  <p className="text-xs text-right" style={{ color: 'hsl(var(--text-muted))' }}>{Math.round(progress)}%</p>
                 </div>
               )}
 
               {status === 'downloaded' && updateInfo && (
                 <div className="py-4 text-center">
                   <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
-                    style={{ background: 'rgba(52, 211, 153, 0.1)' }}>
-                    <CheckCircle2 className="h-8 w-8" style={{ color: '#34d399' }} />
+                    style={{ background: 'hsl(var(--success) / 0.1)' }}>
+                    <CheckCircle2 className="h-8 w-8" style={{ color: 'hsl(var(--success-light))' }} />
                   </div>
                   <h3 className="text-base font-semibold text-white mb-1">Download Complete</h3>
-                  <p className="text-sm mb-4" style={{ color: '#6b6380' }}>
+                  <p className="text-sm mb-4" style={{ color: 'hsl(var(--text-muted))' }}>
                     v{updateInfo.version} is ready to install. The app will restart.
                   </p>
                   <Button
                     onClick={installUpdate}
                     className="w-full"
                     style={{
-                      background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                      background: 'linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark)))',
                       color: 'white',
                       fontWeight: 600,
                     }}
@@ -273,16 +273,16 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
               {status === 'error' && (
                 <div className="text-center py-8">
                   <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
-                    style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
-                    <AlertCircle className="h-8 w-8" style={{ color: '#f87171' }} />
+                    style={{ background: 'hsl(var(--error) / 0.1)' }}>
+                    <AlertCircle className="h-8 w-8" style={{ color: 'hsl(var(--error))' }} />
                   </div>
                   <h3 className="text-base font-semibold text-white mb-1">Update Error</h3>
-                  <p className="text-sm mb-4" style={{ color: '#6b6380' }}>{error || 'Something went wrong'}</p>
+                  <p className="text-sm mb-4" style={{ color: 'hsl(var(--text-muted))' }}>{error || 'Something went wrong'}</p>
                   <Button
                     onClick={checkForUpdates}
                     variant="ghost"
                     className="text-sm"
-                    style={{ color: '#a78bfa' }}
+                    style={{ color: 'hsl(var(--brand-light))' }}
                   >
                     Try Again
                   </Button>
@@ -291,15 +291,15 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
 
               {/* Links */}
               <div className="flex items-center justify-center gap-4 mt-4 pt-3"
-                style={{ borderTop: '1px solid rgba(139, 92, 246, 0.06)' }}>
+                style={{ borderTop: '1px solid hsl(var(--brand) / 0.06)' }}>
                 <button
                   onClick={() => {
                     window.open('https://github.com/meuor/Bait-El-Hakma/releases', '_blank');
                   }}
                   className="flex items-center gap-1 text-xs transition-colors"
-                  style={{ color: '#5a5270' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#5a5270'}
+                  style={{ color: 'hsl(var(--text-dim))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--brand-light))'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--text-dim))'}
                 >
                   <ExternalLink className="w-3 h-3" />
                   Release Notes
@@ -307,9 +307,9 @@ export function UpdateDialog({ open, onOpenChange }: UpdateDialogProps) {
                 <button
                   onClick={checkForUpdates}
                   className="flex items-center gap-1 text-xs transition-colors"
-                  style={{ color: '#5a5270' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#5a5270'}
+                  style={{ color: 'hsl(var(--text-dim))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--brand-light))'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--text-dim))'}
                 >
                   <RefreshCw className="w-3 h-3" />
                   Check Again

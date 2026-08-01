@@ -131,7 +131,7 @@ export function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword }: Log
                       checked={keepLoggedIn}
                       onCheckedChange={(checked) => setKeepLoggedIn(checked === true)}
                     />
-                    <Label htmlFor="keep-logged-in" style={{ fontSize: '0.8rem', color: '#8b82a0', fontWeight: 400 }}>
+                    <Label htmlFor="keep-logged-in" style={{ fontSize: '0.8rem', color: 'hsl(var(--text-secondary))', fontWeight: 400 }}>
                       Keep me logged in
                     </Label>
                   </div>

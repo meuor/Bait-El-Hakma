@@ -98,7 +98,7 @@ export function Header({ user, onLogout, onShowWhatsNew }: HeaderProps) {
             {/* What's New Button */}
             <Button variant="ghost" size="sm" onClick={onShowWhatsNew}
               className="hidden sm:flex gap-1.5 text-xs"
-              style={{ color: '#fbbf24' }}>
+              style={{ color: 'hsl(var(--gold-light))' }}>
               <Sparkles className="h-3.5 w-3.5" />
               What's New
             </Button>

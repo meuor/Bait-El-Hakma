@@ -22,11 +22,11 @@
   min-height: 600px;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(7, 3, 18, 0.6);
+  background: hsl(var(--surface-overlay) / 0.6);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
+  border: 1px solid hsl(var(--brand) / 0.1);
+  box-shadow: 0 32px 100px hsl(0 0% 0% / 0.5);
 }
 
 /* ---------- Form Side ---------- */
@@ -58,13 +58,13 @@
 .reg-form-header h1 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #f0ecf8;
+  color: hsl(var(--text-primary));
   margin: 0 0 0.35rem;
 }
 
 .reg-form-header p {
   font-size: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   margin: 0;
 }
 
@@ -83,24 +83,24 @@
   gap: 0.4rem;
   padding: 0.4rem 0.9rem;
   border-radius: 100px;
-  background: rgba(139, 92, 246, 0.06);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  background: hsl(var(--brand) / 0.06);
+  border: 1px solid hsl(var(--brand) / 0.1);
   font-size: 0.8rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   transition: all 0.3s ease;
 }
 
 .reg-step.active {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.3);
-  color: #a78bfa;
+  background: hsl(var(--brand) / 0.15);
+  border-color: hsl(var(--brand) / 0.3);
+  color: hsl(var(--brand-light));
 }
 
 .reg-step span:first-child {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgba(139, 92, 246, 0.15);
+  background: hsl(var(--brand) / 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,7 +109,7 @@
 }
 
 .reg-step.active span:first-child {
-  background: rgba(139, 92, 246, 0.3);
+  background: hsl(var(--brand) / 0.3);
 }
 
 .reg-step-label {
@@ -119,7 +119,7 @@
 .reg-step-line {
   width: 30px;
   height: 1px;
-  background: rgba(139, 92, 246, 0.15);
+  background: hsl(var(--brand) / 0.15);
 }
 
 /* ---------- Form Fields ---------- */
@@ -138,32 +138,32 @@
 .reg-field label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #c4a8fa;
+  color: hsl(var(--brand-lighter));
 }
 
 .reg-label-hint {
   font-weight: 400;
-  color: #5a5270;
+  color: hsl(var(--text-dim));
   margin-left: 0.5rem;
   font-size: 0.75rem;
 }
 
 .reg-input {
-  background: rgba(18, 8, 42, 0.4) !important;
-  border: 1px solid rgba(139, 92, 246, 0.1) !important;
-  color: #e8e4f0 !important;
+  background: hsl(var(--surface-dim) / 0.4) !important;
+  border: 1px solid hsl(var(--brand) / 0.1) !important;
+  color: hsl(var(--text-primary)) !important;
   border-radius: 10px !important;
   padding: 0.7rem 1rem !important;
   transition: all 0.3s ease !important;
 }
 
 .reg-input:focus {
-  border-color: rgba(139, 92, 246, 0.3) !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08) !important;
+  border-color: hsl(var(--brand) / 0.3) !important;
+  box-shadow: 0 0 0 3px hsl(var(--brand) / 0.08) !important;
 }
 
 .reg-input::placeholder {
-  color: #4a4360 !important;
+  color: hsl(var(--text-input)) !important;
 }
 
 .reg-input-wrapper {
@@ -175,7 +175,7 @@
 .reg-input-prefix {
   position: absolute;
   left: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   font-size: 0.9rem;
   z-index: 1;
 }
@@ -194,7 +194,7 @@
   right: 0.5rem;
   background: none;
   border: none;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   cursor: pointer;
   padding: 0.25rem;
   display: flex;
@@ -203,17 +203,17 @@
 }
 
 .reg-input-toggle:hover {
-  color: #a78bfa;
+  color: hsl(var(--brand-light));
 }
 
 .reg-field-error {
   font-size: 0.75rem;
-  color: #f87171;
+  color: hsl(var(--error));
 }
 
 .reg-field-success {
   font-size: 0.75rem;
-  color: #34d399;
+  color: hsl(var(--success-light));
 }
 
 /* ---------- Buttons ---------- */
@@ -223,7 +223,7 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1) !important;
+  background: linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark))) !important;
   color: white !important;
   font-size: 0.9rem;
   font-weight: 600;
@@ -235,7 +235,7 @@
 }
 
 .reg-btn-primary:hover {
-  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 30px hsl(var(--brand-dark) / 0.35);
 }
 
 .reg-btn-primary:disabled {
@@ -244,12 +244,12 @@
 }
 
 .reg-btn-back {
-  color: #6b6380 !important;
+  color: hsl(var(--text-muted)) !important;
   font-size: 0.85rem;
 }
 
 .reg-btn-back:hover {
-  color: #a78bfa !important;
+  color: hsl(var(--brand-light)) !important;
 }
 
 .reg-form-actions {
@@ -267,26 +267,26 @@
   text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(139, 92, 246, 0.06);
+  border-top: 1px solid hsl(var(--brand) / 0.06);
 }
 
 .reg-form-footer p {
   font-size: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   margin: 0;
 }
 
 .reg-form-footer button {
   background: none;
   border: none;
-  color: #a78bfa;
+  color: hsl(var(--brand-light));
   font-weight: 600;
   cursor: pointer;
   padding: 0;
 }
 
 .reg-form-footer button:hover {
-  color: #c4a8fa;
+  color: hsl(var(--brand-lighter));
 }
 
 /* ---------- Success ---------- */
@@ -302,13 +302,13 @@
 .reg-success h2 {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #f0ecf8;
+  color: hsl(var(--text-primary));
   margin: 0 0 0.5rem;
 }
 
 .reg-success p {
   font-size: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   margin: 0 0 1.5rem;
 }
 
@@ -324,22 +324,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(139, 92, 246, 0.06);
-  border: 1px solid rgba(139, 92, 246, 0.08);
+  background: hsl(var(--brand) / 0.06);
+  border: 1px solid hsl(var(--brand) / 0.08);
   border-radius: 8px;
   font-size: 0.75rem;
-  color: #c4a8fa;
+  color: hsl(var(--brand-lighter));
 }
 
 .reg-success-redirect {
   font-size: 0.8rem;
-  color: #5a5270;
+  color: hsl(var(--text-dim));
 }
 
 /* ---------- Decorative Side ---------- */
 .reg-decor-side {
-  background: rgba(18, 8, 42, 0.4);
-  border-left: 1px solid rgba(139, 92, 246, 0.06);
+  background: hsl(var(--surface-dim) / 0.4);
+  border-left: 1px solid hsl(var(--brand) / 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,21 +353,21 @@
 .reg-decor-content h2 {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #f0ecf8;
+  color: hsl(var(--text-primary));
   margin: 0 0 0.25rem;
 }
 
 .reg-decor-arabic {
   font-family: 'Amiri', 'Noto Naskh Arabic', serif;
   font-size: 1.5rem;
-  color: #d4a853;
+  color: hsl(var(--gold));
   direction: rtl;
   margin: 0 0 1rem;
 }
 
 .reg-decor-desc {
   font-size: 0.9rem;
-  color: #7a7290;
+  color: hsl(var(--text-tertiary));
   line-height: 1.7;
   margin: 0 0 2rem;
 }
@@ -384,17 +384,17 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.6rem 0.85rem;
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.06);
+  background: hsl(var(--brand) / 0.05);
+  border: 1px solid hsl(var(--brand) / 0.06);
   border-radius: 10px;
   font-size: 0.85rem;
-  color: #c4a8fa;
+  color: hsl(var(--brand-lighter));
   transition: all 0.3s ease;
 }
 
 .reg-decor-feature:hover {
-  background: rgba(139, 92, 246, 0.1);
-  border-color: rgba(139, 92, 246, 0.15);
+  background: hsl(var(--brand) / 0.1);
+  border-color: hsl(var(--brand) / 0.15);
 }
 
 .reg-decor-stats {
@@ -411,7 +411,7 @@
   display: block;
   font-size: 1.25rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #a78bfa, #fbbf24);
+  background: linear-gradient(135deg, hsl(var(--brand-light)), hsl(var(--gold-light)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -419,7 +419,7 @@
 
 .reg-decor-stat-label {
   font-size: 0.7rem;
-  color: #5a5270;
+  color: hsl(var(--text-dim));
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -429,11 +429,11 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: #5a5270;
+  color: hsl(var(--text-dim));
 }
 
 .reg-decor-trust svg {
-  color: #10b981;
+  color: hsl(var(--success));
 }
 
 /* ---------- Responsive ---------- */

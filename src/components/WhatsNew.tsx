@@ -65,10 +65,10 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  new: '#34d399',
-  improved: '#a78bfa',
-  fixed: '#fbbf24',
-  removed: '#f87171',
+  new: 'hsl(var(--success-light))',
+  improved: 'hsl(var(--brand-light))',
+  fixed: 'hsl(var(--gold-light))',
+  removed: 'hsl(var(--error))',
 };
 
 const categoryLabels = {
@@ -79,9 +79,9 @@ const categoryLabels = {
 };
 
 const typeColors = {
-  major: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-  minor: 'linear-gradient(135deg, #6366f1, #3b82f6)',
-  patch: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+  major: 'linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark)))',
+  minor: 'linear-gradient(135deg, hsl(var(--brand-dark)), hsl(var(--brand)))',
+  patch: 'linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-light)))',
 };
 
 interface WhatsNewProps {
@@ -120,7 +120,7 @@ export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'hsl(0 0% 0% / 0.7)', backdropFilter: 'blur(8px)' }}
           onClick={handleClose}
         >
           <motion.div
@@ -130,9 +130,9 @@ export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
             transition={{ type: 'spring', duration: 0.5 }}
             className="w-full max-w-2xl max-h-[80vh] rounded-2xl border overflow-hidden flex flex-col"
             style={{
-              background: 'rgba(7, 3, 18, 0.95)',
-              borderColor: 'rgba(139, 92, 246, 0.15)',
-              boxShadow: '0 32px 100px rgba(0, 0, 0, 0.5)',
+              background: 'hsl(var(--surface-overlay) / 0.95)',
+              borderColor: 'hsl(var(--brand) / 0.15)',
+              boxShadow: '0 32px 100px hsl(0 0% 0% / 0.5)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -140,20 +140,20 @@ export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
             <div className="flex items-center justify-between p-5 pb-3 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
+                  style={{ background: 'linear-gradient(135deg, hsl(var(--gold-light)), hsl(var(--gold)))' }}>
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">What's New</h2>
-                  <p className="text-xs" style={{ color: '#6b6380' }}>Latest updates and features</p>
+                  <p className="text-xs" style={{ color: 'hsl(var(--text-muted))' }}>Latest updates and features</p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                style={{ color: '#6b6380' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#6b6380'}
+                style={{ color: 'hsl(var(--text-muted))' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--brand-light))'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--text-muted))'}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -168,12 +168,12 @@ export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
                   style={{
                     background: selectedVersion === entry.version
-                      ? 'rgba(139, 92, 246, 0.15)'
-                      : 'rgba(139, 92, 246, 0.04)',
+                      ? 'hsl(var(--brand) / 0.15)'
+                      : 'hsl(var(--brand) / 0.04)',
                     border: `1px solid ${selectedVersion === entry.version
-                      ? 'rgba(139, 92, 246, 0.3)'
-                      : 'rgba(139, 92, 246, 0.06)'}`,
-                    color: selectedVersion === entry.version ? '#a78bfa' : '#6b6380',
+                      ? 'hsl(var(--brand) / 0.3)'
+                      : 'hsl(var(--brand) / 0.06)'}`,
+                    color: selectedVersion === entry.version ? 'hsl(var(--brand-light))' : 'hsl(var(--text-muted))',
                   }}
                 >
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white"
@@ -211,7 +211,7 @@ export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: i * 0.05 }}
                               className="flex items-start gap-2 text-sm"
-                              style={{ color: '#c4a8fa' }}
+                              style={{ color: 'hsl(var(--brand-lighter))' }}
                             >
                               <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
                                 style={{ background: categoryColors[category] }} />
@@ -228,13 +228,13 @@ export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
 
             {/* Footer */}
             <div className="flex items-center justify-between p-4 pt-3 shrink-0"
-              style={{ borderTop: '1px solid rgba(139, 92, 246, 0.06)' }}>
+              style={{ borderTop: '1px solid hsl(var(--brand) / 0.06)' }}>
               <button
                 onClick={() => window.open('https://github.com/meuor/Bait-El-Hakma/releases', '_blank')}
                 className="flex items-center gap-1 text-xs transition-colors"
-                style={{ color: '#5a5270' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#5a5270'}
+                  style={{ color: 'hsl(var(--text-dim))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--brand-light))'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--text-dim))'}
               >
                 <Globe className="w-3 h-3" />
                 View all releases
@@ -243,7 +243,7 @@ export function WhatsNew({ open, onOpenChange, trigger }: WhatsNewProps) {
                 onClick={handleClose}
                 size="sm"
                 style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                  background: 'linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark)))',
                   color: 'white',
                   fontWeight: 600,
                 }}

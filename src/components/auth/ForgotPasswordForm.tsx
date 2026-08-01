@@ -85,16 +85,16 @@ export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFor
 
                   {devCode && (
                     <div style={{
-                      border: '1px solid rgba(251, 191, 36, 0.3)',
-                      background: 'rgba(251, 191, 36, 0.06)',
+                      border: '1px solid hsl(var(--gold) / 0.3)',
+                      background: 'hsl(var(--gold) / 0.06)',
                       borderRadius: '10px',
                       padding: '1rem',
                       textAlign: 'center',
                     }}>
-                      <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.5rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--gold-light))', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.5rem' }}>
                         Email not configured — use this code:
                       </p>
-                      <p style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: 700, color: '#f0ecf8', letterSpacing: '0.15em', margin: 0 }}>
+                      <p style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: 700, color: 'hsl(var(--text-primary))', letterSpacing: '0.15em', margin: 0 }}>
                         {devCode}
                       </p>
                     </div>

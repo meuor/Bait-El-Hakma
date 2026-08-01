@@ -38,6 +38,31 @@
   --sidebar-accent-foreground: 240 5.9% 10%;
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
+  /* App-specific brand colors */
+  --brand: 262 83% 69%;
+  --brand-light: 263 83% 77%;
+  --brand-lighter: 255 70% 87%;
+  --brand-dark: 263 70% 50%;
+  --gold: 45 74% 58%;
+  --gold-light: 45 93% 64%;
+  --success: 160 84% 50%;
+  --success-light: 160 60% 65%;
+  --error: 0 84% 60%;
+  --error-light: 0 80% 70%;
+  --warning: 40 90% 60%;
+  --surface-base: 260 50% 96%;
+  --surface-dim: 260 20% 93%;
+  --surface-elevated: 0 0% 100%;
+  --surface-overlay: 260 30% 90%;
+  --border-brand: 262 50% 80%;
+  --border-light: 262 20% 90%;
+  --text-brand: 262 83% 69%;
+  --text-primary: 240 10% 10%;
+  --text-secondary: 250 15% 45%;
+  --text-tertiary: 250 10% 60%;
+  --text-muted: 250 15% 50%;
+  --text-dim: 250 12% 35%;
+  --text-input: 250 15% 20%;
 }
 
 /* Dark Theme */
@@ -74,6 +99,31 @@
   --sidebar-accent-foreground: 240 4.8% 95.9%;
   --sidebar-border: 240 3.7% 15.9%;
   --sidebar-ring: 217.2 91.2% 59.8%;
+  /* App-specific brand colors */
+  --brand: 258 90% 66%;
+  --brand-light: 258 90% 74%;
+  --brand-lighter: 255 70% 82%;
+  --brand-dark: 263 70% 50%;
+  --gold: 45 80% 55%;
+  --gold-light: 45 93% 64%;
+  --success: 160 84% 50%;
+  --success-light: 160 60% 65%;
+  --error: 0 84% 60%;
+  --error-light: 0 80% 70%;
+  --warning: 40 90% 60%;
+  --surface-base: 260 50% 4%;
+  --surface-dim: 260 40% 7%;
+  --surface-elevated: 260 40% 10%;
+  --surface-overlay: 260 60% 3%;
+  --border-brand: 258 50% 40%;
+  --border-light: 258 30% 15%;
+  --text-brand: 258 90% 74%;
+  --text-primary: 255 30% 95%;
+  --text-secondary: 240 15% 60%;
+  --text-tertiary: 250 10% 45%;
+  --text-muted: 250 15% 42%;
+  --text-dim: 250 15% 33%;
+  --text-input: 250 10% 25%;
 }
 
 /* Dracula Theme */
@@ -102,6 +152,31 @@
   --chart-3: 135 94% 65%;
   --chart-4: 31 100% 71%;
   --chart-5: 0 100% 67%;
+  /* App-specific brand colors */
+  --brand: 265 89% 78%;
+  --brand-light: 270 80% 82%;
+  --brand-lighter: 275 60% 88%;
+  --brand-dark: 265 70% 60%;
+  --gold: 45 93% 64%;
+  --gold-light: 48 95% 70%;
+  --success: 135 94% 65%;
+  --success-light: 140 70% 72%;
+  --error: 0 100% 67%;
+  --error-light: 0 80% 72%;
+  --warning: 31 100% 71%;
+  --surface-base: 231 15% 15%;
+  --surface-dim: 231 15% 20%;
+  --surface-elevated: 231 15% 23%;
+  --surface-overlay: 231 20% 12%;
+  --border-brand: 265 50% 50%;
+  --border-light: 232 15% 28%;
+  --text-brand: 265 89% 78%;
+  --text-primary: 60 30% 93%;
+  --text-secondary: 60 15% 65%;
+  --text-tertiary: 60 10% 50%;
+  --text-muted: 60 12% 48%;
+  --text-dim: 60 10% 35%;
+  --text-input: 60 10% 90%;
 }
 
 /* Monokai Theme */
@@ -130,6 +205,31 @@
   --chart-3: 50 100% 50%;
   --chart-4: 338 95% 56%;
   --chart-5: 25 100% 55%;
+  /* App-specific brand colors */
+  --brand: 80 76% 53%;
+  --brand-light: 80 65% 60%;
+  --brand-lighter: 80 50% 70%;
+  --brand-dark: 80 80% 45%;
+  --gold: 50 100% 50%;
+  --gold-light: 50 90% 58%;
+  --success: 120 60% 55%;
+  --success-light: 120 50% 65%;
+  --error: 0 100% 59%;
+  --error-light: 0 80% 65%;
+  --warning: 31 100% 55%;
+  --surface-base: 70 8% 12%;
+  --surface-dim: 70 8% 18%;
+  --surface-elevated: 70 8% 22%;
+  --surface-overlay: 70 10% 10%;
+  --border-brand: 80 50% 35%;
+  --border-light: 70 10% 22%;
+  --text-brand: 80 76% 53%;
+  --text-primary: 60 24% 93%;
+  --text-secondary: 60 12% 62%;
+  --text-tertiary: 60 8% 48%;
+  --text-muted: 60 10% 45%;
+  --text-dim: 60 8% 32%;
+  --text-input: 60 10% 90%;
 }
 
 /* GitHub Theme */
@@ -157,7 +257,32 @@
   --chart-2: 137 55% 45%;
   --chart-3: 45 93% 47%;
   --chart-4: 0 72% 51%;
-  --chart-5: 260 60% 55%;
+  --chart-5: 262 83% 69%;
+  /* App-specific brand colors */
+  --brand: 212 92% 45%;
+  --brand-light: 212 80% 55%;
+  --brand-lighter: 212 60% 70%;
+  --brand-dark: 212 95% 38%;
+  --gold: 45 85% 50%;
+  --gold-light: 45 90% 58%;
+  --success: 137 55% 45%;
+  --success-light: 137 45% 55%;
+  --error: 0 72% 51%;
+  --error-light: 0 65% 60%;
+  --warning: 36 90% 50%;
+  --surface-base: 210 20% 96%;
+  --surface-dim: 210 15% 93%;
+  --surface-elevated: 0 0% 100%;
+  --surface-overlay: 210 20% 90%;
+  --border-brand: 212 60% 70%;
+  --border-light: 214 20% 88%;
+  --text-brand: 212 92% 45%;
+  --text-primary: 210 29% 13%;
+  --text-secondary: 215 14% 45%;
+  --text-tertiary: 215 10% 55%;
+  --text-muted: 215 12% 50%;
+  --text-dim: 215 10% 38%;
+  --text-input: 215 15% 15%;
 }
 
 @layer base {

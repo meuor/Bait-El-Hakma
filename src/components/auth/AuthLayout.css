@@ -22,11 +22,11 @@
   min-height: 600px;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(7, 3, 18, 0.6);
+  background: hsl(var(--surface-overlay) / 0.6);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
+  border: 1px solid hsl(var(--brand) / 0.1);
+  box-shadow: 0 32px 100px hsl(0 0% 0% / 0.5);
 }
 
 /* ---------- Form Side ---------- */
@@ -58,13 +58,13 @@
 .auth-form-header h1 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #f0ecf8;
+  color: hsl(var(--text-primary));
   margin: 0 0 0.35rem;
 }
 
 .auth-form-header p {
   font-size: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   margin: 0;
 }
 
@@ -84,32 +84,32 @@
 .auth-field label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #c4a8fa;
+  color: hsl(var(--brand-lighter));
 }
 
 .auth-label-hint {
   font-weight: 400;
-  color: #5a5270;
+  color: hsl(var(--text-dim));
   margin-left: 0.5rem;
   font-size: 0.75rem;
 }
 
 .auth-input {
-  background: rgba(18, 8, 42, 0.4) !important;
-  border: 1px solid rgba(139, 92, 246, 0.1) !important;
-  color: #e8e4f0 !important;
+  background: hsl(var(--surface-dim) / 0.4) !important;
+  border: 1px solid hsl(var(--brand) / 0.1) !important;
+  color: hsl(var(--text-primary)) !important;
   border-radius: 10px !important;
   padding: 0.7rem 1rem !important;
   transition: all 0.3s ease !important;
 }
 
 .auth-input:focus {
-  border-color: rgba(139, 92, 246, 0.3) !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08) !important;
+  border-color: hsl(var(--brand) / 0.3) !important;
+  box-shadow: 0 0 0 3px hsl(var(--brand) / 0.08) !important;
 }
 
 .auth-input::placeholder {
-  color: #4a4360 !important;
+  color: hsl(var(--text-input)) !important;
 }
 
 .auth-input-wrapper {
@@ -121,7 +121,7 @@
 .auth-input-prefix {
   position: absolute;
   left: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   font-size: 0.9rem;
   z-index: 1;
 }
@@ -140,7 +140,7 @@
   right: 0.5rem;
   background: none;
   border: none;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   cursor: pointer;
   padding: 0.25rem;
   display: flex;
@@ -149,17 +149,17 @@
 }
 
 .auth-input-toggle:hover {
-  color: #a78bfa;
+  color: hsl(var(--brand-light));
 }
 
 .auth-field-error {
   font-size: 0.75rem;
-  color: #f87171;
+  color: hsl(var(--error));
 }
 
 .auth-field-success {
   font-size: 0.75rem;
-  color: #34d399;
+  color: hsl(var(--success-light));
 }
 
 .auth-checkbox-row {
@@ -171,7 +171,7 @@
 
 .auth-checkbox-row label {
   font-size: 0.8rem;
-  color: #8b82a0;
+  color: hsl(var(--text-secondary));
   font-weight: 400;
   cursor: pointer;
 }
@@ -179,7 +179,7 @@
 .auth-link-btn {
   background: none;
   border: none;
-  color: #7c6fa0;
+  color: hsl(var(--text-tertiary));
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
@@ -187,7 +187,7 @@
 }
 
 .auth-link-btn:hover {
-  color: #a78bfa;
+  color: hsl(var(--brand-light));
 }
 
 /* ---------- Buttons ---------- */
@@ -197,7 +197,7 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1) !important;
+  background: linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-dark))) !important;
   color: white !important;
   font-size: 0.9rem;
   font-weight: 600;
@@ -209,7 +209,7 @@
 }
 
 .auth-btn-primary:hover {
-  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 30px hsl(var(--brand-dark) / 0.35);
 }
 
 .auth-btn-primary:disabled {
@@ -218,12 +218,12 @@
 }
 
 .auth-btn-back {
-  color: #6b6380 !important;
+  color: hsl(var(--text-muted)) !important;
   font-size: 0.85rem;
 }
 
 .auth-btn-back:hover {
-  color: #a78bfa !important;
+  color: hsl(var(--brand-light)) !important;
 }
 
 .auth-form-actions {
@@ -241,26 +241,26 @@
   text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(139, 92, 246, 0.06);
+  border-top: 1px solid hsl(var(--brand) / 0.06);
 }
 
 .auth-form-footer p {
   font-size: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   margin: 0;
 }
 
 .auth-form-footer button {
   background: none;
   border: none;
-  color: #a78bfa;
+  color: hsl(var(--brand-light));
   font-weight: 600;
   cursor: pointer;
   padding: 0;
 }
 
 .auth-form-footer button:hover {
-  color: #c4a8fa;
+  color: hsl(var(--brand-lighter));
 }
 
 /* ---------- Steps (for multi-step) ---------- */
@@ -278,24 +278,24 @@
   gap: 0.4rem;
   padding: 0.4rem 0.9rem;
   border-radius: 100px;
-  background: rgba(139, 92, 246, 0.06);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  background: hsl(var(--brand) / 0.06);
+  border: 1px solid hsl(var(--brand) / 0.1);
   font-size: 0.8rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   transition: all 0.3s ease;
 }
 
 .auth-step.active {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.3);
-  color: #a78bfa;
+  background: hsl(var(--brand) / 0.15);
+  border-color: hsl(var(--brand) / 0.3);
+  color: hsl(var(--brand-light));
 }
 
 .auth-step span:first-child {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgba(139, 92, 246, 0.15);
+  background: hsl(var(--brand) / 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,7 +304,7 @@
 }
 
 .auth-step.active span:first-child {
-  background: rgba(139, 92, 246, 0.3);
+  background: hsl(var(--brand) / 0.3);
 }
 
 .auth-step-label {
@@ -314,7 +314,7 @@
 .auth-step-line {
   width: 30px;
   height: 1px;
-  background: rgba(139, 92, 246, 0.15);
+  background: hsl(var(--brand) / 0.15);
 }
 
 /* ---------- Success ---------- */
@@ -330,20 +330,20 @@
 .auth-success h2 {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #f0ecf8;
+  color: hsl(var(--text-primary));
   margin: 0 0 0.5rem;
 }
 
 .auth-success p {
   font-size: 0.85rem;
-  color: #6b6380;
+  color: hsl(var(--text-muted));
   margin: 0 0 1.5rem;
 }
 
 /* ---------- Decorative Side ---------- */
 .auth-decor-side {
-  background: rgba(18, 8, 42, 0.4);
-  border-left: 1px solid rgba(139, 92, 246, 0.06);
+  background: hsl(var(--surface-dim) / 0.4);
+  border-left: 1px solid hsl(var(--brand) / 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,21 +357,21 @@
 .auth-decor-content h2 {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #f0ecf8;
+  color: hsl(var(--text-primary));
   margin: 0 0 0.25rem;
 }
 
 .auth-decor-arabic {
   font-family: 'Amiri', 'Noto Naskh Arabic', serif;
   font-size: 1.5rem;
-  color: #d4a853;
+  color: hsl(var(--gold));
   direction: rtl;
   margin: 0 0 1rem;
 }
 
 .auth-decor-desc {
   font-size: 0.9rem;
-  color: #7a7290;
+  color: hsl(var(--text-tertiary));
   line-height: 1.7;
   margin: 0 0 2rem;
 }
@@ -388,17 +388,17 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.6rem 0.85rem;
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.06);
+  background: hsl(var(--brand) / 0.05);
+  border: 1px solid hsl(var(--brand) / 0.06);
   border-radius: 10px;
   font-size: 0.85rem;
-  color: #c4a8fa;
+  color: hsl(var(--brand-lighter));
   transition: all 0.3s ease;
 }
 
 .auth-decor-feature:hover {
-  background: rgba(139, 92, 246, 0.1);
-  border-color: rgba(139, 92, 246, 0.15);
+  background: hsl(var(--brand) / 0.1);
+  border-color: hsl(var(--brand) / 0.15);
 }
 
 .auth-decor-stats {
@@ -415,7 +415,7 @@
   display: block;
   font-size: 1.25rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #a78bfa, #fbbf24);
+  background: linear-gradient(135deg, hsl(var(--brand-light)), hsl(var(--gold-light)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -423,7 +423,7 @@
 
 .auth-decor-stat-label {
   font-size: 0.7rem;
-  color: #5a5270;
+  color: hsl(var(--text-dim));
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -433,27 +433,27 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: #5a5270;
+  color: hsl(var(--text-dim));
 }
 
 .auth-decor-trust svg {
-  color: #10b981;
+  color: hsl(var(--success));
 }
 
 /* ---------- Alert Override ---------- */
 .auth-alert {
-  background: rgba(239, 68, 68, 0.08) !important;
-  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+  background: hsl(var(--error) / 0.08) !important;
+  border: 1px solid hsl(var(--error) / 0.15) !important;
   border-radius: 10px !important;
   padding: 0.75rem 1rem !important;
 }
 
 .auth-alert svg {
-  color: #f87171 !important;
+  color: hsl(var(--error)) !important;
 }
 
 .auth-alert p {
-  color: #fca5a5 !important;
+  color: hsl(var(--error-light)) !important;
   font-size: 0.8rem !important;
 }
 
