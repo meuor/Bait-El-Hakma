@@ -5,6 +5,18 @@ interface IslamicWallpaperProps {
   variant?: 'hero' | 'section' | 'subtle';
 }
 
+// High-quality Islamic wallpaper images from wallhaven.cc
+const wallpaperImages = [
+  'https://w.wallhaven.cc/full/rq/wallhaven-rq215j.png',  // Arabic calligraphy, black bg
+  'https://w.wallhaven.cc/full/5g/wallhaven-5gqpx8.png',  // Quran calligraphy, black bg
+  'https://w.wallhaven.cc/full/nz/wallhaven-nzy5rw.jpg',  // Yemen mosque at dusk
+  'https://w.wallhaven.cc/full/73/wallhaven-73rppe.jpg',  // Iranian architecture
+  'https://w.wallhaven.cc/full/l8/wallhaven-l8og6p.png',  // Mountains + Arabic text
+  'https://w.wallhaven.cc/full/1q/wallhaven-1q13w3.png',  // Islamic quote calligraphy
+  'https://w.wallhaven.cc/full/je/wallhaven-je15pp.png',  // Minimalist Arabic art
+  'https://w.wallhaven.cc/full/nz/wallhaven-nzee1o.jpg',  // Allah verse digital art
+];
+
 // Islamic 8-pointed star pattern
 function StarPattern({ size = 200, opacity = 0.06, color = '#d4a853' }: { size?: number; opacity?: number; color?: string }) {
   const half = size / 2;
@@ -38,23 +50,6 @@ function HexPattern({ size = 120, opacity = 0.04, color = '#a78bfa' }: { size?: 
       <polygon points={hex(size / 2, size / 2, size * 0.4)} fill="none" stroke={color} strokeWidth="0.8" />
       <polygon points={hex(size / 2, size / 2, size * 0.25)} fill="none" stroke={color} strokeWidth="0.5" />
       <circle cx={size / 2} cy={size / 2} r={size * 0.08} fill={color} fillOpacity="0.2" />
-    </svg>
-  );
-}
-
-// Arabesque border pattern
-function ArabesqueBorder({ width = 800, opacity = 0.08, color = '#d4a853' }: { width?: number; opacity?: number; color?: string }) {
-  return (
-    <svg width={width} height="40" viewBox={`0 0 ${width} 40`} style={{ opacity }}>
-      <defs>
-        <pattern id="arabesque-unit" x="0" y="0" width="80" height="40" patternUnits="userSpaceOnUse">
-          <path d="M0,20 Q20,0 40,20 Q60,40 80,20" fill="none" stroke={color} strokeWidth="1" />
-          <circle cx="40" cy="20" r="3" fill={color} fillOpacity="0.3" />
-          <circle cx="0" cy="20" r="2" fill={color} fillOpacity="0.2" />
-          <circle cx="80" cy="20" r="2" fill={color} fillOpacity="0.2" />
-        </pattern>
-      </defs>
-      <rect width={width} height="40" fill="url(#arabesque-unit)" />
     </svg>
   );
 }
@@ -93,6 +88,8 @@ function Rosette({ size = 300, opacity = 0.05, color = '#c4a8fa' }: { size?: num
 
 export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWallpaperProps) {
   const [currentBg, setCurrentBg] = useState(0);
+  const [currentImage, setCurrentImage] = useState(Math.floor(Math.random() * wallpaperImages.length));
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const backgrounds = [
     'linear-gradient(135deg, #06020f 0%, #0d0520 30%, #0a0318 60%, #110828 100%)',
@@ -104,7 +101,9 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
     if (variant !== 'hero') return;
     const interval = setInterval(() => {
       setCurrentBg((prev) => (prev + 1) % backgrounds.length);
-    }, 8000);
+      setCurrentImage((prev) => (prev + 1) % wallpaperImages.length);
+      setImageLoaded(false);
+    }, 12000);
     return () => clearInterval(interval);
   }, [variant, backgrounds.length]);
 
@@ -118,6 +117,34 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
         transition: 'background 2s ease-in-out',
       }}
     >
+      {/* Wallpaper background image */}
+      {variant === 'hero' && (
+        <div
+          className="absolute inset-0 transition-opacity duration-[3000ms]"
+          style={{
+            backgroundImage: `url(${wallpaperImages[currentImage]})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: imageLoaded ? 0.35 : 0,
+          }}
+        >
+          <img
+            src={wallpaperImages[currentImage]}
+            alt=""
+            className="hidden"
+            onLoad={() => setImageLoaded(true)}
+          />
+        </div>
+      )}
+
+      {/* Dark gradient overlay for readability */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(180deg, rgba(6,2,15,0.7) 0%, rgba(6,2,15,0.5) 40%, rgba(6,2,15,0.8) 100%)',
+        }}
+      />
+
       {/* Floating geometric elements */}
       <div className="absolute inset-0">
         {/* Large rosette - top left */}
@@ -179,4 +206,4 @@ export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWa
 }
 
 // Export individual patterns for reuse
-export { StarPattern, HexPattern, ArabesqueBorder, Rosette };
+export { StarPattern, HexPattern, Rosette };

@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "vite build && electron-builder --win",
-    "electron:build:portable": "vite build && electron-builder --win portable"
+    "electron:build:portable": "vite build && electron-builder --win portable",
+    "electron:build:linux": "vite build && electron-builder --linux",
+    "electron:build:mac": "vite build && electron-builder --mac"
   },
   "build": {
     "appId": "com.baithaelhakma.app",
@@ -42,6 +44,31 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Bait El-Hakma",
       "artifactName": "Bait-El-Hakma-${version}-Setup.${ext}"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "tar.gz",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/img/bait-el-hakma logo.png",
+      "category": "Utility",
+      "artifactName": "Bait-El-Hakma-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "public/img/bait-el-hakma logo.png",
+      "category": "public.app-category.productivity"
     }
   },
   "dependencies": {

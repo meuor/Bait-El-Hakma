@@ -1,6 +1,7 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, protocol } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import fs from 'node:fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,6 +11,8 @@ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+
+const DIST_PATH = path.join(__dirname, '..', 'dist');
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -38,7 +41,7 @@ function createWindow() {
   if (isDev && VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    mainWindow.loadFile(path.join(DIST_PATH, 'index.html'));
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -122,7 +125,75 @@ ipcMain.handle('get-platform', () => {
   return process.platform;
 });
 
+// Register custom file protocol for serving local assets in production
+function registerFileProtocol() {
+  protocol.handle('file', (request) => {
+    const filePath = request.url.slice('file://'.length);
+    let fullPath = decodeURIComponent(filePath);
+
+    // On Windows, file URLs look like file:///C:/path/to/file
+    // On Linux/Mac, they look like file:///path/to/file
+    if (process.platform === 'win32') {
+      // Remove leading slash for Windows paths
+      if (fullPath.startsWith('/') && !fullPath.startsWith('//')) {
+        fullPath = fullPath.slice(1);
+      }
+    }
+
+    // Check if the file exists
+    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+      return new Response(fs.readFileSync(fullPath), {
+        headers: {
+          'Content-Type': getMimeType(fullPath),
+        },
+      });
+    }
+
+    // If file doesn't exist, serve index.html for SPA routing
+    const indexPath = path.join(DIST_PATH, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return new Response(fs.readFileSync(indexPath), {
+        headers: { 'Content-Type': 'text/html' },
+      });
+    }
+
+    return new Response('Not Found', { status: 404 });
+  });
+}
+
+function getMimeType(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeTypes: Record<string, string> = {
+    '.html': 'text/html',
+    '.js': 'application/javascript',
+    '.mjs': 'application/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.ttf': 'font/ttf',
+    '.eot': 'application/vnd.ms-fontobject',
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.pdf': 'application/pdf',
+    '.webp': 'image/webp',
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
 app.whenReady().then(() => {
+  if (!isDev) {
+    registerFileProtocol();
+  }
+
   createWindow();
   createTray();
 

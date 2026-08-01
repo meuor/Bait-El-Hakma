@@ -73,15 +73,18 @@ const features = [
   },
 ];
 
+const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
+const assetBase = isElectron ? '.' : '';
+
 const screenshots = [
-  { src: '/screenshots/pomodoro.png', title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player' },
-  { src: '/screenshots/focus-video.png', title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate' },
-  { src: '/screenshots/kanban.png', title: 'Kanban', desc: 'Drag-and-drop task management board' },
-  { src: '/screenshots/library.png', title: 'Library', desc: 'Track books with progress & notes' },
-  { src: '/screenshots/tasks.png', title: 'Tasks', desc: 'Daily todos with priority & categories' },
-  { src: '/screenshots/stats.png', title: 'Stats', desc: 'Activity analytics & focus breakdown' },
-  { src: '/screenshots/inspire.png', title: 'Inspire', desc: 'Quran, hadith & daily quotes' },
-  { src: '/screenshots/challenges.png', title: 'Challenges', desc: 'Build habits with streaks & achievements' },
+  { src: `${assetBase}/screenshots/pomodoro.png`, title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player' },
+  { src: `${assetBase}/screenshots/focus-video.png`, title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate' },
+  { src: `${assetBase}/screenshots/kanban.png`, title: 'Kanban', desc: 'Drag-and-drop task management board' },
+  { src: `${assetBase}/screenshots/library.png`, title: 'Library', desc: 'Track books with progress & notes' },
+  { src: `${assetBase}/screenshots/tasks.png`, title: 'Tasks', desc: 'Daily todos with priority & categories' },
+  { src: `${assetBase}/screenshots/stats.png`, title: 'Stats', desc: 'Activity analytics & focus breakdown' },
+  { src: `${assetBase}/screenshots/inspire.png`, title: 'Inspire', desc: 'Quran, hadith & daily quotes' },
+  { src: `${assetBase}/screenshots/challenges.png`, title: 'Challenges', desc: 'Build habits with streaks & achievements' },
 ];
 
 const steps = [
