@@ -186,7 +186,7 @@ function AppContent() {
       )}
       
       {!state.isMinimized && (
-        <main className="flex-1 container mx-auto px-4 py-6 overflow-auto">
+        <main className="flex-1 container mx-auto px-4 pt-4 pb-6 overflow-auto relative z-10">
           <AnimatePresenceWrapper currentTab={currentTab}>
             {(['pomodoro', 'video', 'kanban', 'library', 'todo', 'stats', 'motivation', 'challenges', 'daily', 'profile', 'help'] as const).map((tab) => (
               <TabPanel key={tab} tab={tab} currentTab={currentTab}>

@@ -214,7 +214,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         transition={{ duration: 0.6 }}
       >
         <a href="/" className="lp-nav-brand">
-          <img src="/img/logo.png" alt="Bait El-Hakma" className="lp-nav-logo" />
+          <img src={`${assetBase}/img/logo.png`} alt="Bait El-Hakma" className="lp-nav-logo" />
           <span className="lp-nav-title">Bait El-Hakma</span>
         </a>
         <div className="lp-nav-links">
@@ -605,7 +605,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div className="lp-footer-brand">
-            <img src="/img/logo.png" alt="Bait El-Hakma" className="lp-footer-logo" />
+            <img src={`${assetBase}/img/logo.png`} alt="Bait El-Hakma" className="lp-footer-logo" />
             <span>Bait El-Hakma</span>
           </div>
           <div className="lp-footer-links">
