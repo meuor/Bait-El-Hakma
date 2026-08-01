@@ -4,6 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 interface IslamicWallpaperProps {
   className?: string;
   variant?: 'hero' | 'section' | 'subtle';
+  forceDark?: boolean;
 }
 
 // High-quality Islamic wallpaper images from wallhaven.cc
@@ -87,13 +88,13 @@ function Rosette({ size = 300, opacity = 0.05, color = '#c4a8fa' }: { size?: num
   );
 }
 
-export function IslamicWallpaper({ className = '', variant = 'hero' }: IslamicWallpaperProps) {
+export function IslamicWallpaper({ className = '', variant = 'hero', forceDark = false }: IslamicWallpaperProps) {
   const { theme } = useTheme();
   const [currentBg, setCurrentBg] = useState(0);
   const [currentImage, setCurrentImage] = useState(Math.floor(Math.random() * wallpaperImages.length));
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const isDark = theme === 'dark' || theme === 'dracula' || theme === 'monokai';
+  const isDark = forceDark || theme === 'dark' || theme === 'dracula' || theme === 'monokai';
 
   if (!isDark) return null;
 

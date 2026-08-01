@@ -235,7 +235,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
       {/* Hero */}
       <section className="lp-hero" ref={heroRef}>
-        <IslamicWallpaper variant="hero" />
+        <IslamicWallpaper variant="hero" forceDark />
         <motion.div className="lp-hero-content" style={{ y: heroY, opacity: heroOpacity }}>
           <div className="lp-hero-left">
             <motion.div
