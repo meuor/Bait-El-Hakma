@@ -1,7 +1,7 @@
 {
   "name": "bait-el-hakma",
   "private": true,
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "Bait El-Hakma - House of Wisdom - All-in-one productivity suite",
   "main": "dist-electron/main.js",
   "type": "module",
@@ -60,7 +60,7 @@
           ]
         }
       ],
-      "icon": "build/icon.png",
+      "icon": "build/icon.ico",
       "artifactName": "Bait-El-Hakma-${version}-Win.${ext}"
     },
     "nsis": {
@@ -71,9 +71,9 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Bait El-Hakma",
       "artifactName": "Bait-El-Hakma-${version}-Setup.${ext}",
-      "installerIcon": "build/icon.png",
-      "uninstallerIcon": "build/icon.png",
-      "installerHeaderIcon": "build/icon.png"
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     },
     "linux": {
       "target": [
@@ -105,12 +105,6 @@
       "icon": "build/icon.png",
       "category": "Utility",
       "artifactName": "Bait-El-Hakma-${version}-Linux.${ext}",
-      "desktop": {
-        "Name": "Bait El-Hakma",
-        "Comment": "House of Wisdom - All-in-one productivity suite",
-        "Keywords": "productivity;islamic;quran;timer;kanban;tasks",
-        "StartupWMClass": "bait-el-hakma"
-      },
       "mimeTypes": [
         "x-scheme-handler/bait-el-hakma"
       ]
@@ -153,7 +147,7 @@
           ]
         }
       ],
-      "icon": "build/icon.png",
+      "icon": "build/icon.ico",
       "category": "public.app-category.productivity",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
