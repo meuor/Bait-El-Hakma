@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 /* Theme Variables */
-html {
-  background-color: hsl(var(--background));
+html, html body {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
 }
 :root {
   /* Light Theme (Default) */
@@ -295,8 +296,8 @@ html {
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 

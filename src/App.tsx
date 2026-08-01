@@ -176,7 +176,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col" style={{ position: 'relative' }}>
+    <div className="min-h-screen bg-background text-foreground flex flex-col" style={{ position: 'relative', backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }}>
       <IslamicWallpaper variant="subtle" />
       {!state.isMinimized && (
         <>
