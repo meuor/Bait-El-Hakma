@@ -353,7 +353,8 @@ ipcMain.handle('get-platform', () => {
 // --- IPC — API proxy (main-process fetch, bypasses renderer CORS) ---
 ipcMain.handle('api-request', async (_, url: string, options?: { method?: string; headers?: Record<string, string>; body?: string }) => {
   try {
-    const res = await net.fetch(url, {
+    const fullUrl = url.startsWith('http') ? url : `https://bait-el-hakma.vercel.app${url.startsWith('/') ? url : `/${url}`}`;
+    const res = await net.fetch(fullUrl, {
       method: options?.method || 'GET',
       headers: options?.headers,
       body: options?.body,

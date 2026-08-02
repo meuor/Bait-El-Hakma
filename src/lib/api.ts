@@ -10,7 +10,7 @@ import type {
 } from '@/types';
 
 const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
-const API_BASE = import.meta.env.VITE_API_BASE || (isElectron ? 'https://bait-el-hakma.vercel.app/api' : '/api');
+const API_BASE = isElectron ? 'https://bait-el-hakma.vercel.app/api' : (import.meta.env.VITE_API_BASE || '/api');
 
 function getAuthToken(): string | null {
   return localStorage.getItem('bait-el-hakma-token');
