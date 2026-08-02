@@ -492,6 +492,9 @@ function isAPIAvailable(): boolean {
   return typeof window !== 'undefined' && window.fetch !== undefined;
 }
 
+const _isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
+const API_BASE_URL = _isElectron ? 'https://bait-el-hakma.vercel.app' : '';
+
 // Actions that should sync to API
 const API_SYNC_ACTIONS = new Set([
   'SET_POMODORO_SETTINGS',
@@ -562,7 +565,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_API_STATUS', payload: 'checking' });
       let apiReachable = false;
       try {
-        const check = await fetch('/api/migrate', { method: 'GET' });
+        const check = await fetch(`${API_BASE_URL}/api/migrate`, { method: 'GET' });
         apiReachable = check.ok;
       } catch {
         apiReachable = false;
@@ -582,7 +585,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_API_STATUS', payload: 'checking' });
         try {
           // Test if the data tables work with this token
-          const testResp = await fetch('/api/todos', {
+          const testResp = await fetch(`${API_BASE_URL}/api/todos`, {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
           });
 
@@ -595,7 +598,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             // API returned error — try to migrate tables (safe migration)
             console.log('Data API failed, attempting safe migration...');
             try {
-              const migResp = await fetch('/api/migrate', {
+              const migResp = await fetch(`${API_BASE_URL}/api/migrate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
               });
@@ -625,12 +628,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } else {
         // No token — check if tables exist anyway (for first-time setup)
         try {
-          const testResp = await fetch('/api/migrate');
+          const testResp = await fetch(`${API_BASE_URL}/api/migrate`);
           if (testResp.ok) {
             dispatch({ type: 'SET_API_STATUS', payload: 'online' });
           } else {
             // Try to create tables
-            const migResp = await fetch('/api/migrate', {
+            const migResp = await fetch(`${API_BASE_URL}/api/migrate`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             });

@@ -9,7 +9,8 @@ import type {
   Challenge,
 } from '@/types';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
+const API_BASE = import.meta.env.VITE_API_BASE || (isElectron ? 'https://bait-el-hakma.vercel.app/api' : '/api');
 
 function getAuthToken(): string | null {
   return localStorage.getItem('bait-el-hakma-token');

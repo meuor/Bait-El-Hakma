@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter, protocol, net } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -19,6 +19,73 @@ let desktopSettings: DesktopSettings = loadSettings();
 let isQuitting = false;
 
 const DIST_PATH = path.join(__dirname, '..', 'dist');
+
+// --- Custom Protocol for serving dist files ---
+// This gives the app a proper origin (app://localhost) instead of file://
+// which is required for: images, CORS, Firebase, and proper security
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.mjs': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.eot': 'application/vnd.ms-fontobject',
+  '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
+  '.webp': 'image/webp',
+  '.webm': 'video/webm',
+  '.txt': 'text/plain',
+  '.xml': 'application/xml',
+  '.map': 'application/json',
+  '.webmanifest': 'application/manifest+json',
+};
+
+function registerAppProtocol() {
+  protocol.handle('app', (request) => {
+    const url = new URL(request.url);
+    // Remove leading slash and decode URI components
+    let pathname = decodeURIComponent(url.pathname);
+    if (pathname.startsWith('/')) pathname = pathname.slice(1);
+
+    const filePath = path.join(DIST_PATH, pathname);
+
+    // Security: prevent directory traversal
+    if (!filePath.startsWith(DIST_PATH)) {
+      return new Response('Forbidden', { status: 403 });
+    }
+
+    try {
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+        const data = fs.readFileSync(filePath);
+        return new Response(data, {
+          headers: { 'Content-Type': contentType },
+        });
+      }
+      // Fallback: serve index.html for SPA routing (e.g., /login -> index.html)
+      const indexPath = path.join(DIST_PATH, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        const data = fs.readFileSync(indexPath, 'utf-8');
+        return new Response(data, {
+          headers: { 'Content-Type': 'text/html' },
+        });
+      }
+      return new Response('Not Found', { status: 404 });
+    } catch {
+      return new Response('Internal Error', { status: 500 });
+    }
+  });
+}
 
 // --- Error Logging ---
 function getLogDir(): string {
@@ -118,7 +185,8 @@ function createWindow() {
   if (isDev && VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(DIST_PATH, 'index.html'));
+    // Use custom protocol for proper origin (fixes images, CORS, Firebase)
+    mainWindow.loadURL('app://localhost/index.html');
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -421,6 +489,7 @@ ipcMain.handle('get-update-status', () => {
 // --- App Lifecycle ---
 app.whenReady().then(() => {
   writeLog('INFO', 'app', `App starting v${app.getVersion()} (${isDev ? 'dev' : 'prod'})`);
+  if (!isDev) registerAppProtocol();
   applyAutoStart(desktopSettings);
   createWindow();
   createTray();
