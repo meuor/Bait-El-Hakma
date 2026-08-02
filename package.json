@@ -174,7 +174,10 @@
         }
       ],
       "artifactName": "Bait-El-Hakma-${version}-Mac.${ext}"
-    }
+    },
+    "asarUnpack": [
+      "dist/**"
+    ]
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

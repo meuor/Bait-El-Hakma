@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter, net } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -345,6 +345,21 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-platform', () => {
   return process.platform;
+});
+
+// --- IPC — API proxy (main-process fetch, bypasses renderer CORS) ---
+ipcMain.handle('api-request', async (_, url: string, options?: { method?: string; headers?: Record<string, string>; body?: string }) => {
+  try {
+    const res = await net.fetch(url, {
+      method: options?.method || 'GET',
+      headers: options?.headers,
+      body: options?.body,
+    });
+    const text = await res.text();
+    return { status: res.status, statusText: res.statusText, body: text };
+  } catch (err) {
+    return { status: 0, statusText: 'Failed to fetch', body: '', error: err instanceof Error ? err.message : String(err) };
+  }
 });
 
 // --- IPC Handlers — Desktop Settings ---

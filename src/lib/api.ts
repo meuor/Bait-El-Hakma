@@ -16,6 +16,22 @@ function getAuthToken(): string | null {
   return localStorage.getItem('bait-el-hakma-token');
 }
 
+// In Electron, route requests through the main process to bypass renderer CORS restrictions.
+export async function rawFetch(url: string, options?: RequestInit): Promise<Response> {
+  if (isElectron && (window as any).electronAPI?.apiRequest) {
+    const res = await (window as any).electronAPI.apiRequest(url, {
+      method: options?.method || 'GET',
+      headers: options?.headers as Record<string, string> | undefined,
+      body: typeof options?.body === 'string' ? options.body : options?.body ? JSON.stringify(options.body) : undefined,
+    });
+    if (!res || res.status === 0) {
+      throw new Error(res?.error || 'Failed to fetch');
+    }
+    return new Response(res.body, { status: res.status, statusText: res.statusText });
+  }
+  return fetch(url, options);
+}
+
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const token = getAuthToken();
   const headers: Record<string, string> = {
@@ -26,7 +42,7 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  const res = await rawFetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
   });

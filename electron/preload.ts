@@ -52,4 +52,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Logging
   getAppLogs: () => ipcRenderer.invoke('get-app-logs'),
   getLogDirectory: () => ipcRenderer.invoke('get-log-directory'),
+
+  // API proxy (main-process fetch — bypasses renderer CORS)
+  apiRequest: (url: string, options?: { method?: string; headers?: Record<string, string>; body?: string }) =>
+    ipcRenderer.invoke('api-request', url, options),
 });

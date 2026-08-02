@@ -495,6 +495,21 @@ function isAPIAvailable(): boolean {
 const _isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
 const API_BASE_URL = _isElectron ? 'https://bait-el-hakma.vercel.app' : '';
 
+async function apiFetch(url: string, options?: RequestInit): Promise<Response> {
+  if (_isElectron && (window as any).electronAPI?.apiRequest) {
+    const res = await (window as any).electronAPI.apiRequest(url, {
+      method: options?.method || 'GET',
+      headers: options?.headers as Record<string, string> | undefined,
+      body: typeof options?.body === 'string' ? options.body : options?.body ? JSON.stringify(options.body) : undefined,
+    });
+    if (!res || res.status === 0) {
+      throw new Error(res?.error || 'Failed to fetch');
+    }
+    return new Response(res.body, { status: res.status, statusText: res.statusText });
+  }
+  return fetch(url, options);
+}
+
 // Actions that should sync to API
 const API_SYNC_ACTIONS = new Set([
   'SET_POMODORO_SETTINGS',
@@ -565,7 +580,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_API_STATUS', payload: 'checking' });
       let apiReachable = false;
       try {
-        const check = await fetch(`${API_BASE_URL}/api/migrate`, { method: 'GET' });
+        const check = await apiFetch(`${API_BASE_URL}/api/migrate`, { method: 'GET' });
         apiReachable = check.ok;
       } catch {
         apiReachable = false;
@@ -585,7 +600,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_API_STATUS', payload: 'checking' });
         try {
           // Test if the data tables work with this token
-          const testResp = await fetch(`${API_BASE_URL}/api/todos`, {
+          const testResp = await apiFetch(`${API_BASE_URL}/api/todos`, {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
           });
 
@@ -598,7 +613,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             // API returned error — try to migrate tables (safe migration)
             console.log('Data API failed, attempting safe migration...');
             try {
-              const migResp = await fetch(`${API_BASE_URL}/api/migrate`, {
+              const migResp = await apiFetch(`${API_BASE_URL}/api/migrate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
               });
@@ -628,12 +643,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } else {
         // No token — check if tables exist anyway (for first-time setup)
         try {
-          const testResp = await fetch(`${API_BASE_URL}/api/migrate`);
+          const testResp = await apiFetch(`${API_BASE_URL}/api/migrate`);
           if (testResp.ok) {
             dispatch({ type: 'SET_API_STATUS', payload: 'online' });
           } else {
             // Try to create tables
-            const migResp = await fetch(`${API_BASE_URL}/api/migrate`, {
+            const migResp = await apiFetch(`${API_BASE_URL}/api/migrate`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             });
