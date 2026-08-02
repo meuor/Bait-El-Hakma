@@ -27,6 +27,7 @@ import { WhatsNew, useWhatsNewAutoShow } from '@/components/WhatsNew';
 import { CommandPalette } from '@/components/CommandPalette';
 import { QuickCapture } from '@/components/QuickCapture';
 import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 import { DailyNotes } from '@/sections/DailyNotes';
 import { syncManager } from '@/lib/SyncManager';
@@ -251,7 +252,9 @@ function App() {
   return (
     <ThemeProvider>
       <AppProvider>
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </AppProvider>
     </ThemeProvider>
   );
