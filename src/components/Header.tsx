@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { 
+import {
   Sun, 
   Moon, 
   Palette, 
@@ -23,11 +23,15 @@ import {
   RefreshCw,
   Sparkles,
   ExternalLink,
+  HelpCircle,
+  Globe,
+  Info,
 } from 'lucide-react';
 import type { Theme } from '@/types';
 import type { AuthUser } from '@/lib/api';
 import { asset } from '@/lib/assets';
 import { UpdateDialog } from '@/components/UpdateDialog';
+import { AboutMeDialog } from '@/components/AboutMeDialog';
 
 const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
   { value: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
@@ -49,6 +53,7 @@ export function Header({ user, onLogout, onShowWhatsNew }: HeaderProps) {
   const { apiStatus, syncErrors } = state;
   const hasErrors = syncErrors.length > 0;
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [showAboutMe, setShowAboutMe] = useState(false);
 
   const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
 
@@ -141,6 +146,49 @@ export function Header({ user, onLogout, onShowWhatsNew }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Help Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative" title="Help">
+                  <HelpCircle className="h-4 w-4" />
+                  <span className="sr-only">Help</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Help</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => window.open('https://github.com/meuor/Bait-El-Hakma', '_blank')}
+                  className="cursor-pointer"
+                >
+                  <Github className="w-4 h-4 mr-2" />
+                  GitHub Repository
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => window.open('https://github.com/meuor/Bait-El-Hakma/releases', '_blank')}
+                  className="cursor-pointer"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Releases & Downloads
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => window.open('https://bait-el-hakma.vercel.app', '_blank')}
+                  className="cursor-pointer"
+                >
+                  <Globe className="w-4 h-4 mr-2" />
+                  Online Web App
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setShowAboutMe(true)}
+                  className="cursor-pointer"
+                >
+                  <Info className="w-4 h-4 mr-2" />
+                  About Me
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -205,6 +253,8 @@ export function Header({ user, onLogout, onShowWhatsNew }: HeaderProps) {
 
       {/* Update Dialog */}
       <UpdateDialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog} />
+      {/* About Me Dialog */}
+      <AboutMeDialog open={showAboutMe} onOpenChange={setShowAboutMe} />
     </>
   );
 }
