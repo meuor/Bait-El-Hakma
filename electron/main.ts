@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, protocol, Notification } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -16,43 +16,83 @@ const isLinux = process.platform === 'linux';
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let desktopSettings: DesktopSettings = loadSettings();
+let isQuitting = false;
 
 const DIST_PATH = path.join(__dirname, '..', 'dist');
 
-// Auto-updater configuration
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = true;
-autoUpdater.logger = {
-  info: (msg: string) => console.log('[updater]', msg),
-  warn: (msg: string) => console.warn('[updater]', msg),
-  error: (msg: string) => console.error('[updater]', msg),
-  debug: () => {},
-} as any;
+// --- Error Logging ---
+function getLogDir(): string {
+  const logDir = path.join(app.getPath('userData'), 'logs');
+  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+  return logDir;
+}
 
+function writeLog(level: string, source: string, message: string, stack?: string) {
+  const timestamp = new Date().toISOString();
+  const logLine = `[${timestamp}] [${level}] [${source}] ${message}${stack ? '\n' + stack : ''}\n`;
+  const logFile = path.join(getLogDir(), `app-${new Date().toISOString().slice(0, 10)}.log`);
+  try {
+    fs.appendFileSync(logFile, logLine, 'utf-8');
+  } catch {
+    // Silent fail — can't log a log error
+  }
+  console[level === 'ERROR' ? 'error' : level === 'WARN' ? 'warn' : 'log'](`[${source}] ${message}`);
+}
+
+// Global error handlers
+process.on('uncaughtException', (error) => {
+  writeLog('ERROR', 'main-process', 'Uncaught exception', error.stack || error.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  writeLog('ERROR', 'main-process', 'Unhandled promise rejection', String(reason));
+});
+
+// --- Icon ---
 function getIconPath(): string {
   if (!isDev) {
     const resourcesPath = process.resourcesPath;
-    const iconPath = path.join(resourcesPath, 'icons', 'icon.png');
-    if (fs.existsSync(iconPath)) return iconPath;
+    const candidates = [
+      path.join(resourcesPath, 'icons', 'icon.png'),
+      path.join(resourcesPath, 'icon.png'),
+    ];
+    for (const iconPath of candidates) {
+      if (fs.existsSync(iconPath)) return iconPath;
+    }
   }
   return path.join(__dirname, '..', 'build', 'icon.png');
 }
 
+// --- Auto-updater ---
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.logger = {
+  info: (msg: string) => writeLog('INFO', 'updater', msg),
+  warn: (msg: string) => writeLog('WARN', 'updater', msg),
+  error: (msg: string) => writeLog('ERROR', 'updater', msg),
+  debug: () => {},
+} as any;
+
+// --- Window ---
 function createWindow() {
+  const iconPath = getIconPath();
+
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1400,
     height: 900,
     minWidth: 800,
     minHeight: 600,
     title: 'Bait El-Hakma - House of Wisdom',
-    icon: getIconPath(),
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     backgroundColor: '#06020f',
-    show: !desktopSettings.startMinimized,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      spellcheck: false,
+      devtools: isDev,
     },
   };
 
@@ -68,11 +108,13 @@ function createWindow() {
 
   mainWindow = new BrowserWindow(windowOptions);
 
+  // Open external links in system browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
+  // Load content
   if (isDev && VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
@@ -80,24 +122,32 @@ function createWindow() {
   }
 
   mainWindow.once('ready-to-show', () => {
+    writeLog('INFO', 'app', 'Window ready to show');
     if (!desktopSettings.startMinimized) {
       mainWindow?.show();
     }
-    // Check for updates after window is ready (only in production)
+    // Check for updates in production after a delay
     if (!isDev) {
       setTimeout(() => {
-        autoUpdater.checkForUpdates().catch(() => {});
-      }, 3000);
+        autoUpdater.checkForUpdates().catch((err) => {
+          writeLog('WARN', 'updater', 'Auto-update check failed', err?.message);
+        });
+      }, 5000);
     }
   });
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow?.webContents.send('desktop-settings-changed', desktopSettings);
+  });
+
+  mainWindow.webContents.on('did-fail-load', (_, errorCode, errorDescription) => {
+    writeLog('ERROR', 'webcontents', `Page load failed: ${errorCode} - ${errorDescription}`);
+  });
+
   mainWindow.on('close', (event) => {
-    if (!app.isQuitting && desktopSettings.closeToTray) {
+    if (!isQuitting && desktopSettings.closeToTray) {
       event.preventDefault();
       mainWindow?.hide();
-      if (desktopSettings.showNotifications && !Notification.isSupported() === false) {
-        // Silent minimize — no notification needed
-      }
       return;
     }
     mainWindow = null;
@@ -115,26 +165,43 @@ function createWindow() {
     mainWindow?.webContents.send('window-maximized', false);
   });
 
-  // Send initial settings to renderer
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow?.webContents.send('desktop-settings-changed', desktopSettings);
+  // Catch renderer process crashes
+  mainWindow.webContents.on('render-process-gone', (_, details) => {
+    writeLog('ERROR', 'renderer', `Render process crashed: ${details.reason}`, details.exitCode?.toString());
+  });
+
+  mainWindow.on('unresponsive', () => {
+    writeLog('WARN', 'app', 'Window became unresponsive');
+  });
+
+  mainWindow.on('responsive', () => {
+    writeLog('INFO', 'app', 'Window became responsive again');
   });
 }
 
+// --- Tray ---
 function createTray() {
-  const iconPath = getIconPath();
-  const icon = nativeImage.createFromPath(iconPath);
-  const trayIconSize = isLinux ? 22 : 16;
-  tray = new Tray(icon.resize({ width: trayIconSize, height: trayIconSize }));
+  try {
+    const iconPath = getIconPath();
+    if (!fs.existsSync(iconPath)) {
+      writeLog('WARN', 'tray', `Icon not found: ${iconPath}, skipping tray`);
+      return;
+    }
+    const icon = nativeImage.createFromPath(iconPath);
+    const trayIconSize = isLinux ? 22 : 16;
+    tray = new Tray(icon.resize({ width: trayIconSize, height: trayIconSize }));
+    tray.setToolTip('Bait El-Hakma - House of Wisdom');
 
-  updateTrayMenu();
+    tray.on('double-click', () => {
+      mainWindow?.show();
+      mainWindow?.focus();
+    });
 
-  tray.setToolTip('Bait El-Hakma - House of Wisdom');
-
-  tray.on('double-click', () => {
-    mainWindow?.show();
-    mainWindow?.focus();
-  });
+    updateTrayMenu();
+    writeLog('INFO', 'tray', 'System tray created');
+  } catch (err) {
+    writeLog('WARN', 'tray', 'Failed to create tray', String(err));
+  }
 }
 
 function updateTrayMenu() {
@@ -169,6 +236,17 @@ function updateTrayMenu() {
         updateTrayMenu();
       },
     },
+    {
+      label: 'Start with Windows',
+      type: 'checkbox',
+      checked: desktopSettings.autoStart,
+      click: (menuItem) => {
+        desktopSettings.autoStart = menuItem.checked;
+        saveSettings(desktopSettings);
+        applyAutoStart(desktopSettings);
+        updateTrayMenu();
+      },
+    },
     { type: 'separator' },
     {
       label: 'Check for Updates...',
@@ -181,7 +259,7 @@ function updateTrayMenu() {
     {
       label: 'Quit',
       click: () => {
-        app.isQuitting = true;
+        isQuitting = true;
         app.quit();
       },
     },
@@ -194,21 +272,21 @@ function sendNotification(title: string, body: string) {
   if (!desktopSettings.showNotifications) return;
   if (!Notification.isSupported()) return;
 
-  const notification = new Notification({
-    title,
-    body,
-    icon: getIconPath(),
-    silent: true,
-  });
-  notification.show();
+  try {
+    const notification = new Notification({ title, body, icon: getIconPath(), silent: true });
+    notification.show();
+  } catch (err) {
+    writeLog('WARN', 'notification', 'Failed to show notification', String(err));
+  }
 }
 
-// Auto-updater events
+// --- Auto-updater events ---
 autoUpdater.on('checking-for-update', () => {
   mainWindow?.webContents.send('update-status', 'checking');
 });
 
 autoUpdater.on('update-available', (info) => {
+  writeLog('INFO', 'updater', `Update available: v${info.version}`);
   mainWindow?.webContents.send('update-available', {
     version: info.version,
     releaseDate: info.releaseDate,
@@ -229,21 +307,20 @@ autoUpdater.on('download-progress', (progress) => {
 });
 
 autoUpdater.on('update-downloaded', (info) => {
+  writeLog('INFO', 'updater', `Update downloaded: v${info.version}`);
   mainWindow?.webContents.send('update-downloaded', {
     version: info.version,
     releaseDate: info.releaseDate,
   });
-  sendNotification(
-    'Update Ready',
-    `Bait El-Hakma v${info.version} has been downloaded and is ready to install.`
-  );
+  sendNotification('Update Ready', `Bait El-Hakma v${info.version} has been downloaded and is ready to install.`);
 });
 
 autoUpdater.on('error', (error) => {
+  writeLog('ERROR', 'updater', 'Update error', error.message);
   mainWindow?.webContents.send('update-error', error.message);
 });
 
-// IPC Handlers — Window
+// --- IPC Handlers — Window ---
 ipcMain.on('window-minimize', () => {
   if (desktopSettings.minimizeToTray) {
     mainWindow?.hide();
@@ -276,7 +353,7 @@ ipcMain.handle('get-platform', () => {
   return process.platform;
 });
 
-// IPC Handlers — Desktop Settings
+// --- IPC Handlers — Desktop Settings ---
 ipcMain.handle('get-desktop-settings', () => {
   return desktopSettings;
 });
@@ -286,18 +363,30 @@ ipcMain.handle('set-desktop-settings', (_, settings: Partial<DesktopSettings>) =
   saveSettings(desktopSettings);
   applyAutoStart(desktopSettings);
   updateTrayMenu();
-
-  // Notify renderer
   mainWindow?.webContents.send('desktop-settings-changed', desktopSettings);
-
   return desktopSettings;
 });
 
-// Update IPC handlers
-ipcMain.handle('check-for-updates', async () => {
-  if (isDev) {
-    return { error: 'Updates are not available in development mode' };
+// --- IPC — Logs ---
+ipcMain.handle('get-app-logs', () => {
+  const logDir = getLogDir();
+  try {
+    const files = fs.readdirSync(logDir).filter(f => f.endsWith('.log')).sort().reverse();
+    const latestFile = files[0];
+    if (!latestFile) return '';
+    return fs.readFileSync(path.join(logDir, latestFile), 'utf-8');
+  } catch {
+    return '';
   }
+});
+
+ipcMain.handle('get-log-directory', () => {
+  return getLogDir();
+});
+
+// --- IPC — Update ---
+ipcMain.handle('check-for-updates', async () => {
+  if (isDev) return { error: 'Updates are not available in development mode' };
   try {
     const result = await autoUpdater.checkForUpdates();
     return {
@@ -326,90 +415,13 @@ ipcMain.handle('install-update', () => {
 });
 
 ipcMain.handle('get-update-status', () => {
-  return {
-    isDev,
-    version: app.getVersion(),
-    platform: process.platform,
-  };
+  return { isDev, version: app.getVersion(), platform: process.platform };
 });
 
-// Register custom file protocol for serving local assets in production
-function registerFileProtocol() {
-  protocol.handle('file', (request) => {
-    const url = new URL(request.url);
-    let fullPath = decodeURIComponent(url.pathname);
-
-    if (process.platform === 'win32') {
-      if (fullPath.startsWith('/') && !fullPath.startsWith('//')) {
-        fullPath = fullPath.slice(1);
-      }
-    }
-
-    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
-      return new Response(fs.readFileSync(fullPath), {
-        headers: {
-          'Content-Type': getMimeType(fullPath),
-        },
-      });
-    }
-
-    // Try resolving relative to DIST_PATH
-    const relativePath = path.join(DIST_PATH, url.pathname);
-    if (fs.existsSync(relativePath) && fs.statSync(relativePath).isFile()) {
-      return new Response(fs.readFileSync(relativePath), {
-        headers: {
-          'Content-Type': getMimeType(relativePath),
-        },
-      });
-    }
-
-    const indexPath = path.join(DIST_PATH, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      return new Response(fs.readFileSync(indexPath), {
-        headers: { 'Content-Type': 'text/html' },
-      });
-    }
-
-    return new Response('Not Found', { status: 404 });
-  });
-}
-
-function getMimeType(filePath: string): string {
-  const ext = path.extname(filePath).toLowerCase();
-  const mimeTypes: Record<string, string> = {
-    '.html': 'text/html',
-    '.js': 'application/javascript',
-    '.mjs': 'application/javascript',
-    '.css': 'text/css',
-    '.json': 'application/json',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-    '.woff': 'font/woff',
-    '.woff2': 'font/woff2',
-    '.ttf': 'font/ttf',
-    '.eot': 'application/vnd.ms-fontobject',
-    '.mp4': 'video/mp4',
-    '.webm': 'video/webm',
-    '.mp3': 'audio/mpeg',
-    '.wav': 'audio/wav',
-    '.pdf': 'application/pdf',
-    '.webp': 'image/webp',
-  };
-  return mimeTypes[ext] || 'application/octet-stream';
-}
-
+// --- App Lifecycle ---
 app.whenReady().then(() => {
-  // Apply auto-start setting
+  writeLog('INFO', 'app', `App starting v${app.getVersion()} (${isDev ? 'dev' : 'prod'})`);
   applyAutoStart(desktopSettings);
-
-  if (!isDev) {
-    registerFileProtocol();
-  }
-
   createWindow();
   createTray();
 
@@ -430,5 +442,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-  app.isQuitting = true;
+  isQuitting = true;
+  writeLog('INFO', 'app', 'App quitting');
 });

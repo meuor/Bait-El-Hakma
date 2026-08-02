@@ -14,7 +14,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Window state events
   onMaximized: (callback: (maximized: boolean) => void) => {
-    ipcRenderer.on('window-maximized', (_, maximized) => callback(maximized));
+    const handler = (_: Electron.IpcRendererEvent, maximized: boolean) => callback(maximized);
+    ipcRenderer.on('window-maximized', handler);
+    return () => ipcRenderer.removeListener('window-maximized', handler);
   },
 
   // Desktop settings
@@ -46,4 +48,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateError: (callback: (error: string) => void) => {
     ipcRenderer.on('update-error', (_, error) => callback(error));
   },
+
+  // Logging
+  getAppLogs: () => ipcRenderer.invoke('get-app-logs'),
+  getLogDirectory: () => ipcRenderer.invoke('get-log-directory'),
 });
