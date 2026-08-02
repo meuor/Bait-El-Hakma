@@ -8,6 +8,7 @@ import {
   Terminal, Apple,
 } from 'lucide-react';
 import { IslamicWallpaper } from './IslamicWallpaper';
+import { asset } from '@/lib/assets';
 import './LandingPage.css';
 
 interface LandingPageProps {
@@ -74,18 +75,15 @@ const features = [
   },
 ];
 
-const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
-const assetBase = isElectron ? '.' : '';
-
 const screenshots = [
-  { src: `${assetBase}/screenshots/pomodoro.png`, title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player' },
-  { src: `${assetBase}/screenshots/focus-video.png`, title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate' },
-  { src: `${assetBase}/screenshots/kanban.png`, title: 'Kanban', desc: 'Drag-and-drop task management board' },
-  { src: `${assetBase}/screenshots/library.png`, title: 'Library', desc: 'Track books with progress & notes' },
-  { src: `${assetBase}/screenshots/tasks.png`, title: 'Tasks', desc: 'Daily todos with priority & categories' },
-  { src: `${assetBase}/screenshots/stats.png`, title: 'Stats', desc: 'Activity analytics & focus breakdown' },
-  { src: `${assetBase}/screenshots/inspire.png`, title: 'Inspire', desc: 'Quran, hadith & daily quotes' },
-  { src: `${assetBase}/screenshots/challenges.png`, title: 'Challenges', desc: 'Build habits with streaks & achievements' },
+  { src: asset('/screenshots/pomodoro.png'), title: 'Pomodoro', desc: 'Focus timer with sessions, themes & mini-player' },
+  { src: asset('/screenshots/focus-video.png'), title: 'Focus Video', desc: 'YouTube & local video player with auto-rotate' },
+  { src: asset('/screenshots/kanban.png'), title: 'Kanban', desc: 'Drag-and-drop task management board' },
+  { src: asset('/screenshots/library.png'), title: 'Library', desc: 'Track books with progress & notes' },
+  { src: asset('/screenshots/tasks.png'), title: 'Tasks', desc: 'Daily todos with priority & categories' },
+  { src: asset('/screenshots/stats.png'), title: 'Stats', desc: 'Activity analytics & focus breakdown' },
+  { src: asset('/screenshots/inspire.png'), title: 'Inspire', desc: 'Quran, hadith & daily quotes' },
+  { src: asset('/screenshots/challenges.png'), title: 'Challenges', desc: 'Build habits with streaks & achievements' },
 ];
 
 const steps = [
@@ -214,7 +212,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         transition={{ duration: 0.6 }}
       >
         <a href="/" className="lp-nav-brand">
-          <img src={`${assetBase}/img/logo.png`} alt="Bait El-Hakma" className="lp-nav-logo" />
+          <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="lp-nav-logo" />
           <span className="lp-nav-title">Bait El-Hakma</span>
         </a>
         <div className="lp-nav-links">
@@ -605,7 +603,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div className="lp-footer-brand">
-            <img src={`${assetBase}/img/logo.png`} alt="Bait El-Hakma" className="lp-footer-logo" />
+            <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="lp-footer-logo" />
             <span>Bait El-Hakma</span>
           </div>
           <div className="lp-footer-links">

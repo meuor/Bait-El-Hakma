@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import type { Theme } from '@/types';
 import type { AuthUser } from '@/lib/api';
+import { asset } from '@/lib/assets';
 import { UpdateDialog } from '@/components/UpdateDialog';
 
 const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
@@ -70,7 +71,7 @@ export function Header({ user, onLogout, onShowWhatsNew }: HeaderProps) {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src="/img/logo.png" alt="Bait El-Hakma" className="w-10 h-10 rounded-xl object-cover" />
+            <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="w-10 h-10 rounded-xl object-cover" />
             <div>
               <h1 className="text-xl font-bold tracking-tight">Bait El-Hakma</h1>
               <p className="text-xs text-muted-foreground">House of Wisdom</p>

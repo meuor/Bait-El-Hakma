@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter, protocol, net } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -20,73 +20,6 @@ let isQuitting = false;
 
 const DIST_PATH = path.join(__dirname, '..', 'dist');
 
-// --- Custom Protocol for serving dist files ---
-// This gives the app a proper origin (app://localhost) instead of file://
-// which is required for: images, CORS, Firebase, and proper security
-const MIME_TYPES: Record<string, string> = {
-  '.html': 'text/html',
-  '.js': 'application/javascript',
-  '.mjs': 'application/javascript',
-  '.css': 'text/css',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf',
-  '.eot': 'application/vnd.ms-fontobject',
-  '.mp3': 'audio/mpeg',
-  '.mp4': 'video/mp4',
-  '.webp': 'image/webp',
-  '.webm': 'video/webm',
-  '.txt': 'text/plain',
-  '.xml': 'application/xml',
-  '.map': 'application/json',
-  '.webmanifest': 'application/manifest+json',
-};
-
-function registerAppProtocol() {
-  protocol.handle('app', (request) => {
-    const url = new URL(request.url);
-    // Remove leading slash and decode URI components
-    let pathname = decodeURIComponent(url.pathname);
-    if (pathname.startsWith('/')) pathname = pathname.slice(1);
-
-    const filePath = path.join(DIST_PATH, pathname);
-
-    // Security: prevent directory traversal
-    if (!filePath.startsWith(DIST_PATH)) {
-      return new Response('Forbidden', { status: 403 });
-    }
-
-    try {
-      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-        const ext = path.extname(filePath).toLowerCase();
-        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-        const data = fs.readFileSync(filePath);
-        return new Response(data, {
-          headers: { 'Content-Type': contentType },
-        });
-      }
-      // Fallback: serve index.html for SPA routing (e.g., /login -> index.html)
-      const indexPath = path.join(DIST_PATH, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        const data = fs.readFileSync(indexPath, 'utf-8');
-        return new Response(data, {
-          headers: { 'Content-Type': 'text/html' },
-        });
-      }
-      return new Response('Not Found', { status: 404 });
-    } catch {
-      return new Response('Internal Error', { status: 500 });
-    }
-  });
-}
-
 // --- Error Logging ---
 function getLogDir(): string {
   const logDir = path.join(app.getPath('userData'), 'logs');
@@ -100,13 +33,10 @@ function writeLog(level: string, source: string, message: string, stack?: string
   const logFile = path.join(getLogDir(), `app-${new Date().toISOString().slice(0, 10)}.log`);
   try {
     fs.appendFileSync(logFile, logLine, 'utf-8');
-  } catch {
-    // Silent fail — can't log a log error
-  }
+  } catch {}
   console[level === 'ERROR' ? 'error' : level === 'WARN' ? 'warn' : 'log'](`[${source}] ${message}`);
 }
 
-// Global error handlers
 process.on('uncaughtException', (error) => {
   writeLog('ERROR', 'main-process', 'Uncaught exception', error.stack || error.message);
 });
@@ -160,6 +90,7 @@ function createWindow() {
       sandbox: false,
       spellcheck: false,
       devtools: isDev,
+      webSecurity: !isDev ? false : true,
     },
   };
 
@@ -175,18 +106,15 @@ function createWindow() {
 
   mainWindow = new BrowserWindow(windowOptions);
 
-  // Open external links in system browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // Load content
   if (isDev && VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    // Use custom protocol for proper origin (fixes images, CORS, Firebase)
-    mainWindow.loadURL('app://localhost/index.html');
+    mainWindow.loadFile(path.join(DIST_PATH, 'index.html'));
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -194,7 +122,6 @@ function createWindow() {
     if (!desktopSettings.startMinimized) {
       mainWindow?.show();
     }
-    // Check for updates in production after a delay
     if (!isDev) {
       setTimeout(() => {
         autoUpdater.checkForUpdates().catch((err) => {
@@ -233,7 +160,6 @@ function createWindow() {
     mainWindow?.webContents.send('window-maximized', false);
   });
 
-  // Catch renderer process crashes
   mainWindow.webContents.on('render-process-gone', (_, details) => {
     writeLog('ERROR', 'renderer', `Render process crashed: ${details.reason}`, details.exitCode?.toString());
   });
@@ -489,7 +415,6 @@ ipcMain.handle('get-update-status', () => {
 // --- App Lifecycle ---
 app.whenReady().then(() => {
   writeLog('INFO', 'app', `App starting v${app.getVersion()} (${isDev ? 'dev' : 'prod'})`);
-  if (!isDev) registerAppProtocol();
   applyAutoStart(desktopSettings);
   createWindow();
   createTray();

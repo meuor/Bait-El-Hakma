@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, ArrowRight, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import { asset } from '@/lib/assets';
 import './AuthLayout.css';
 
 interface LoginFormProps {
@@ -68,7 +69,7 @@ export function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword }: Log
             transition={{ duration: 0.6 }}
           >
             <div className="auth-form-header">
-              <img src="/img/logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="auth-logo" />
               <h1>Welcome Back</h1>
               <p>Sign in to access your productivity dashboard</p>
             </div>

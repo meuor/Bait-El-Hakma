@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Loader2, ArrowLeft, Mail, CheckCircle2, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import { asset } from '@/lib/assets';
 import './AuthLayout.css';
 
 interface ForgotPasswordFormProps {
@@ -61,7 +62,7 @@ export function ForgotPasswordForm({ onBack, onCodeVerified }: ForgotPasswordFor
             transition={{ duration: 0.6 }}
           >
             <div className="auth-form-header">
-              <img src="/img/logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="auth-logo" />
               <h1>{sent ? 'Check Your Email' : 'Reset Password'}</h1>
               <p>{sent ? `We sent a code to ${email}` : "Enter your email and we'll send you a reset code"}</p>
             </div>

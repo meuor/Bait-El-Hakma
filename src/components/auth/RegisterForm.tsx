@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, ArrowRight, Sparkles, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import { asset } from '@/lib/assets';
 import './AuthLayout.css';
 
 interface RegisterFormProps {
@@ -118,7 +119,7 @@ export function RegisterForm({ onLogin, onSwitchToLogin }: RegisterFormProps) {
             transition={{ duration: 0.6 }}
           >
             <div className="auth-form-header">
-              <img src="/img/logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="auth-logo" />
               <h1>{registered ? 'Welcome!' : 'Create Account'}</h1>
               <p>{registered ? `Hello ${registeredName}, your workspace is ready` : 'Start your productivity journey today'}</p>
             </div>

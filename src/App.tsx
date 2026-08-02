@@ -31,6 +31,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 import { DailyNotes } from '@/sections/DailyNotes';
 import { syncManager } from '@/lib/SyncManager';
+import { asset } from '@/lib/assets';
 import { motion } from 'framer-motion';
 import { authAPI, type AuthUser } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
@@ -120,7 +121,7 @@ function AppContent() {
       <div className="min-h-screen flex items-center justify-center" style={{ position: 'relative', overflow: 'hidden' }}>
         <IslamicWallpaper variant="hero" />
         <div className="text-center" style={{ position: 'relative', zIndex: 2 }}>
-          <img src="/img/logo.png" alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
+          <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4" />
           <Loader2 className="h-8 w-8 animate-spin text-violet-600 mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>

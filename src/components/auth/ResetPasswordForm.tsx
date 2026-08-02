@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Loader2, ArrowLeft, KeyRound, CheckCircle2, Eye, EyeOff, BookOpen, Timer, ListTodo, Trophy, Library, RefreshCw, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IslamicWallpaper } from '@/components/IslamicWallpaper';
+import { asset } from '@/lib/assets';
 import './AuthLayout.css';
 
 interface ResetPasswordFormProps {
@@ -133,7 +134,7 @@ export function ResetPasswordForm({ email, initialCode = '', onBack, onSuccess }
             transition={{ duration: 0.6 }}
           >
             <div className="auth-form-header">
-              <img src="/img/logo.png" alt="Bait El-Hakma" className="auth-logo" />
+              <img src={asset("/img/logo.png")} alt="Bait El-Hakma" className="auth-logo" />
               <h1>{codeVerified ? 'New Password' : 'Enter Reset Code'}</h1>
               <p>{codeVerified ? `Set a new password for ${email}` : `Enter the 6-character code sent to ${email}`}</p>
             </div>
