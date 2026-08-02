@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter, protocol, net } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -19,38 +19,6 @@ let desktopSettings: DesktopSettings = loadSettings();
 let isQuitting = false;
 
 const DIST_PATH = path.join(__dirname, '..', 'dist');
-
-// --- Custom Protocol: app://localhost ---
-// Serves files from dist/ via net.fetch(file://) — the official Electron-recommended approach.
-// This gives the app a proper origin (app://localhost) fixing images, CORS, and API calls.
-function registerAppProtocol() {
-  protocol.handle('app', (request) => {
-    const url = new URL(request.url);
-    let pathname = decodeURIComponent(url.pathname);
-    if (pathname.startsWith('/')) pathname = pathname.slice(1);
-
-    const filePath = path.join(DIST_PATH, pathname);
-
-    // Security: prevent directory traversal
-    if (!filePath.startsWith(DIST_PATH)) {
-      return new Response('Forbidden', { status: 403 });
-    }
-
-    try {
-      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-        return net.fetch('file://' + filePath.replace(/\\/g, '/'));
-      }
-      // SPA fallback: serve index.html for client-side routing
-      const indexPath = path.join(DIST_PATH, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        return net.fetch('file://' + indexPath.replace(/\\/g, '/'));
-      }
-      return new Response('Not Found', { status: 404 });
-    } catch (err) {
-      return new Response('Error', { status: 500 });
-    }
-  });
-}
 
 // --- Error Logging ---
 function getLogDir(): string {
@@ -122,6 +90,7 @@ function createWindow() {
       sandbox: false,
       spellcheck: false,
       devtools: isDev,
+      webSecurity: false,
     },
   };
 
@@ -145,7 +114,7 @@ function createWindow() {
   if (isDev && VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadURL('app://localhost/index.html');
+    mainWindow.loadFile(path.join(DIST_PATH, 'index.html'));
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -446,7 +415,6 @@ ipcMain.handle('get-update-status', () => {
 // --- App Lifecycle ---
 app.whenReady().then(() => {
   writeLog('INFO', 'app', `App starting v${app.getVersion()} (${isDev ? 'dev' : 'prod'})`);
-  if (!isDev) registerAppProtocol();
   applyAutoStart(desktopSettings);
   createWindow();
   createTray();

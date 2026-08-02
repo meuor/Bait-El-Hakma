@@ -4,9 +4,15 @@ export function asset(path: string): string {
   }
   const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron;
   if (isElectron) {
-    // On app://localhost protocol, relative paths resolve correctly
-    // Convert /img/logo.png → ./img/logo.png
-    return path.startsWith('/') ? `.${path}` : `./${path}`;
+    // Resolve relative paths against the page's file:// URL
+    // /img/logo.png → file:///C:/path/dist/img/logo.png
+    const base = window.location.href.replace(/\/[^/]*$/, '/');
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    try {
+      return new URL(cleanPath, base).href;
+    } catch {
+      return path;
+    }
   }
   return path;
 }
