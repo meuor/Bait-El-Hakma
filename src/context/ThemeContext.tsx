@@ -56,14 +56,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.add('theme-github');
     }
     // Light theme is default, no class needed
-
-    // Force body background to match theme variable (backup for CSS layer issues)
-    requestAnimationFrame(() => {
-      const bg = getComputedStyle(root).getPropertyValue('--background').trim();
-      const fg = getComputedStyle(root).getPropertyValue('--foreground').trim();
-      if (bg) document.body.style.backgroundColor = `hsl(${bg})`;
-      if (fg) document.body.style.color = `hsl(${fg})`;
-    });
   }, [theme]);
 
   return (
