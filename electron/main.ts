@@ -73,6 +73,9 @@ autoUpdater.logger = {
 // --- Window ---
 function createWindow() {
   const iconPath = getIconPath();
+  const preloadPath = fs.existsSync(path.join(__dirname, 'preload.mjs'))
+    ? path.join(__dirname, 'preload.mjs')
+    : path.join(__dirname, 'preload.js');
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1400,
@@ -84,7 +87,7 @@ function createWindow() {
     backgroundColor: '#06020f',
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
