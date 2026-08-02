@@ -96,8 +96,6 @@ export function IslamicWallpaper({ className = '', variant = 'hero', forceDark =
 
   const isDark = forceDark || theme === 'dark' || theme === 'dracula' || theme === 'monokai';
 
-  if (!isDark) return null;
-
   const backgrounds = [
     'linear-gradient(135deg, #06020f 0%, #0d0520 30%, #0a0318 60%, #110828 100%)',
     'linear-gradient(135deg, #08030f 0%, #100525 30%, #0c0420 60%, #0e0622 100%)',
@@ -113,6 +111,8 @@ export function IslamicWallpaper({ className = '', variant = 'hero', forceDark =
     }, 12000);
     return () => clearInterval(interval);
   }, [variant, backgrounds.length]);
+
+  if (!isDark) return null;
 
   const patternOpacity = variant === 'subtle' ? 0.02 : variant === 'section' ? 0.04 : 0.06;
 
