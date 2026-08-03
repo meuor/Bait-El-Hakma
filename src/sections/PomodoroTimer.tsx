@@ -141,6 +141,7 @@ export function PomodoroTimer() {
   const [sessionType, setSessionType] = useState<'focus' | 'shortBreak' | 'longBreak'>('focus');
   const [showSettings, setShowSettings] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(pomodoroSettings.soundEnabled);
+  const [soundVolumeLocal, setSoundVolumeLocal] = useState(pomodoroSettings.soundVolume);
   const [activityMode, setActivityMode] = useState<ActivityMode | ''>('');
   const [customName, setCustomName] = useState('');
   const [linkedTaskId, setLinkedTaskId] = useState('');
@@ -292,6 +293,9 @@ export function PomodoroTimer() {
     }
   }, [timerState]);
 
+  const soundVolumeRef = useRef(pomodoroSettings.soundVolume);
+  useEffect(() => { soundVolumeRef.current = pomodoroSettings.soundVolume; }, [pomodoroSettings.soundVolume]);
+
   // --- Background Sound Playback ---
   const stopCurrentSound = useCallback(() => {
     try {
@@ -328,7 +332,7 @@ export function PomodoroTimer() {
     source.buffer = buffer;
     source.loop = true;
     const gain = ctx.createGain();
-    gain.gain.value = 0.3;
+    gain.gain.value = 0.3 * (soundVolumeRef.current / 100);
     source.connect(gain);
     gain.connect(ctx.destination);
     source.start();
@@ -349,7 +353,7 @@ export function PomodoroTimer() {
     stopYouTubeSound();
     stopCurrentSound();
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0`;
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&volume=${Math.round(soundVolumeRef.current)}`;
     iframe.style.cssText = 'position:fixed;bottom:-100px;left:-100px;width:1px;height:1px;opacity:0;pointer-events:none;';
     iframe.allow = 'autoplay';
     document.body.appendChild(iframe);
@@ -378,11 +382,28 @@ export function PomodoroTimer() {
     } else if (sound === 'local' && localAudioUrl) {
       const audio = new Audio(localAudioUrl);
       audio.loop = true;
+      audio.volume = soundVolumeRef.current / 100;
       audio.play().catch(() => {});
       localAudioRef.current = audio;
       setLocalAudioPlaying(true);
     }
   }, [pomodoroSettings.selectedSound, localAudioUrl, stopYouTubeSound, stopCurrentSound, startGeneratedNoise, startYouTubeSound]);
+
+  // Apply volume changes live without restarting the sound
+  useEffect(() => {
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = 0.3 * (soundVolumeRef.current / 100);
+    }
+    if (localAudioRef.current) {
+      localAudioRef.current.volume = soundVolumeRef.current / 100;
+    }
+    if (soundIframeRef.current) {
+      const opt = soundOptions.find(s => s.id === pomodoroSettings.selectedSound);
+      if (opt?.type === 'youtube' && opt.youtubeId) {
+        startYouTubeSound(opt.youtubeId);
+      }
+    }
+  }, [pomodoroSettings.soundVolume, pomodoroSettings.selectedSound, startYouTubeSound]);
 
   useEffect(() => {
     return () => {
@@ -502,6 +523,28 @@ export function PomodoroTimer() {
                 })}
               </div>
               <div className="border-t border-border/50 pt-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="sound-volume" className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Volume2 className="w-3.5 h-3.5" /> Volume
+                  </Label>
+                  <span className="text-xs font-medium text-foreground">{soundVolumeLocal}%</span>
+                </div>
+                <Slider
+                  id="sound-volume"
+                  min={0}
+                  max={100}
+                  value={[soundVolumeLocal]}
+                  onValueChange={([v]) => {
+                    setSoundVolumeLocal(v);
+                    if (gainNodeRef.current) gainNodeRef.current.gain.value = 0.3 * (v / 100);
+                    if (localAudioRef.current) localAudioRef.current.volume = v / 100;
+                  }}
+                  onValueCommit={([v]) => {
+                    setSoundVolumeLocal(v);
+                    dispatch({ type: 'SET_POMODORO_SETTINGS', payload: { ...pomodoroSettings, soundVolume: v } });
+                  }}
+                  className="w-full"
+                />
                 <input
                   type="file"
                   accept="audio/*"
