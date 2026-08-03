@@ -187,14 +187,12 @@ export function PomodoroTimer() {
     }
   }, [timerState, timeLeft, totalTime, sessionType, dispatch]);
 
+  const lastTimerToggleRef = useRef(0);
   useEffect(() => {
-    if (state.timerToggle === 0) return;
-    if (timerState === 'running') {
-      setTimerState('paused');
-    } else if (timerState === 'paused') {
-      setTimerState('running');
-    }
-  }, [state.timerToggle, timerState]);
+    if (state.timerToggle === 0 || state.timerToggle === lastTimerToggleRef.current) return;
+    lastTimerToggleRef.current = state.timerToggle;
+    setTimerState(prev => prev === 'running' ? 'paused' : prev === 'paused' ? 'running' : prev);
+  }, [state.timerToggle]);
 
   const videoUrlRef = useRef<string | null>(null);
   useEffect(() => {
