@@ -82,7 +82,6 @@ export interface PomodoroSettings {
   videoSyncEnabled: boolean;
   theme: PomodoroTheme;
   selectedSound: BackgroundSoundId;
-  soundVolume: number;
 }
 
 export interface PomodoroSession {

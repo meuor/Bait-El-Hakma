@@ -141,10 +141,19 @@ export function PomodoroTimer() {
   const [sessionType, setSessionType] = useState<'focus' | 'shortBreak' | 'longBreak'>('focus');
   const [showSettings, setShowSettings] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(pomodoroSettings.soundEnabled);
-  const safeVolume = typeof pomodoroSettings.soundVolume === 'number' && isFinite(pomodoroSettings.soundVolume)
-    ? Math.min(100, Math.max(0, pomodoroSettings.soundVolume))
-    : 70;
-  const [soundVolumeLocal, setSoundVolumeLocal] = useState(safeVolume);
+
+  // Volume is a local-only control (not synced to cloud)
+  const VOLUME_KEY = 'bait-el-hakma-sound-volume';
+  const [soundVolumeLocal, setSoundVolumeLocal] = useState(() => {
+    try {
+      const stored = localStorage.getItem(VOLUME_KEY);
+      if (stored !== null) {
+        const n = Number(stored);
+        if (isFinite(n)) return Math.min(100, Math.max(0, n));
+      }
+    } catch { /* ignore */ }
+    return 70;
+  });
   const [activityMode, setActivityMode] = useState<ActivityMode | ''>('');
   const [customName, setCustomName] = useState('');
   const [linkedTaskId, setLinkedTaskId] = useState('');
@@ -296,8 +305,27 @@ export function PomodoroTimer() {
     }
   }, [timerState]);
 
-  const soundVolumeRef = useRef(safeVolume);
-  useEffect(() => { soundVolumeRef.current = safeVolume; }, [safeVolume]);
+  const soundVolumeRef = useRef(soundVolumeLocal);
+  useEffect(() => { soundVolumeRef.current = soundVolumeLocal; }, [soundVolumeLocal]);
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(100, Math.max(0, v));
+    soundVolumeRef.current = clamped;
+    setSoundVolumeLocal(clamped);
+    try {
+      localStorage.setItem(VOLUME_KEY, String(clamped));
+    } catch { /* ignore */ }
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = 0.3 * (clamped / 100);
+    }
+    if (localAudioRef.current) {
+      localAudioRef.current.volume = clamped / 100;
+    }
+    // Live-adjust the hidden YouTube player without reloading it
+    if (soundIframeRef.current) {
+      sendYouTubeVolume(soundIframeRef.current, clamped);
+    }
+  }, [sendYouTubeVolume]);
 
   // --- Background Sound Playback ---
   const stopCurrentSound = useCallback(() => {
@@ -344,8 +372,21 @@ export function PomodoroTimer() {
   }, [stopCurrentSound]);
 
   const soundIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const youtubeMsgHandlerRef = useRef<{ onMessage: (e: MessageEvent) => void; iframe: HTMLIFrameElement } | null>(null);
+
+  const sendYouTubeVolume = useCallback((iframe: HTMLIFrameElement, volume: number) => {
+    try {
+      iframe.contentWindow?.postMessage(JSON.stringify({
+        event: 'command', func: 'setVolume', args: [Math.round(volume)], id: '0', channel: 'widget',
+      }), '*');
+    } catch { /* ignore */ }
+  }, []);
 
   const stopYouTubeSound = useCallback(() => {
+    if (youtubeMsgHandlerRef.current) {
+      window.removeEventListener('message', youtubeMsgHandlerRef.current.onMessage);
+      youtubeMsgHandlerRef.current = null;
+    }
     if (soundIframeRef.current) {
       soundIframeRef.current.remove();
       soundIframeRef.current = null;
@@ -356,12 +397,35 @@ export function PomodoroTimer() {
     stopYouTubeSound();
     stopCurrentSound();
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&volume=${Math.round(soundVolumeRef.current)}`;
+    // enablejsapi allows live volume control via postMessage; volume= is ignored by YouTube.
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&enablejsapi=1`;
     iframe.style.cssText = 'position:fixed;bottom:-100px;left:-100px;width:1px;height:1px;opacity:0;pointer-events:none;';
     iframe.allow = 'autoplay';
     document.body.appendChild(iframe);
     soundIframeRef.current = iframe;
-  }, [stopYouTubeSound, stopCurrentSound]);
+
+    // Complete the IFrame API handshake, then apply the current volume.
+    const applyVolume = () => sendYouTubeVolume(iframe, soundVolumeRef.current);
+    const onMessage = (e: MessageEvent) => {
+      try {
+        const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (!d || typeof d.event !== 'string') return;
+        if (d.event === 'listening' && e.source === iframe.contentWindow) {
+          (e.source as Window).postMessage(JSON.stringify({ event: 'listening', id: d.id || '0', channel: 'widget' }), '*');
+          applyVolume();
+        } else if (d.event === 'onReady') {
+          applyVolume();
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('message', onMessage);
+    youtubeMsgHandlerRef.current = { onMessage, iframe };
+
+    // Fallback: some embedded players don't send the handshake reliably
+    setTimeout(() => {
+      if (soundIframeRef.current === iframe) applyVolume();
+    }, 3000);
+  }, [stopYouTubeSound, stopCurrentSound, sendYouTubeVolume]);
 
   useEffect(() => {
     const sound = pomodoroSettings.selectedSound;
@@ -391,22 +455,6 @@ export function PomodoroTimer() {
       setLocalAudioPlaying(true);
     }
   }, [pomodoroSettings.selectedSound, localAudioUrl, stopYouTubeSound, stopCurrentSound, startGeneratedNoise, startYouTubeSound]);
-
-  // Apply volume changes live without restarting the sound
-  useEffect(() => {
-    if (gainNodeRef.current) {
-      gainNodeRef.current.gain.value = 0.3 * (soundVolumeRef.current / 100);
-    }
-    if (localAudioRef.current) {
-      localAudioRef.current.volume = soundVolumeRef.current / 100;
-    }
-    if (soundIframeRef.current) {
-      const opt = soundOptions.find(s => s.id === pomodoroSettings.selectedSound);
-      if (opt?.type === 'youtube' && opt.youtubeId) {
-        startYouTubeSound(opt.youtubeId);
-      }
-    }
-  }, [pomodoroSettings.soundVolume, pomodoroSettings.selectedSound, startYouTubeSound]);
 
   useEffect(() => {
     return () => {
@@ -537,15 +585,7 @@ export function PomodoroTimer() {
                   min={0}
                   max={100}
                   value={[soundVolumeLocal]}
-                  onValueChange={([v]) => {
-                    setSoundVolumeLocal(v);
-                    if (gainNodeRef.current) gainNodeRef.current.gain.value = 0.3 * (v / 100);
-                    if (localAudioRef.current) localAudioRef.current.volume = v / 100;
-                  }}
-                  onValueCommit={([v]) => {
-                    setSoundVolumeLocal(v);
-                    dispatch({ type: 'SET_POMODORO_SETTINGS', payload: { ...pomodoroSettings, soundVolume: v } });
-                  }}
+                  onValueChange={([v]) => setVolume(v)}
                   className="w-full"
                 />
                 <input

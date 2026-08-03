@@ -152,7 +152,6 @@ const defaultPomodoroSettings: PomodoroSettings = {
   videoSyncEnabled: false,
   theme: 'classic',
   selectedSound: 'none',
-  soundVolume: 70,
 };
 
 // Default Kanban Columns
@@ -265,7 +264,7 @@ function appReducer(state: State, action: Action): State {
         tabActiveProfile: state.tabActiveProfile === action.payload ? 'Default' : state.tabActiveProfile,
       };
     case 'SET_POMODORO_SETTINGS':
-      return { ...state, pomodoroSettings: { ...defaultPomodoroSettings, ...action.payload } };
+      return { ...state, pomodoroSettings: action.payload };
     case 'ADD_POMODORO_SESSION':
       return { 
         ...state, 
@@ -459,10 +458,6 @@ function appReducer(state: State, action: Action): State {
       return {
         ...state,
         ...rest,
-        pomodoroSettings: {
-          ...defaultPomodoroSettings,
-          ...(action.payload.pomodoroSettings || state.pomodoroSettings),
-        },
         pomodoroHistory: normalizeEntities(pomodoroHistory || state.pomodoroHistory, ['tags', 'links']),
         kanbanCards: normalizeEntities(kanbanCards || state.kanbanCards, ['tags', 'links']),
         books: normalizeEntities(books || state.books, ['tags', 'links']),
@@ -830,7 +825,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           videoSyncEnabled: sv.video_sync_enabled !== undefined ? sv.video_sync_enabled : (sv.videoSyncEnabled !== undefined ? sv.videoSyncEnabled : false),
           theme: sv.theme || 'classic',
           selectedSound: sv.selected_sound || sv.selectedSound || 'none',
-          soundVolume: typeof sv.sound_volume === 'number' ? sv.sound_volume : (typeof sv.soundVolume === 'number' ? sv.soundVolume : 70),
         };
       }
 
