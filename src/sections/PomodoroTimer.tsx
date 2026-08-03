@@ -308,25 +308,6 @@ export function PomodoroTimer() {
   const soundVolumeRef = useRef(soundVolumeLocal);
   useEffect(() => { soundVolumeRef.current = soundVolumeLocal; }, [soundVolumeLocal]);
 
-  const setVolume = useCallback((v: number) => {
-    const clamped = Math.min(100, Math.max(0, v));
-    soundVolumeRef.current = clamped;
-    setSoundVolumeLocal(clamped);
-    try {
-      localStorage.setItem(VOLUME_KEY, String(clamped));
-    } catch { /* ignore */ }
-    if (gainNodeRef.current) {
-      gainNodeRef.current.gain.value = 0.3 * (clamped / 100);
-    }
-    if (localAudioRef.current) {
-      localAudioRef.current.volume = clamped / 100;
-    }
-    // Live-adjust the hidden YouTube player without reloading it
-    if (soundIframeRef.current) {
-      sendYouTubeVolume(soundIframeRef.current, clamped);
-    }
-  }, [sendYouTubeVolume]);
-
   // --- Background Sound Playback ---
   const stopCurrentSound = useCallback(() => {
     try {
@@ -426,6 +407,25 @@ export function PomodoroTimer() {
       if (soundIframeRef.current === iframe) applyVolume();
     }, 3000);
   }, [stopYouTubeSound, stopCurrentSound, sendYouTubeVolume]);
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(100, Math.max(0, v));
+    soundVolumeRef.current = clamped;
+    setSoundVolumeLocal(clamped);
+    try {
+      localStorage.setItem(VOLUME_KEY, String(clamped));
+    } catch { /* ignore */ }
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = 0.3 * (clamped / 100);
+    }
+    if (localAudioRef.current) {
+      localAudioRef.current.volume = clamped / 100;
+    }
+    // Live-adjust the hidden YouTube player without reloading it
+    if (soundIframeRef.current) {
+      sendYouTubeVolume(soundIframeRef.current, clamped);
+    }
+  }, [sendYouTubeVolume]);
 
   useEffect(() => {
     const sound = pomodoroSettings.selectedSound;
