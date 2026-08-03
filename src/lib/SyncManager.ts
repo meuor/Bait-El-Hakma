@@ -50,6 +50,7 @@ class SyncManager {
     this.isFlushing = true;
 
     const entries = [...this.queue.entries()];
+    let hadError = false;
     for (const [key, job] of entries) {
       if (job.retries > job.maxRetries) {
         this.queue.delete(key);
@@ -59,6 +60,7 @@ class SyncManager {
         await job.execute();
         this.queue.delete(key);
       } catch (err) {
+        hadError = true;
         job.retries++;
         job.error = err instanceof Error ? err.message : String(err);
         this._lastError = job.error;
@@ -66,6 +68,7 @@ class SyncManager {
     }
 
     this.isFlushing = false;
+    if (!hadError) this._lastError = null;
     this.notify();
   }
 

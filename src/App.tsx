@@ -28,6 +28,8 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { QuickCapture } from '@/components/QuickCapture';
 import { IslamicWallpaper } from '@/components/IslamicWallpaper';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { LastSyncedIndicator } from '@/components/LastSyncedIndicator';
+import type { AppTab } from '@/types';
 
 import { DailyNotes } from '@/sections/DailyNotes';
 import { syncManager } from '@/lib/SyncManager';
@@ -244,6 +246,7 @@ function TabPanel({ tab, currentTab, children }: { tab: string; currentTab: stri
       className="h-full"
       style={{ display: isActive ? 'block' : 'none' }}
     >
+      {isActive && <LastSyncedIndicator tab={tab as AppTab} />}
       {children}
     </motion.div>
   );

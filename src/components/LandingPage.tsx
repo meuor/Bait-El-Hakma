@@ -5,7 +5,7 @@ import {
   Cloud, Sparkles, ArrowRight, ChevronRight, X,
   Star, Headphones, Brain, Heart, Check,
   Zap, Globe, Shield, Download, Monitor, Laptop,
-  Terminal, Apple,
+  Terminal, Apple, Github,
 } from 'lucide-react';
 import { IslamicWallpaper } from './IslamicWallpaper';
 import { asset } from '@/lib/assets';
@@ -220,6 +220,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <a href="#gallery" className="lp-nav-link">Gallery</a>
           <a href="#desktop" className="lp-nav-link">Desktop App</a>
           <a href="#how" className="lp-nav-link">How it Works</a>
+          <a href="#about" className="lp-nav-link">About</a>
           <motion.button
             className="lp-btn-primary lp-btn-sm"
             onClick={onLogin}
@@ -473,7 +474,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               <div className="lp-desktop-actions-grid">
                 {/* Windows */}
                 <motion.a
-                  href="https://github.com/meuor/Bait-El-Hakma/releases/latest/download/Bait-El-Hakma-2.8.0-Setup.exe"
+                  href="https://github.com/meuor/Bait-El-Hakma/releases/latest/download/Bait-El-Hakma-2.9.0-Setup.exe"
                   target="_blank"
                   rel="noreferrer"
                   className="lp-download-card"
@@ -485,7 +486,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   </div>
                   <div className="lp-download-info">
                     <span className="lp-download-name">Windows</span>
-                    <span className="lp-download-format">EXE Installer • v2.8.0</span>
+                    <span className="lp-download-format">EXE Installer • v2.9.0</span>
                   </div>
                 </motion.a>
 
@@ -567,6 +568,55 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </FadeInSection>
       </section>
 
+      {/* About This Project */}
+      <section className="lp-about" id="about">
+        <FadeInSection>
+          <div className="lp-section-header">
+            <span className="lp-section-tag">About This Project</span>
+            <h2 className="lp-section-title">Built with passion, designed to help</h2>
+            <p className="lp-section-desc">
+              Bait El-Hakma (بيت الحكمة — "House of Wisdom") is a free, open-source productivity
+              suite created by a self-taught developer. It blends modern focus tools with Islamic
+              heritage — a full Quran reader, Pomodoro timer, Kanban board, book library, habits,
+              and cloud sync, all in one beautiful workspace.
+            </p>
+          </div>
+        </FadeInSection>
+
+        <FadeInSection delay={0.1}>
+          <div className="lp-about-grid">
+            <div className="lp-about-card">
+              <h3><Sparkles className="w-5 h-5 inline mr-2 text-violet-400" />Why it exists</h3>
+              <p>
+                Made to help students and busy people stay consistent with study, work, and worship —
+                especially during long shifts and Ramadan. Everything is free, ad-free, and privacy-first.
+              </p>
+            </div>
+            <div className="lp-about-card">
+              <h3><Zap className="w-5 h-5 inline mr-2 text-emerald-400" />Built with</h3>
+              <p>
+                React, Vite, TypeScript, Electron (desktop apps), Python & PyQt (video study tools),
+                Node.js APIs, and a modern responsive UI with dark themes, gradients, and custom branding.
+              </p>
+            </div>
+            <div className="lp-about-card">
+              <h3><Heart className="w-5 h-5 inline mr-2 text-rose-400" />The mission</h3>
+              <p>
+                Continuous learning and real-world building. Every feature is a lesson in software
+                development, UI/UX design, and artificial intelligence — shared openly with the community.
+              </p>
+            </div>
+            <div className="lp-about-card">
+              <h3><Github className="w-5 h-5 inline mr-2 text-sky-400" />Open source</h3>
+              <p>
+                The entire project is open on GitHub. Found a bug or want a feature? Open an issue,
+                fork the repo, or just say salam — contributions and ideas are always welcome.
+              </p>
+            </div>
+          </div>
+        </FadeInSection>
+      </section>
+
       {/* CTA */}
       <section className="lp-cta">
         <div className="lp-cta-glow" />
@@ -611,6 +661,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <a href="#gallery">Gallery</a>
             <a href="#desktop">Desktop App</a>
             <a href="#how">How It Works</a>
+            <a href="#about">About</a>
             <a href="https://github.com/meuor/Bait-El-Hakma/releases/latest" target="_blank" rel="noreferrer">
               <Download className="w-3.5 h-3.5 inline mr-1" />
               Download

@@ -79,6 +79,7 @@ interface State {
   dailyNotes: DailyNote[];
   automationRules: AutomationRule[];
   propertySchemas: Record<EntityType, PropertySchema[]>;
+  lastSynced: Partial<Record<AppTab, number>>;
 }
 
 // Action Types
@@ -136,6 +137,7 @@ type Action =
   | { type: 'SET_AUTOMATION_RULES'; payload: AutomationRule[] }
   | { type: 'SET_PROPERTY_SCHEMAS'; payload: Record<EntityType, PropertySchema[]> }
   | { type: 'SET_PROPERTY_VALUES'; payload: { entityType: EntityType; entityId: string; properties: PropertyValue[] } }
+  | { type: 'SET_LAST_SYNCED'; payload: Partial<Record<AppTab, number>> }
   | { type: 'LOAD_STATE'; payload: Partial<State> };
 
 // Default Pomodoro Settings
@@ -203,6 +205,7 @@ const initialState: State = {
   dailyNotes: [],
   automationRules: [],
   propertySchemas: {} as Record<EntityType, PropertySchema[]>,
+  lastSynced: {},
 };
 
 const normalizeEntities = (entities: any[], fields: string[]) =>
@@ -466,6 +469,8 @@ function appReducer(state: State, action: Action): State {
         }),
       };
     }
+    case 'SET_LAST_SYNCED':
+      return { ...state, lastSynced: { ...state.lastSynced, ...action.payload } };
     default:
       return state;
   }
@@ -550,14 +555,56 @@ function getSyncKey(action: Action): string | null {
   }
 }
 
+function getSyncTab(action: Action): AppTab | null {
+  switch (action.type) {
+    case 'SET_POMODORO_SETTINGS':
+    case 'ADD_POMODORO_SESSION':
+      return 'pomodoro';
+    case 'SET_KANBAN_COLUMNS':
+    case 'ADD_KANBAN_CARD':
+    case 'UPDATE_KANBAN_CARD':
+    case 'DELETE_KANBAN_CARD':
+      return 'kanban';
+    case 'ADD_BOOK':
+    case 'UPDATE_BOOK':
+    case 'DELETE_BOOK':
+      return 'library';
+    case 'ADD_TODO':
+    case 'UPDATE_TODO':
+    case 'DELETE_TODO':
+      return 'todo';
+    case 'ADD_CHALLENGE':
+    case 'UPDATE_CHALLENGE':
+    case 'DELETE_CHALLENGE':
+      return 'challenges';
+    default:
+      return null;
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const isFirstMount = useRef(true);
+  const pendingSyncTabs = useRef<Set<AppTab>>(new Set());
 
   // Start the periodic sync timer on mount
   useEffect(() => {
     syncManager.start();
     return () => syncManager.stop();
+  }, []);
+
+  // When the sync queue drains without errors, mark the affected tabs as synced
+  useEffect(() => {
+    const unsub = syncManager.subscribe((status) => {
+      if (status.pending === 0 && !status.lastError && pendingSyncTabs.current.size > 0) {
+        const now = Date.now();
+        const synced: Partial<Record<AppTab, number>> = {};
+        for (const tab of pendingSyncTabs.current) synced[tab] = now;
+        pendingSyncTabs.current.clear();
+        dispatch({ type: 'SET_LAST_SYNCED', payload: synced });
+      }
+    });
+    return unsub;
   }, []);
 
   // Load state from API or localStorage on mount
@@ -996,6 +1043,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const key = getSyncKey(action);
     if (!key) return;
+
+    const tab = getSyncTab(action);
+    if (tab) pendingSyncTabs.current.add(tab);
 
     syncManager.enqueue(key, () => syncActionToAPI(action));
   }, [syncActionToAPI]);
