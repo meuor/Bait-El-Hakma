@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter, net } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, ipcMain, Notification, crashReporter, net, session } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -434,6 +434,17 @@ ipcMain.handle('get-update-status', () => {
 // --- App Lifecycle ---
 app.whenReady().then(() => {
   writeLog('INFO', 'app', `App starting v${app.getVersion()} (${isDev ? 'dev' : 'prod'})`);
+
+  // YouTube embeds require a valid Referer to play; from a file:// page none is sent.
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    const headers = details.requestHeaders;
+    if (/^https:\/\/(www\.|m\.)?(youtube\.com|youtube-nocookie\.com)\//.test(details.url)) {
+      headers['Referer'] = 'https://bait-el-hakma.vercel.app/';
+      headers['Origin'] = 'https://bait-el-hakma.vercel.app';
+    }
+    callback({ requestHeaders: headers });
+  });
+
   applyAutoStart(desktopSettings);
   createWindow();
   createTray();
