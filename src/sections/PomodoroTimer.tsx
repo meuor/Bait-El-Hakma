@@ -141,7 +141,10 @@ export function PomodoroTimer() {
   const [sessionType, setSessionType] = useState<'focus' | 'shortBreak' | 'longBreak'>('focus');
   const [showSettings, setShowSettings] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(pomodoroSettings.soundEnabled);
-  const [soundVolumeLocal, setSoundVolumeLocal] = useState(pomodoroSettings.soundVolume);
+  const safeVolume = typeof pomodoroSettings.soundVolume === 'number' && isFinite(pomodoroSettings.soundVolume)
+    ? Math.min(100, Math.max(0, pomodoroSettings.soundVolume))
+    : 70;
+  const [soundVolumeLocal, setSoundVolumeLocal] = useState(safeVolume);
   const [activityMode, setActivityMode] = useState<ActivityMode | ''>('');
   const [customName, setCustomName] = useState('');
   const [linkedTaskId, setLinkedTaskId] = useState('');
@@ -293,8 +296,8 @@ export function PomodoroTimer() {
     }
   }, [timerState]);
 
-  const soundVolumeRef = useRef(pomodoroSettings.soundVolume);
-  useEffect(() => { soundVolumeRef.current = pomodoroSettings.soundVolume; }, [pomodoroSettings.soundVolume]);
+  const soundVolumeRef = useRef(safeVolume);
+  useEffect(() => { soundVolumeRef.current = safeVolume; }, [safeVolume]);
 
   // --- Background Sound Playback ---
   const stopCurrentSound = useCallback(() => {
