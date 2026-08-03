@@ -42,11 +42,11 @@ const soundOptions: SoundOption[] = [
   { id: 'nasheed2', label: 'Nasheed 2', icon: '🎵', type: 'youtube', youtubeId: 'nWPnLX0deGw', color: '#d4a853' },
   { id: 'rain', label: 'Rain', icon: '🌧', type: 'youtube', youtubeId: 'mPZkdNFkNps', color: '#0ea5e9' },
   { id: 'cafe', label: 'Cafe', icon: '☕', type: 'youtube', youtubeId: 'VMAPTo7RVCo', color: '#f59e0b' },
-  { id: 'fire', label: 'Fire Woods', icon: '🔥', type: 'youtube', youtubeId: 'NoE31RWe3oA', color: '#ef4444' },
+  { id: 'fire', label: 'Fire Woods', icon: '🔥', type: 'youtube', youtubeId: '8DRwmngnWvU', color: '#ef4444' },
   { id: 'forest', label: 'Forest Walk', icon: '🚶', type: 'youtube', youtubeId: 'EaR9TVPMEeY', color: '#22c55e' },
   { id: 'whitenoise', label: 'White Noise', icon: '📡', type: 'generated', color: '#a78bfa' },
   { id: 'brownnoise', label: 'Brown Noise', icon: '〰️', type: 'generated', color: '#8b5cf6' },
-  { id: 'night', label: 'Night Sounds', icon: '🌙', type: 'youtube', youtubeId: 'DbQGhJ1flgA', color: '#6366f1' },
+  { id: 'night', label: 'Night Sounds', icon: '🌙', type: 'youtube', youtubeId: 'nINkKPFTrG4', color: '#6366f1' },
   { id: 'focustime', label: '432Hz Focus', icon: '🧘', type: 'youtube', youtubeId: '2CWLYLUowaQ', color: '#a855f7' },
   { id: 'reading', label: 'Library', icon: '📚', type: 'youtube', youtubeId: 'lhEITbnKzU4', color: '#f97316' },
 ];

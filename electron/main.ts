@@ -435,12 +435,15 @@ ipcMain.handle('get-update-status', () => {
 app.whenReady().then(() => {
   writeLog('INFO', 'app', `App starting v${app.getVersion()} (${isDev ? 'dev' : 'prod'})`);
 
-  // YouTube embeds require a valid Referer to play; from a file:// page none is sent.
+  // YouTube embeds fail from file:// pages (Error 153 / 403):
+  // the player requires a valid Referer and a standard Chrome User-Agent.
+  const YT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     const headers = details.requestHeaders;
-    if (/^https:\/\/(www\.|m\.)?(youtube\.com|youtube-nocookie\.com)\//.test(details.url)) {
+    if (/^https:\/\/(www\.|m\.)?(youtube\.com|youtube-nocookie\.com|googlevideo\.com)\//.test(details.url)) {
       headers['Referer'] = 'https://bait-el-hakma.vercel.app/';
-      headers['Origin'] = 'https://bait-el-hakma.vercel.app';
+      headers['User-Agent'] = YT_UA;
+      delete headers['Origin'];
     }
     callback({ requestHeaders: headers });
   });
